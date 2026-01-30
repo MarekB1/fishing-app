@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Prihlásenie{% endblock %}
+
+{% block content %}
+  <h1>Prihlásenie</h1>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Prihlásiť</button>
+  </form>
+
+  <p style="margin-top: 1rem;">
+    <a href="{% url 'password_reset' %}">Zabudol som heslo</a>
+  </p>
+{% endblock %}

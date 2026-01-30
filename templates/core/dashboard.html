@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+  <section>
+    <h1>Dashboard</h1>
+    <p>Rýchly prístup k hlavným funkciám.</p>
+
+    <div class="grid">
+      <article>
+        <h3>🏁 Súťaže</h3>
+        <p>Prehľad tvojich súťaží a členstiev.</p>
+        <a href="{% url 'competitions:my_competitions' %}" role="button">Moje súťaže</a>
+      </article>
+
+      <article>
+        <h3>➕ Vytvoriť súťaž</h3>
+        <p>Organizátor vytvorí novú súťaž a nastaví pravidlá.</p>
+        <a href="#" role="button">Nová súťaž</a>
+      </article>
+
+      <article>
+        <h3>✉️ Pozvánky</h3>
+        <p>Generovanie invite linku a správa pozvaných.</p>
+        <a href="#" role="button">Pozvánky</a>
+      </article>
+
+      <article>
+        <h3>📸 Pridať úlovok</h3>
+        <p>Pridaj úlovok do aktívnej súťaže.</p>
+        <a href="#" role="button">Nový úlovok</a>
+      </article>
+
+      <article>
+        <h3>✅ Pending schválenia</h3>
+        <p>Úlovky čakajúce na kontrolu.</p>
+        <a href="#" role="button">Pending ({{ unread_notifications|default:0 }})</a>
+      </article>
+
+      <article>
+        <h3>🏆 Scoreboard</h3>
+        <p>Priebežné poradie podľa schválených úlovkov.</p>
+        <a href="#" role="button">Zobraziť</a>
+      </article>
+    </div>
+  </section>
+{% endblock %}

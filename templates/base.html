@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="sk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Fishing app{% endblock %}</title>
+
+  <!-- Minimal CSS bez build stepu (MVP) -->
+  <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@2/css/pico.min.css">
+
+  <!-- HTMX -->
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+  {% include "partials/nav.html" %}
+
+  <main class="container">
+    {% if messages %}
+      <section>
+        {% for message in messages %}
+          <article class="message {{ message.tags }}">{{ message }}</article>
+        {% endfor %}
+      </section>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

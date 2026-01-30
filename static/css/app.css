@@ -1,0 +1,3 @@
+.message { padding: 0.75rem; border-radius: 0.5rem; }
+.message.success { border: 1px solid #2d7; }
+.message.error { border: 1px solid #d33; }

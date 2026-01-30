@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{ competition.name }}{% endblock %}
+
+{% block content %}
+  <a href="{% url 'competitions:my_competitions' %}">← späť na moje súťaže</a>
+
+  <h1>{{ competition.name }}</h1>
+  {% if competition.description %}
+    <p>{{ competition.description }}</p>
+  {% endif %}
+
+  <article>
+    <p>
+      <strong>Status:</strong> {{ status }}<br>
+      <strong>Od:</strong> {{ competition.starts_at|date:"d.m.Y H:i" }}<br>
+      <strong>Do:</strong> {{ competition.ends_at|date:"d.m.Y H:i" }}<br>
+      {% if membership %}
+        <strong>Rola:</strong> {{ membership.get_role_display }}<br>
+      {% else %}
+        <strong>Rola:</strong> Organizer<br>
+      {% endif %}
+    </p>
+  </article>
+
+  <div class="grid">
+    {% if is_organizer %}
+      <article>
+        <h3>✅ Pending schválenia</h3>
+        <p>Úlovky čakajúce na schválenie.</p>
+        <a href="#" role="button" disabled>Čoskoro</a>
+      </article>
+
+      <article>
+        <h3>✉️ Pozvánky</h3>
+        <p>Generovanie a správa pozvánok.</p>
+        <a href="#" role="button" disabled>Čoskoro</a>
+      </article>
+    {% endif %}
+
+    {% if is_contestant %}
+      <article>
+        <h3>📸 Pridať úlovok</h3>
+        <p>Pridaj úlovok do tejto súťaže.</p>
+        <a href="#" role="button" disabled>Čoskoro</a>
+      </article>
+    {% endif %}
+
+    <article>
+      <h3>🏆 Scoreboard</h3>
+      <p>Poradie podľa schválených úlovkov.</p>
+      <a href="#" role="button" disabled>Čoskoro</a>
+    </article>
+  </div>
+{% endblock %}

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Moje súťaže{% endblock %}
+
+{% block content %}
+  <h1>Moje súťaže</h1>
+
+  {% if items %}
+    <div class="grid">
+      {% for it in items %}
+        <article>
+          <h3>{{ it.name }}</h3>
+
+          <p>
+            <strong>Status:</strong> {{ it.status }}<br>
+            <strong>Rola:</strong> {{ it.role }}<br>
+            <strong>Od:</strong> {{ it.starts|date:"d.m.Y H:i" }}<br>
+            <strong>Do:</strong> {{ it.ends|date:"d.m.Y H:i" }}<br>
+          </p>
+
+          <a href="{% url 'competitions:detail' it.competition.pk %}" role="button">Detail</a>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>Zatiaľ nie si v žiadnej súťaži.</p>
+  {% endif %}
+{% endblock %}

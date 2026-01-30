@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Fishing app{% endblock %}
+
+{% block content %}
+  <section>
+    <h1>Rybárska súťaž – jednoduché pridávanie úlovkov</h1>
+    <p>Organizátor vytvorí súťaž, pozve účastníkov a schvaľuje úlovky. Súťažiaci pridávajú úlovky počas trvania súťaže.</p>
+
+    <div class="grid">
+      <article>
+        <h3>Organizátor</h3>
+        <ul>
+          <li>Vytvorenie súťaže</li>
+          <li>Pozvánky účastníkom</li>
+          <li>Realtime notifikácie nových úlovkov</li>
+          <li>Schválenie/odmietnutie</li>
+          <li>Scoreboard</li>
+        </ul>
+      </article>
+
+      <article>
+        <h3>Súťažiaci</h3>
+        <ul>
+          <li>Pripojenie cez pozvánku</li>
+          <li>Pridanie úlovku (foto + parametre)</li>
+          <li>Stav schválenia</li>
+          <li>Poradie / výsledky</li>
+        </ul>
+      </article>
+    </div>
+
+    <p>
+      <a role="button" href="{% url 'login' %}">Prihlásiť sa</a>
+    </p>
+  </section>
+{% endblock %}
