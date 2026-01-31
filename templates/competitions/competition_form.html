@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Nová súťaž</h1>
+
+  <form method="post">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+      <article>
+        {{ form.non_field_errors }}
+      </article>
+    {% endif %}
+
+    <label>
+      Názov
+      {{ form.name }}
+      {% if form.name.errors %}<small>{{ form.name.errors }}</small>{% endif %}
+    </label>
+
+    <label>
+      Popis
+      {{ form.description }}
+      {% if form.description.errors %}<small>{{ form.description.errors }}</small>{% endif %}
+    </label>
+
+    <label>
+      Začiatok
+      {{ form.starts_at }}
+      {% if form.starts_at.errors %}<small>{{ form.starts_at.errors }}</small>{% endif %}
+    </label>
+
+    <label>
+      Koniec
+      {{ form.ends_at }}
+      {% if form.ends_at.errors %}<small>{{ form.ends_at.errors }}</small>{% endif %}
+    </label>
+
+    <div style="display:flex; gap: .75rem; align-items:center;">
+      <button type="submit">Vytvoriť</button>
+      <a href="{% url 'competitions:my_competitions' %}" role="button" class="secondary">Zrušiť</a>
+    </div>
+
+    <p>TODO: 
+        <ul>
+            <li>Pridať vytváranie vlastných pravidiel</li>
+            <li>Pridať názov miesta, kde sa koná súťaž</li>
+            <li>Pridať max počet účastníkov</li>
+            <li>Pridať počet miest z ktorých sa loví</li>
+
+        </ul>
+    </p>
+  </form>
+{% endblock %}

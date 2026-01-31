@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Pozvánky{% endblock %}
+
+{% block content %}
+  <h1>Pozvánky</h1>
+  <p>Vytváranie invite linkov a správa pozvaných (len pre organizátorov).</p>
+
+  {% if competitions %}
+    <article>
+      <h3>➕ Vytvoriť pozvánku</h3>
+
+      <form method="post">
+        {% csrf_token %}
+
+        <div class="grid">
+          <label>
+            Súťaž
+            {{ form.competition }}
+            {% if form.competition.errors %}<small>{{ form.competition.errors }}</small>{% endif %}
+          </label>
+
+          <label>
+            Email
+            {{ form.email }}
+            {% if form.email.errors %}<small>{{ form.email.errors }}</small>{% endif %}
+          </label>
+
+          <label>
+            Expirácia (voliteľné)
+            {{ form.expires_at }}
+            {% if form.expires_at.errors %}<small>{{ form.expires_at.errors }}</small>{% endif %}
+          </label>
+        </div>
+
+        <button type="submit">Vytvoriť pozvánku</button>
+      </form>
+    </article>
+
+    <article>
+      <h3>Filtrovať podľa súťaže</h3>
+      <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+        <a href="{% url 'competitions:invitations' %}" role="button" class="secondary">Všetky</a>
+        {% for c in competitions %}
+          <a href="{% url 'competitions:invitations' %}?competition={{ c.id }}" role="button" class="secondary">
+            {{ c.name }}
+          </a>
+        {% endfor %}
+      </div>
+    </article>
+
+    {% if items %}
+      <h3>Zoznam pozvánok</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Súťaž</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Vytvorené</th>
+            <th>Expirácia</th>
+            <th>Link</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for it in items %}
+            <tr>
+              <td>
+                <a href="{% url 'competitions:detail' it.competition.id %}">{{ it.competition.name }}</a>
+              </td>
+              <td>{{ it.email }}</td>
+              <td>{{ it.status }}</td>
+              <td>{{ it.created_at|date:"d.m.Y H:i" }}</td>
+              <td>
+                {% if it.expires_at %}
+                  {{ it.expires_at|date:"d.m.Y H:i" }}
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+              <td>
+                <input type="text" value="{{ it.link }}" readonly onclick="this.select()" style="min-width: 360px;">
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p><small>Tip: klikni do políčka s linkom – automaticky sa označí na kopírovanie.</small></p>
+    {% else %}
+      <p>Zatiaľ nemáš žiadne pozvánky.</p>
+    {% endif %}
+
+  {% else %}
+    <p>Nemáš žiadne súťaže, kde si organizátor – preto tu zatiaľ nie je čo spravovať.</p>
+  {% endif %}
+
+  <p>TODO:
+    <ul>
+        <li>Link nemá byť len pre jedného účastníka, ale pre všetkých</li>
+        <li>Schválenie pozvánok</li>
+        <li>Invite aj cez QR code</li>
+        <li>Zmazanie pozvánok</li>
+    </ul>
+  </p>
+{% endblock %}

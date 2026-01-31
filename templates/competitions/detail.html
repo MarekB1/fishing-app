@@ -33,7 +33,7 @@
       <article>
         <h3>✉️ Pozvánky</h3>
         <p>Generovanie a správa pozvánok.</p>
-        <a href="#" role="button" disabled>Čoskoro</a>
+        <a href="{% url 'competitions:invitations' %}?competition={{ competition.pk }}" role="button">Pozvánky</a>
       </article>
     {% endif %}
 
@@ -51,4 +51,12 @@
       <a href="#" role="button" disabled>Čoskoro</a>
     </article>
   </div>
+
+  <p>TODO:
+    <ul>
+      <li>Zobraziť členov + info (body, počet rýb...)</li>
+      <li></li>
+      <li></li>
+    </ul>
+  </p>
 {% endblock %}

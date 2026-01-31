@@ -16,13 +16,13 @@
       <article>
         <h3>➕ Vytvoriť súťaž</h3>
         <p>Organizátor vytvorí novú súťaž a nastaví pravidlá.</p>
-        <a href="#" role="button">Nová súťaž</a>
+        <a href="{% url 'competitions:competition_create' %}" role="button">Nová súťaž</a>
       </article>
 
       <article>
         <h3>✉️ Pozvánky</h3>
         <p>Generovanie invite linku a správa pozvaných.</p>
-        <a href="#" role="button">Pozvánky</a>
+        <a href="{% url 'competitions:invitations' %}" role="button">Pozvánky</a>
       </article>
 
       <article>
@@ -51,6 +51,9 @@
             <li>Vytvoriť úpravu profilu</li>
             <li>Prihlasovanie pomoc mailu a nie nicku</li>
             <li>Notifikácie iba organizátovi súťaže</li>
+            <li>Pidať feature friends</li>
+            <li>Pridať invite cez QR Code, link alebo priamo cez meno</li>
+            <li>Preložiť "Contestant" a "Organizer</li>
         </ul>
     </p>
   </section>
