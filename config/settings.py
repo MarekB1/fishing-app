@@ -33,6 +33,7 @@ ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1
 
 INSTALLED_APPS = [
     # Django default...
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -45,11 +46,11 @@ INSTALLED_APPS = [
     "channels",
 
     # Local apps
-    "apps.accounts",
-    "apps.competitions",
-    "apps.catches",
-    "apps.notifications",
-    "core",
+    "apps.accounts.apps.AccountsConfig",
+    "apps.competitions.apps.CompetitionsConfig",
+    "apps.catches.apps.CatchesConfig",
+    "apps.notifications.apps.NotificationsConfig",
+    "core.apps.CoreConfig",
 ]
 
 MIDDLEWARE = [
@@ -80,6 +81,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                "apps.notifications.context_processors.unread_notifications",
             ],
         },
     },
@@ -143,6 +145,9 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+DATA_UPLOAD_MAX_MEMORY_SIZE = 25 * 1024 * 1024  # 25MB - max veľkosť celého requestu
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB - max veľkosť jedného uploadu do pamäte
+
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
@@ -155,8 +160,10 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/0")
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {"hosts": [REDIS_URL]},
-    }
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
 }
 
 LOGIN_REDIRECT_URL = "/dashboard/"
@@ -180,3 +187,4 @@ PASSWORD_RESET_TIMEOUT = int(os.getenv("PASSWORD_RESET_TIMEOUT", str(60 * 60 * 2
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+

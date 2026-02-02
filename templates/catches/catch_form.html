@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Nový úlovok{% endblock %}
+
+{% block content %}
+  <h1>Nový úlovok</h1>
+
+  {% if not has_competitions %}
+    <article>
+      <strong>Nemáš žiadnu aktívnu súťaž</strong> (kde si súťažiaci).
+      <p>Skús pozvánku do súťaže alebo počkaj na začiatok.</p>
+      <a href="{% url 'competitions:my_competitions' %}" role="button">Moje súťaže</a>
+    </article>
+  {% else %}
+
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+
+      {% if form.non_field_errors %}
+        <article>{{ form.non_field_errors }}</article>
+      {% endif %}
+
+      <label>
+        Súťaž
+        {{ form.competition }}
+        {% if form.competition.errors %}<small>{{ form.competition.errors }}</small>{% endif %}
+      </label>
+
+      <label>
+        Druh ryby
+        {{ form.species }}
+        {% if form.species.errors %}<small>{{ form.species.errors }}</small>{% endif %}
+      </label>
+
+      <div class="grid">
+        <label>
+          Dĺžka (cm)
+          {{ form.length_cm }}
+          {% if form.length_cm.errors %}<small>{{ form.length_cm.errors }}</small>{% endif %}
+        </label>
+
+        <label>
+          Váha (kg)
+          {{ form.weight_kg }}
+          {% if form.weight_kg.errors %}<small>{{ form.weight_kg.errors }}</small>{% endif %}
+        </label>
+      </div>
+
+      <label>
+        Čas úlovku
+        {{ form.caught_at }}
+        {% if form.caught_at.errors %}<small>{{ form.caught_at.errors }}</small>{% endif %}
+      </label>
+
+      <label>
+        Poznámka
+        {{ form.note }}
+        {% if form.note.errors %}<small>{{ form.note.errors }}</small>{% endif %}
+      </label>
+
+      <label>
+        Fotka
+        {{ form.photo }}
+        {% if form.photo.errors %}<small>{{ form.photo.errors }}</small>{% endif %}
+      </label>
+
+      <button type="submit">Pridať úlovok</button>
+    </form>
+
+  {% endif %}
+{% endblock %}

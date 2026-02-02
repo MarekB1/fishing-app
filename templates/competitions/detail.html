@@ -41,7 +41,7 @@
       <article>
         <h3>📸 Pridať úlovok</h3>
         <p>Pridaj úlovok do tejto súťaže.</p>
-        <a href="#" role="button" disabled>Čoskoro</a>
+        <a href="{% url 'catches:catch_create' %}?competition={{ competition.id }}" role="button">Pridať úlovok</a>
       </article>
     {% endif %}
 

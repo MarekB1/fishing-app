@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Pending schválenia{% endblock %}
+
+{% block content %}
+  <h1>Pending schválenia</h1>
+
+  <form method="post" action="{% url 'notifications:mark_all_read' %}">
+    {% csrf_token %}
+    <button type="submit" class="secondary">Označiť všetko ako prečítané</button>
+  </form>
+
+  <hr>
+
+  <div
+    id="pending-list"
+    hx-get="{% url 'notifications:pending_list' %}"
+    hx-trigger="load, pendingRefresh from:body"
+    hx-swap="innerHTML"
+  >Načítavam…</div>
+{% endblock %}

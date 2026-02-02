@@ -28,13 +28,15 @@
       <article>
         <h3>📸 Pridať úlovok</h3>
         <p>Pridaj úlovok do aktívnej súťaže.</p>
-        <a href="#" role="button">Nový úlovok</a>
+        <a href="{% url 'catches:catch_create' %}" role="button">Nový úlovok</a>
       </article>
 
       <article>
         <h3>✅ Pending schválenia</h3>
         <p>Úlovky čakajúce na kontrolu.</p>
-        <a href="#" role="button">Pending ({{ unread_notifications|default:0 }})</a>
+        <a href="{% url 'notifications:pending' %}" role="button">
+          Pending (<span id="pending-count-dashboard">{{ unread_notifications|default:0 }}</span>)
+        </a>
       </article>
 
       <article>
@@ -46,14 +48,19 @@
 
     <p>TODO:
         <ul>
-            <li>Scoreboard bude aj pre účačastníkov?</li>
+            <li>Scoreboard bude aj pre účastníkov?</li>
             <li>Dorobiť prelinky</li>
             <li>Vytvoriť úpravu profilu</li>
-            <li>Prihlasovanie pomoc mailu a nie nicku</li>
+            <li>Prihlasovanie pomocou mailu a nie nicku</li>
             <li>Notifikácie iba organizátovi súťaže</li>
             <li>Pidať feature friends</li>
             <li>Pridať invite cez QR Code, link alebo priamo cez meno</li>
             <li>Preložiť "Contestant" a "Organizer</li>
+            <li>Oficiálne súťaže a neoficiálne súťaže</li>  
+            <li>Pridať sekciu "Moje úlovky"</li>
+            <li>Invite aj pre ďalšieho organizátora (Môže ich byť viac)</li>
+            <li>Vypísať meno užívateľa aj rolu</li>
+            <li>Pridať zvuk pípača/navijáka pri novom úlovku</li>
         </ul>
     </p>
   </section>

@@ -8,6 +8,4 @@ def home(request):
 
 @login_required
 def dashboard(request):
-    return render(request, "core/dashboard.html", {
-        "unread_notifications": 0,  # zatiaľ placeholder
-    })
+    return render(request, "core/dashboard.html")

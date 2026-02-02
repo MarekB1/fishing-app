@@ -5,14 +5,13 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-
     # login/logout (Django built-in auth)
     path("accounts/", include("django.contrib.auth.urls")),
-
     # stránky z core appky
     path("", include("core.urls")),
-
     path("competitions/", include("apps.competitions.urls")),
+    path("catches/", include("apps.catches.urls")),
+    path("notifications/", include("apps.notifications.urls")),
 ]
 
 if settings.DEBUG:

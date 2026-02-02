@@ -15,6 +15,104 @@
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
 </head>
 <body>
+  {% load static %}
+  {% if user.is_authenticated %}
+  <script>
+  (() => {
+    const scheme = window.location.protocol === "https:" ? "wss" : "ws";
+    const wsUrl = `${scheme}://${window.location.host}/ws/notifications/`;
+    console.log("WS connecting to:", wsUrl);
+
+    // ----- Sound (file) -----
+    const beep = new Audio("{% static 'sounds/bite-beep.mp3' %}");
+    beep.preload = "auto";
+    beep.volume = 0.8;
+    beep.load();
+
+    let soundArmed = false;
+
+    function getDisplayedCount() {
+      const dash = document.getElementById("pending-count-dashboard");
+      const nav = document.getElementById("pending-count-nav");
+      const txt = (dash?.textContent || nav?.textContent || "0").trim();
+      const n = parseInt(txt, 10);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    let lastCount = getDisplayedCount();
+
+    const armSound = async () => {
+      if (soundArmed) return;
+      try {
+        // “prime” audio po user geste
+        beep.muted = true;
+        await beep.play();
+        beep.pause();
+        beep.currentTime = 0;
+        beep.muted = false;
+
+        soundArmed = true;
+        console.log("Sound armed");
+      } catch (e) {
+        console.log("Sound arm blocked:", e);
+      }
+    };
+
+    window.addEventListener("click", armSound, { once: true });
+    window.addEventListener("keydown", armSound, { once: true });
+
+    function playBeep() {
+      if (!soundArmed) return;
+      beep.currentTime = 0;
+      beep.play().catch((e) => console.log("Beep play failed:", e));
+    }
+
+    function setCount(count) {
+      const nav = document.getElementById("pending-count-nav");
+      if (nav) {
+        nav.textContent = count;
+        nav.style.display = count > 0 ? "" : "none";
+      }
+      const dash = document.getElementById("pending-count-dashboard");
+      if (dash) dash.textContent = count;
+    }
+
+    function connect() {
+      // pri reconnecte si zober aktuálny počet z DOM
+      lastCount = getDisplayedCount();
+
+      const socket = new WebSocket(wsUrl);
+
+      socket.onopen = () => console.log("WS open");
+      socket.onmessage = (event) => {
+        let data;
+        try { data = JSON.parse(event.data); } catch { return; }
+
+        if (typeof data.unread_count === "number") {
+          if (data.unread_count > lastCount) {
+            playBeep();
+          }
+          lastCount = data.unread_count;
+          setCount(data.unread_count);
+        }
+
+        if (data.refresh_pending) {
+          document.body.dispatchEvent(new Event("pendingRefresh", { bubbles: true }));
+        }
+      };
+
+      socket.onerror = (e) => console.log("WS error", e);
+      socket.onclose = (e) => {
+        console.log("WS closed", e.code);
+        setTimeout(connect, 1500);
+      };
+    }
+
+    connect();
+  })();
+  </script>
+  {% endif %}
+  
   {% include "partials/nav.html" %}
 
   <main class="container">

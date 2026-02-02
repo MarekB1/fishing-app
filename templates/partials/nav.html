@@ -11,13 +11,14 @@
       <li><a href="#">Moje súťaže</a></li>
       <li><a href="#">Vytvoriť súťaž</a></li>
       <li>
-        <a href="#">
-          Pending
-          {% if unread_notifications|default:0 %}
-            <mark>{{ unread_notifications|default:0 }}</mark>
-          {% endif %}
-        </a>
-      </li>
+        <li>
+          <a href="{% url 'notifications:pending' %}">
+            Pending
+            <mark id="pending-count-nav" {% if not unread_notifications %}style="display:none"{% endif %}>
+              {{ unread_notifications|default:0 }}
+            </mark>
+          </a>
+        </li>
 
       <li><a href="{% url 'logout' %}">Odhlásiť</a></li>
     {% else %}
