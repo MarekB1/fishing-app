@@ -11,6 +11,8 @@ from django.urls import reverse
 from .forms import CompetitionForm
 from .models import Competition, CompetitionMembership, Invitation
 from .forms import InvitationCreateForm
+from apps.catches.models import Catch
+from django.contrib.auth.views import redirect_to_login
 
 
 def _status_for_competition(c: Competition) -> str:
@@ -108,14 +110,58 @@ def competition_detail(request, pk: int):
     is_organizer = is_creator or (membership and membership.role == CompetitionMembership.Role.ORGANIZER)
     is_contestant = (membership and membership.role == CompetitionMembership.Role.CONTESTANT)
 
+    # Úlovky v súťaži (vidí každý člen súťaže)
+    catches_qs = (
+        Catch.objects
+        .filter(competition=competition)
+        .select_related("user")
+        .order_by("caught_at", "created_at")
+    )
+
+    my_catches_qs = catches_qs.filter(user=request.user)
+
     context = {
         "competition": competition,
         "membership": membership,
         "status": _status_for_competition(competition),
         "is_organizer": bool(is_organizer),
         "is_contestant": bool(is_contestant),
+        "catches": catches_qs,
+        "my_catches": my_catches_qs,
     }
     return render(request, "competitions/detail.html", context)
+
+
+@login_required
+def competition_catch_list(request, pk: int):
+    """HTMX partial: zoznam úlovkov v súťaži."""
+    competition = get_object_or_404(Competition, pk=pk)
+
+    membership = (
+        CompetitionMembership.objects
+        .filter(competition=competition, user=request.user)
+        .first()
+    )
+
+    is_creator = (competition.created_by_id == request.user.id)
+    if membership is None and not is_creator:
+        raise Http404("Competition not found")
+
+    is_organizer = is_creator or (membership and membership.role == CompetitionMembership.Role.ORGANIZER)
+
+    catches_qs = (
+        Catch.objects
+        .filter(competition=competition)
+        .select_related("user")
+        .order_by("caught_at", "created_at")
+    )
+
+    return render(request, "competitions/_catch_list.html", {
+        "competition": competition,
+        "catches": catches_qs,
+        "is_organizer": bool(is_organizer),
+        "back_url": reverse("competitions:detail", kwargs={"pk": competition.pk}),
+    })
 
 @login_required
 def invitations(request):
@@ -213,3 +259,31 @@ def invite_accept(request, token):
 
     messages.success(request, f"Vstúpil si do súťaže: {invite.competition.name}")
     return redirect("competitions:detail", pk=invite.competition_id)
+
+@login_required
+def competition_my_catch_list(request, pk: int):
+    """HTMX partial: úlovky prihláseného usera v konkrétnej súťaži."""
+    competition = get_object_or_404(Competition, pk=pk)
+
+    membership = (
+        CompetitionMembership.objects
+        .filter(competition=competition, user=request.user)
+        .first()
+    )
+
+    is_creator = (competition.created_by_id == request.user.id)
+    if membership is None and not is_creator:
+        raise Http404("Competition not found")
+
+    catches_qs = (
+        Catch.objects
+        .filter(competition=competition, user=request.user)
+        .select_related("user")
+        .order_by("-caught_at", "-created_at")
+    )
+
+    return render(request, "competitions/_my_catch_list.html", {
+        "competition": competition,
+        "catches": catches_qs,
+        "back_url": reverse("competitions:detail", kwargs={"pk": competition.pk}),
+    })

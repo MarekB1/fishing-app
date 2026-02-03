@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Detail úlovku{% endblock %}
+
+{% block content %}
+  <nav style="margin-bottom: 1rem;">
+    <a href="{{ back_url }}">← späť</a>
+  </nav>
+
+  <h1>Detail úlovku</h1>
+
+  <article>
+    <header>
+      <strong>{{ catch.species }}</strong>
+      <small>({{ catch.created_at|date:"d.m.Y H:i" }})</small>
+    </header>
+
+    <dl>
+      <dt>Súťaž</dt>
+      <dd><a href="{% url 'competitions:detail' catch.competition.id %}">{{ catch.competition.name }}</a></dd>
+
+      <dt>Súťažiaci</dt>
+      <dd>{{ catch.user.username }}</dd>
+
+      <dt>Čas úlovku</dt>
+      <dd>{{ catch.caught_at|date:"d.m.Y H:i" }}</dd>
+
+      <dt>Dĺžka</dt>
+      <dd>{% if catch.length_cm %}{{ catch.length_cm }} cm{% else %}—{% endif %}</dd>
+
+      <dt>Váha</dt>
+      <dd>{% if catch.weight_kg %}{{ catch.weight_kg }} kg{% else %}—{% endif %}</dd>
+
+      <dt>Poznámka</dt>
+      <dd>{% if catch.note %}{{ catch.note }}{% else %}—{% endif %}</dd>
+
+      <dt>Status</dt>
+      <dd><strong>{{ catch.get_status_display }}</strong></dd>
+    </dl>
+
+    {% if catch.photo %}
+      <hr>
+      <p>
+        <a href="{{ catch.photo.url }}" target="_blank" rel="noopener">Otvoriť foto v novom okne</a>
+      </p>
+      <img src="{{ catch.photo.url }}" alt="Foto úlovku" style="max-width:100%; height:auto; border-radius:0.5rem;" />
+    {% endif %}
+
+    {% if catch.status == "PENDING" %}
+      <hr>
+
+      <div style="display:flex; gap:0.75rem; flex-wrap:wrap; align-items:flex-start;">
+        <form method="post" action="{% url 'catches:approve' catch.id %}">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{% url 'notifications:pending' %}">
+          <button type="submit" class="contrast">Schváliť</button>
+        </form>
+
+        {% if can_review %}
+          <form method="post" action="{% url 'catches:reject' catch.id %}" style="min-width: 320px;">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{% url 'notifications:pending' %}">
+            <label>
+              Dôvod odmietnutia (voliteľné)
+              <textarea name="rejection_reason" rows="3" placeholder="napr. zlý druh / nečitateľná fotka..."></textarea>
+            </label>
+            <button type="submit" class="secondary">Odmietnuť</button>
+          </form>
+        </div>
+        {% endif %}
+      {% else %}
+      <hr>
+      <p>Úlovok už bol skontrolovaný.</p>
+      {% if catch.reviewed_at %}
+        <small>Skontrolované: {{ catch.reviewed_at|date:"d.m.Y H:i" }}</small>
+      {% endif %}
+      {% if catch.status == "REJECTED" and catch.rejection_reason %}
+        <p><strong>Dôvod odmietnutia:</strong> {{ catch.rejection_reason }}</p>
+      {% endif %}
+    {% endif %}
+  </article>
+{% endblock %}

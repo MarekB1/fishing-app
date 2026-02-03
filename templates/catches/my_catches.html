@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Moje úlovky{% endblock %}
+
+{% block content %}
+  <a href="{% url 'core:dashboard' %}">← späť na dashboard</a>
+
+  <h1>Moje úlovky</h1>
+  <p>Prehľad všetkých tvojich úlovkov (naprieč súťažami) + stav schválenia.</p>
+
+  <form method="get" style="margin: 1rem 0;">
+    <label>
+      Filter podľa súťaže
+      <select name="competition" onchange="this.form.submit()">
+        <option value="">Všetky súťaže</option>
+        {% for comp in competitions %}
+          <option value="{{ comp.id }}" {% if active_competition_id == comp.id %}selected{% endif %}>
+            {{ comp.name }}
+          </option>
+        {% endfor %}
+      </select>
+    </label>
+    <noscript><button type="submit">Filtrovať</button></noscript>
+  </form>
+
+  {% if catches %}
+    <table>
+      <thead>
+        <tr>
+          <th>Súťaž</th>
+          <th>Druh</th>
+          <th>Čas</th>
+          <th>Status</th>
+          <th>Detail</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in catches %}
+          <tr>
+            <td>
+              <a href="{% url 'competitions:detail' c.competition.id %}">{{ c.competition.name }}</a>
+            </td>
+            <td>{{ c.species }}</td>
+            <td>{{ c.caught_at|date:"d.m.Y H:i" }}</td>
+            <td><strong>{{ c.get_status_display }}</strong></td>
+            <td>
+              <a href="{% url 'catches:detail' c.id %}?next={{ request.get_full_path|urlencode }}">otvoriť</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <article>
+      <strong>Zatiaľ nemáš žiadne úlovky.</strong>
+      <p>Keď si v aktívnej súťaži ako súťažiaci, môžeš pridať úlovok.</p>
+      <a href="{% url 'catches:catch_create' %}" role="button">Pridať úlovok</a>
+    </article>
+  {% endif %}
+{% endblock %}

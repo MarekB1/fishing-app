@@ -27,7 +27,9 @@
       <article>
         <h3>✅ Pending schválenia</h3>
         <p>Úlovky čakajúce na schválenie.</p>
-        <a href="#" role="button" disabled>Čoskoro</a>
+        <a href="{% url 'notifications:pending' %}" role="button">
+          Pending (<span id="pending-count-dashboard">{{ unread_notifications|default:0 }}</span>)
+        </a>
       </article>
 
       <article>
@@ -52,10 +54,38 @@
     </article>
   </div>
 
+  <section>
+    <h2>🎣 Úlovky</h2>
+    <p>Úlovky v tejto súťaži (pribúdajú postupne).</p>
+
+    <div
+      id="competition-catch-list"
+      hx-get="{% url 'competitions:catch_list' competition.pk %}"
+      hx-trigger="load, every 5s"
+      hx-swap="innerHTML"
+    >
+      {% include "competitions/_catch_list.html" with competition=competition catches=catches back_url=request.path %}
+    </div>
+  </section>
+
+  <section>
+  <h2>🎣 Moje úlovky</h2>
+  <p>Tvoje úlovky v tejto súťaži + stav schválenia.</p>
+
+  <div
+    id="competition-my-catch-list"
+    hx-get="{% url 'competitions:my_catch_list' competition.pk %}"
+    hx-trigger="load, every 5s"
+    hx-swap="innerHTML"
+  >
+    {% include "competitions/_my_catch_list.html" with competition=competition catches=my_catches back_url=request.path %}
+  </div>
+</section>
+
   <p>TODO:
     <ul>
       <li>Zobraziť členov + info (body, počet rýb...)</li>
-      <li></li>
+      <li>Pridať úlovky, ktoré do teraz boli schválené</li>
       <li></li>
     </ul>
   </p>

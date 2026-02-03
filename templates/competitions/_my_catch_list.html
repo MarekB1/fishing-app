@@ -1,0 +1,28 @@
+{% if catches %}
+  <table>
+    <thead>
+      <tr>
+        <th>Druh</th>
+        <th>Čas</th>
+        <th>Status</th>
+        <th>Detail</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for c in catches %}
+        <tr>
+          <td>{{ c.species }}</td>
+          <td>{{ c.caught_at|date:"d.m.Y H:i" }}</td>
+          <td><strong>{{ c.get_status_display }}</strong></td>
+          <td>
+            <a href="{% url 'catches:detail' c.id %}?next={{ back_url|urlencode }}">otvoriť</a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <article>
+    <strong>Zatiaľ nemáš v tejto súťaži žiadne úlovky.</strong>
+  </article>
+{% endif %}
