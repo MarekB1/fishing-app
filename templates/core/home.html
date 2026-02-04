@@ -2,35 +2,54 @@
 {% block title %}Fishing app{% endblock %}
 
 {% block content %}
-  <section>
-    <h1>Rybárska súťaž – jednoduché pridávanie úlovkov</h1>
-    <p>Organizátor vytvorí súťaž, pozve účastníkov a schvaľuje úlovky. Súťažiaci pridávajú úlovky počas trvania súťaže.</p>
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-10">
+      <div class="p-4 p-md-5 rounded-4 border bg-body-tertiary">
+        <h1 class="display-6 fw-bold mb-2">Rybárska súťaž – jednoduché pridávanie úlovkov</h1>
+        <p class="lead mb-4">
+          Organizátor vytvorí súťaž, pozve účastníkov a schvaľuje úlovky.
+          Súťažiaci pridávajú úlovky počas trvania súťaže.
+        </p>
 
-    <div class="grid">
-      <article>
-        <h3>Organizátor</h3>
-        <ul>
-          <li>Vytvorenie súťaže</li>
-          <li>Pozvánky účastníkom</li>
-          <li>Realtime notifikácie nových úlovkov</li>
-          <li>Schválenie/odmietnutie</li>
-          <li>Scoreboard</li>
-        </ul>
-      </article>
+        <div class="row g-3">
+          <div class="col-12 col-md-6">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body">
+                <h3 class="h5">Organizátor</h3>
+                <ul class="mb-0">
+                  <li>Vytvorenie súťaže</li>
+                  <li>Pozvánky účastníkom</li>
+                  <li>Realtime notifikácie nových úlovkov</li>
+                  <li>Schválenie/odmietnutie</li>
+                  <li>Scoreboard</li>
+                </ul>
+              </div>
+            </div>
+          </div>
 
-      <article>
-        <h3>Súťažiaci</h3>
-        <ul>
-          <li>Pripojenie cez pozvánku</li>
-          <li>Pridanie úlovku (foto + parametre)</li>
-          <li>Stav schválenia</li>
-          <li>Poradie / výsledky</li>
-        </ul>
-      </article>
+          <div class="col-12 col-md-6">
+            <div class="card h-100 shadow-sm">
+              <div class="card-body">
+                <h3 class="h5">Súťažiaci</h3>
+                <ul class="mb-0">
+                  <li>Pripojenie cez pozvánku</li>
+                  <li>Pridanie úlovku (foto + parametre)</li>
+                  <li>Stav schválenia</li>
+                  <li>Poradie / výsledky</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+          {% if user.is_authenticated %}
+            <a class="btn btn-primary" href="{% url 'core:dashboard' %}">Prejsť na dashboard</a>
+          {% else %}
+            <a class="btn btn-primary" href="{% url 'login' %}">Prihlásiť sa</a>
+          {% endif %}
+        </div>
+      </div>
     </div>
-
-    <p>
-      <a role="button" href="{% url 'login' %}">Prihlásiť sa</a>
-    </p>
-  </section>
+  </div>
 {% endblock %}

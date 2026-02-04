@@ -2,72 +2,109 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-  <section>
-    <h1>Dashboard</h1>
-    <p>Rýchly prístup k hlavným funkciám.</p>
+  <div class="mb-4">
+    <h1 class="h2 fw-bold mb-1">Dashboard</h1>
+    <p class="text-secondary mb-0">Rýchly prístup k hlavným funkciám.</p>
+  </div>
 
-    <div class="grid" style="min-width: 300px;">
-      <article>
-        <h3>🏁 Súťaže</h3>
-        <p>Prehľad tvojich súťaží a členstiev.</p>
-        <a href="{% url 'competitions:my_competitions' %}" role="button">Moje súťaže</a>
-      </article>
-
-      <article>
-        <h3>➕ Vytvoriť súťaž</h3>
-        <p>Organizátor vytvorí novú súťaž a nastaví pravidlá.</p>
-        <a href="{% url 'competitions:competition_create' %}" role="button">Nová súťaž</a>
-      </article>
-
-      <article>
-        <h3>✉️ Pozvánky</h3>
-        <p>Generovanie invite linku a správa pozvaných.</p>
-        <a href="{% url 'competitions:invitations' %}" role="button">Pozvánky</a>
-      </article>
-
-      <article>
-        <h3>📸 Pridať úlovok</h3>
-        <p>Pridaj úlovok do aktívnej súťaže.</p>
-        <a href="{% url 'catches:catch_create' %}" role="button">Nový úlovok</a>
-      </article>
-
-      <article>
-        <h3>✅ Pending schválenia</h3>
-        <p>Úlovky čakajúce na kontrolu.</p>
-        <a href="{% url 'notifications:pending' %}" role="button">
-          Pending (<span id="pending-count-dashboard">{{ unread_notifications|default:0 }}</span>)
-        </a>
-      </article>
-
-      <article>
-        <h3>🏆 Scoreboard</h3>
-        <p>Priebežné poradie podľa schválených úlovkov.</p>
-        <a href="#" role="button">Zobraziť</a>
-      </article>
-
-      <article>
-        <h3>🎣 Moje úlovky</h3>
-        <p>Prehľad všetkých tvojich úlovkov a ich stav.</p>
-        <a href="{% url 'catches:my_catches' %}" role="button">Moje úlovky</a>
-      </article>
+  <div class="row g-3">
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body d-flex flex-column">
+          <div class="fw-semibold mb-2">🏁 Súťaže</div>
+          <p class="text-secondary flex-grow-1 mb-3">Prehľad tvojich súťaží a členstiev.</p>
+          <a class="btn btn-primary" href="{% url 'competitions:my_competitions' %}">Moje súťaže</a>
+        </div>
+      </div>
     </div>
 
-    <p>TODO:
-        <ul>
-            <li>Scoreboard bude aj pre účastníkov?</li>
-            <li>Dorobiť prelink na Scoreboard</li>
-            <li>Vytvoriť úpravu profilu</li>
-            <li>Prihlasovanie pomocou mailu a nie nicku</li>
-            <li style="text-decoration: line-through">Notifikácie iba organizátovi súťaže</li>
-            <li>Pidať feature friends</li>
-            <li>Pridať invite cez QR Code, link alebo priamo cez meno</li>
-            <li>Preložiť "Contestant" a "Organizer</li>
-            <li>Oficiálne súťaže a neoficiálne súťaže</li>  
-            <li style="text-decoration: line-through">Pridať sekciu "Moje úlovky"</li>
-            <li>Invite aj pre ďalšieho organizátora (Môže ich byť viac)</li>
-            <li>Vypísať meno užívateľa aj rolu</li>
-            <li style="text-decoration: line-through">Pridať zvuk pípača/navijáka pri novom úlovku</li>
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body d-flex flex-column">
+          <div class="fw-semibold mb-2">➕ Vytvoriť súťaž</div>
+          <p class="text-secondary flex-grow-1 mb-3">Organizátor vytvorí novú súťaž a nastaví pravidlá.</p>
+          <a class="btn btn-primary" href="{% url 'competitions:competition_create' %}">Nová súťaž</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body d-flex flex-column">
+          <div class="fw-semibold mb-2">✉️ Pozvánky</div>
+          <p class="text-secondary flex-grow-1 mb-3">Generovanie invite linku a správa pozvaných.</p>
+          <a class="btn btn-primary" href="{% url 'competitions:invitations' %}">Pozvánky</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body d-flex flex-column">
+          <div class="fw-semibold mb-2">📸 Pridať úlovok</div>
+          <p class="text-secondary flex-grow-1 mb-3">Pridaj úlovok do aktívnej súťaže.</p>
+          <a class="btn btn-primary" href="{% url 'catches:catch_create' %}">Nový úlovok</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body d-flex flex-column">
+          <div class="fw-semibold mb-2">✅ Pending schválenia</div>
+          <p class="text-secondary flex-grow-1 mb-3">Úlovky čakajúce na kontrolu.</p>
+          <a class="btn btn-warning d-flex align-items-center justify-content-between" href="{% url 'notifications:pending' %}">
+            <span>Pending</span>
+            <span class="badge text-bg-dark" id="pending-count-dashboard" data-pending-count>
+              {{ unread_notifications|default:0 }}
+            </span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body d-flex flex-column">
+          <div class="fw-semibold mb-2">🏆 Scoreboard</div>
+          <p class="text-secondary flex-grow-1 mb-3">Priebežné poradie podľa schválených úlovkov.</p>
+          <a class="btn btn-secondary disabled" href="#" tabindex="-1" aria-disabled="true">Čoskoro</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body d-flex flex-column">
+          <div class="fw-semibold mb-2">🎣 Moje úlovky</div>
+          <p class="text-secondary flex-grow-1 mb-3">Prehľad všetkých tvojich úlovkov a ich stav.</p>
+          <a class="btn btn-primary" href="{% url 'catches:my_catches' %}">Moje úlovky</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4">
+    <div class="card border-secondary">
+      <div class="card-header fw-semibold">TODO</div>
+      <div class="card-body">
+        <ul class="mb-0">
+          <li>Scoreboard bude aj pre účastníkov?</li>
+          <li>Dorobiť prelink na Scoreboard</li>
+          <li>Vytvoriť úpravu profilu</li>
+          <li>Prihlasovanie pomocou mailu a nie nicku</li>
+          <li><s>Notifikácie iba organizátovi súťaže</s></li>
+          <li>Pridať feature friends</li>
+          <li>Pridať invite cez QR Code, link alebo priamo cez meno</li>
+          <li>Preložiť „Contestant“ a „Organizer“</li>
+          <li>Oficiálne súťaže a neoficiálne súťaže</li>
+          <li><s>Pridať sekciu „Moje úlovky“</s></li>
+          <li>Invite aj pre ďalšieho organizátora (Môže ich byť viac)</li>
+          <li>Vypísať meno užívateľa aj rolu</li>
+          <li><s>Pridať zvuk pípača/navijáka pri novom úlovku</s></li>
+          <li>Zobraziť heslo pri login-e</li>
         </ul>
-    </p>
-  </section>
+      </div>
+    </div>
+  </div>
 {% endblock %}

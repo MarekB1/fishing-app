@@ -2,91 +2,171 @@
 {% block title %}{{ competition.name }}{% endblock %}
 
 {% block content %}
-  <a href="{% url 'competitions:my_competitions' %}">← späť na moje súťaže</a>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <a class="btn btn-outline-light btn-sm" href="{% url 'competitions:my_competitions' %}">← Moje súťaže</a>
 
-  <h1>{{ competition.name }}</h1>
-  {% if competition.description %}
-    <p>{{ competition.description }}</p>
-  {% endif %}
-
-  <article>
-    <p>
-      <strong>Status:</strong> {{ status }}<br>
-      <strong>Od:</strong> {{ competition.starts_at|date:"d.m.Y H:i" }}<br>
-      <strong>Do:</strong> {{ competition.ends_at|date:"d.m.Y H:i" }}<br>
-      {% if membership %}
-        <strong>Rola:</strong> {{ membership.get_role_display }}<br>
-      {% else %}
-        <strong>Rola:</strong> Organizer<br>
-      {% endif %}
-    </p>
-  </article>
-
-  <div class="grid">
-    {% if is_organizer %}
-      <article>
-        <h3>✅ Pending schválenia</h3>
-        <p>Úlovky čakajúce na schválenie.</p>
-        <a href="{% url 'notifications:pending' %}" role="button">
-          Pending (<span id="pending-count-dashboard">{{ unread_notifications|default:0 }}</span>)
+      {% if is_organizer %}
+        <a class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2" href="{% url 'notifications:pending' %}">
+          Pending
+          <span class="badge rounded-pill text-bg-danger" data-pending-count data-pending-hide-zero="1"
+                {% if not unread_notifications %}style="display:none"{% endif %}>
+            {{ unread_notifications|default:0 }}
+          </span>
         </a>
-      </article>
+      {% endif %}
+    </div>
 
-      <article>
-        <h3>✉️ Pozvánky</h3>
-        <p>Generovanie a správa pozvánok.</p>
-        <a href="{% url 'competitions:invitations' %}?competition={{ competition.pk }}" role="button">Pozvánky</a>
-      </article>
+    <div class="d-flex flex-wrap gap-2">
+      {% if is_organizer %}
+        <a class="btn btn-outline-light btn-sm" href="{% url 'competitions:invitations' %}?competition={{ competition.pk }}">Pozvánky</a>
+      {% endif %}
+      {% if is_contestant %}
+        <a class="btn btn-primary btn-sm" href="{% url 'catches:catch_create' %}?competition={{ competition.id }}">+ Pridať úlovok</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <h1 class="h3 fw-bold mb-1">{{ competition.name }}</h1>
+    {% if competition.description %}
+      <p class="text-secondary mb-0">{{ competition.description }}</p>
+    {% endif %}
+  </div>
+
+  <div class="card border-secondary shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-2 small">
+        <div class="col-12 col-md-3">
+          <div class="text-secondary">Status</div>
+          <div class="fw-semibold">{{ status }}</div>
+        </div>
+        <div class="col-12 col-md-3">
+          <div class="text-secondary">Od</div>
+          <div class="fw-semibold">{{ competition.starts_at|date:"d.m.Y H:i" }}</div>
+        </div>
+        <div class="col-12 col-md-3">
+          <div class="text-secondary">Do</div>
+          <div class="fw-semibold">{{ competition.ends_at|date:"d.m.Y H:i" }}</div>
+        </div>
+        <div class="col-12 col-md-3">
+          <div class="text-secondary">Rola</div>
+          <div class="fw-semibold">
+            {% if membership %}
+              {{ membership.get_role_display }}
+            {% else %}
+              Organizer
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    {% if is_organizer %}
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <h2 class="h5 fw-semibold mb-2">✅ Pending schválenia</h2>
+            <p class="text-secondary mb-3">Úlovky čakajúce na schválenie.</p>
+            <a class="btn btn-outline-light btn-sm" href="{% url 'notifications:pending' %}">
+              Otvoriť pending
+              <span class="badge rounded-pill text-bg-danger ms-2" data-pending-count data-pending-hide-zero="1"
+                    {% if not unread_notifications %}style="display:none"{% endif %}>
+                {{ unread_notifications|default:0 }}
+              </span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <h2 class="h5 fw-semibold mb-2">✉️ Pozvánky</h2>
+            <p class="text-secondary mb-3">Generovanie a správa pozvánok.</p>
+            <a class="btn btn-outline-light btn-sm" href="{% url 'competitions:invitations' %}?competition={{ competition.pk }}">Spravovať pozvánky</a>
+          </div>
+        </div>
+      </div>
     {% endif %}
 
     {% if is_contestant %}
-      <article>
-        <h3>📸 Pridať úlovok</h3>
-        <p>Pridaj úlovok do tejto súťaže.</p>
-        <a href="{% url 'catches:catch_create' %}?competition={{ competition.id }}" role="button">Pridať úlovok</a>
-      </article>
+      <div class="col-12 col-md-6 col-lg-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <h2 class="h5 fw-semibold mb-2">📸 Pridať úlovok</h2>
+            <p class="text-secondary mb-3">Pridaj úlovok do tejto súťaže.</p>
+            <a class="btn btn-primary btn-sm" href="{% url 'catches:catch_create' %}?competition={{ competition.id }}">+ Pridať</a>
+          </div>
+        </div>
+      </div>
     {% endif %}
 
-    <article>
-      <h3>🏆 Scoreboard</h3>
-      <p>Poradie podľa schválených úlovkov.</p>
-      <a href="#" role="button" disabled>Čoskoro</a>
-    </article>
-  </div>
-
-  <section>
-    <h2>🎣 Úlovky</h2>
-    <p>Úlovky v tejto súťaži (pribúdajú postupne).</p>
-
-    <div
-      id="competition-catch-list"
-      hx-get="{% url 'competitions:catch_list' competition.pk %}"
-      hx-trigger="load, every 5s"
-      hx-swap="innerHTML"
-    >
-      {% include "competitions/_catch_list.html" with competition=competition catches=catches back_url=request.path %}
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body">
+          <h2 class="h5 fw-semibold mb-2">🏆 Scoreboard</h2>
+          <p class="text-secondary mb-3">Poradie podľa schválených úlovkov.</p>
+          <button class="btn btn-outline-light btn-sm" disabled>Čoskoro</button>
+        </div>
+      </div>
     </div>
-  </section>
-
-  <section>
-  <h2>🎣 Moje úlovky</h2>
-  <p>Tvoje úlovky v tejto súťaži + stav schválenia.</p>
-
-  <div
-    id="competition-my-catch-list"
-    hx-get="{% url 'competitions:my_catch_list' competition.pk %}"
-    hx-trigger="load, every 5s"
-    hx-swap="innerHTML"
-  >
-    {% include "competitions/_my_catch_list.html" with competition=competition catches=my_catches back_url=request.path %}
   </div>
-</section>
 
-  <p>TODO:
-    <ul>
-      <li>Zobraziť členov + info (body, počet rýb...)</li>
-      <li>Pridať úlovky, ktoré do teraz boli schválené</li>
-      <li>Schválené úlovky vidí iba organizátor</li>
-    </ul>
-  </p>
+  <div class="row g-3">
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-header border-secondary d-flex align-items-center justify-content-between">
+          <div>
+            <div class="fw-semibold">🎣 Úlovky v súťaži</div>
+            <div class="small text-secondary">Pribúdajú postupne (autorefresh).</div>
+          </div>
+        </div>
+
+        <div class="card-body p-0">
+          <div
+            id="competition-catch-list"
+            hx-get="{% url 'competitions:catch_list' competition.pk %}"
+            hx-trigger="load, every 5s"
+            hx-swap="innerHTML"
+          >
+            {% include "competitions/_catch_list.html" with competition=competition catches=catches back_url=request.path %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-header border-secondary">
+          <div class="fw-semibold">🎣 Moje úlovky v súťaži</div>
+          <div class="small text-secondary">Tvoje úlovky + stav schválenia (autorefresh).</div>
+        </div>
+
+        <div class="card-body p-0">
+          <div
+            id="competition-my-catch-list"
+            hx-get="{% url 'competitions:my_catch_list' competition.pk %}"
+            hx-trigger="load, every 5s"
+            hx-swap="innerHTML"
+          >
+            {% include "competitions/_my_catch_list.html" with competition=competition catches=my_catches back_url=request.path %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-4 card border-secondary">
+    <div class="card-header fw-semibold">TODO</div>
+    <div class="card-body">
+      <ul class="mb-0">
+        <li>Zobraziť členov + info (body, počet rýb...)</li>
+        <li>Pridať úlovky, ktoré do teraz boli schválené</li>
+        <li>Schválené úlovky vidí iba organizátor</li>
+      </ul>
+    </div>
+  </div>
 {% endblock %}

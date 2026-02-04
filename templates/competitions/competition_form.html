@@ -1,54 +1,78 @@
 {% extends "base.html" %}
 
+{% block title %}Nová súťaž{% endblock %}
+
 {% block content %}
-  <h1>Nová súťaž</h1>
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h1 class="h3 fw-bold mb-3">Nová súťaž</h1>
 
-  <form method="post">
-    {% csrf_token %}
+          <form method="post" novalidate>
+            {% csrf_token %}
 
-    {% if form.non_field_errors %}
-      <article>
-        {{ form.non_field_errors }}
-      </article>
-    {% endif %}
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+              </div>
+            {% endif %}
 
-    <label>
-      Názov
-      {{ form.name }}
-      {% if form.name.errors %}<small>{{ form.name.errors }}</small>{% endif %}
-    </label>
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.name.id_for_label }}">Názov</label>
+              {{ form.name }}
+              {% if form.name.errors %}
+                <div class="invalid-feedback d-block">{{ form.name.errors }}</div>
+              {% endif %}
+            </div>
 
-    <label>
-      Popis
-      {{ form.description }}
-      {% if form.description.errors %}<small>{{ form.description.errors }}</small>{% endif %}
-    </label>
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.description.id_for_label }}">Popis</label>
+              {{ form.description }}
+              {% if form.description.errors %}
+                <div class="invalid-feedback d-block">{{ form.description.errors }}</div>
+              {% endif %}
+            </div>
 
-    <label>
-      Začiatok
-      {{ form.starts_at }}
-      {% if form.starts_at.errors %}<small>{{ form.starts_at.errors }}</small>{% endif %}
-    </label>
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="{{ form.starts_at.id_for_label }}">Začiatok</label>
+                {{ form.starts_at }}
+                {% if form.starts_at.errors %}
+                  <div class="invalid-feedback d-block">{{ form.starts_at.errors }}</div>
+                {% endif %}
+              </div>
 
-    <label>
-      Koniec
-      {{ form.ends_at }}
-      {% if form.ends_at.errors %}<small>{{ form.ends_at.errors }}</small>{% endif %}
-    </label>
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="{{ form.ends_at.id_for_label }}">Koniec</label>
+                {{ form.ends_at }}
+                {% if form.ends_at.errors %}
+                  <div class="invalid-feedback d-block">{{ form.ends_at.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
 
-    <div style="display:flex; gap: .75rem; align-items:center;">
-      <button type="submit">Vytvoriť</button>
-      <a href="{% url 'competitions:my_competitions' %}" role="button" class="secondary">Zrušiť</a>
+            <div class="mt-4 d-flex gap-2">
+              <button type="submit" class="btn btn-primary">Vytvoriť</button>
+              <a class="btn btn-outline-light" href="{% url 'competitions:my_competitions' %}">Zrušiť</a>
+            </div>
+
+            <div class="mt-4 card border-secondary">
+              <div class="card-header fw-semibold">TODO</div>
+              <div class="card-body">
+                <ul class="mb-0">
+                  <li>Pridať vytváranie vlastných pravidiel</li>
+                  <li>Pridať názov miesta, kde sa koná súťaž</li>
+                  <li>Pridať max počet účastníkov</li>
+                  <li>Pridať počet miest z ktorých sa loví</li>
+                  <li>Checkbox pre pridávanie fotky (áno/nie)</li>
+                </ul>
+              </div>
+            </div>
+
+          </form>
+        </div>
+      </div>
     </div>
-
-    <p>TODO: 
-        <ul>
-            <li>Pridať vytváranie vlastných pravidiel</li>
-            <li>Pridať názov miesta, kde sa koná súťaž</li>
-            <li>Pridať max počet účastníkov</li>
-            <li>Pridať počet miest z ktorých sa loví</li>
-            <li>Checkbox pre pridávanie fotky (áno/nie)</li>
-        </ul>
-    </p>
-  </form>
+  </div>
 {% endblock %}

@@ -2,15 +2,55 @@
 {% block title %}Prihlásenie{% endblock %}
 
 {% block content %}
-  <h1>Prihlásenie</h1>
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-5">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h1 class="h3 fw-bold mb-1">Prihlásenie</h1>
+          <p class="text-secondary mb-4">Prihlás sa do aplikácie.</p>
 
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Prihlásiť</button>
-  </form>
+          <style>
+            .login-form input {
+              width: 60%;
+            }
+          </style>
 
-  <p style="margin-top: 1rem;">
-    <a href="{% url 'password_reset' %}">Zabudol som heslo</a>
-  </p>
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+              </div>
+            {% endif %}
+
+            <div class="login-form d-flex flex-column flex-md-row justify-content-md-between mb-3">
+              <label class="form-label col-5" for="{{ form.username.id_for_label }}">{{ form.username.label|default:"Používateľ" }}:</label>
+              {{ form.username }}
+              {% if form.username.errors %}
+                <div class="invalid-feedback d-block">{{ form.username.errors }}</div>
+              {% endif %}
+            </div>
+
+            <div class="login-form d-flex flex-column flex-md-row justify-content-md-between mb-3">
+              <label class="form-label col-5" for="{{ form.password.id_for_label }}">{{ form.password.label|default:"Heslo" }}:</label>
+              {{ form.password }}
+              {% if form.password.errors %}
+                <div class="invalid-feedback d-block">{{ form.password.errors }}</div>
+              {% endif %}
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between gap-2">
+              <button type="submit" class="btn btn-primary">Prihlásiť</button>
+              <a class="btn btn-link text-decoration-none px-0" href="{% url 'password_reset' %}">Zabudol som heslo</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="text-center text-secondary small mt-3">
+        Tip: ak ti nefunguje reset hesla v dev, skontroluj MailHog/console email backend.
+      </div>
+    </div>
+  </div>
 {% endblock %}

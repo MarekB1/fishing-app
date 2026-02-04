@@ -2,69 +2,112 @@
 {% block title %}Nový úlovok{% endblock %}
 
 {% block content %}
-  <h1>Nový úlovok</h1>
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Nový úlovok</h1>
+      <p class="text-secondary mb-0">Pridaj úlovok do aktívnej súťaže.</p>
+    </div>
+    <a class="btn btn-outline-light btn-sm" href="{% url 'core:dashboard' %}">Dashboard</a>
+  </div>
 
   {% if not has_competitions %}
-    <article>
-      <strong>Nemáš žiadnu aktívnu súťaž</strong> (kde si súťažiaci).
-      <p>Skús pozvánku do súťaže alebo počkaj na začiatok.</p>
-      <a href="{% url 'competitions:my_competitions' %}" role="button">Moje súťaže</a>
-    </article>
+    <div class="alert alert-info">
+      <div class="fw-semibold mb-1">Nemáš žiadnu aktívnu súťaž (kde si súťažiaci).</div>
+      <div class="mb-2">Skús pozvánku do súťaže alebo počkaj na začiatok.</div>
+      <a class="btn btn-primary btn-sm" href="{% url 'competitions:my_competitions' %}">Moje súťaže</a>
+    </div>
   {% else %}
+    <div class="row justify-content-center">
+      <div class="col-12 col-lg-8">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <form method="post" enctype="multipart/form-data" novalidate>
+              {% csrf_token %}
 
-    <form method="post" enctype="multipart/form-data">
-      {% csrf_token %}
+              {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                  {{ form.non_field_errors }}
+                </div>
+              {% endif %}
 
-      {% if form.non_field_errors %}
-        <article>{{ form.non_field_errors }}</article>
-      {% endif %}
+              <div class="mb-3">
+                <label class="form-label" for="{{ form.competition.id_for_label }}">Súťaž</label>
+                {{ form.competition }}
+                {% if form.competition.errors %}
+                  <div class="invalid-feedback d-block">{{ form.competition.errors }}</div>
+                {% endif %}
+              </div>
 
-      <label>
-        Súťaž
-        {{ form.competition }}
-        {% if form.competition.errors %}<small>{{ form.competition.errors }}</small>{% endif %}
-      </label>
+              <div class="mb-3">
+                <label class="form-label" for="{{ form.species.id_for_label }}">Druh ryby</label>
+                {{ form.species }}
+                {% if form.species.errors %}
+                  <div class="invalid-feedback d-block">{{ form.species.errors }}</div>
+                {% endif %}
+              </div>
 
-      <label>
-        Druh ryby
-        {{ form.species }}
-        {% if form.species.errors %}<small>{{ form.species.errors }}</small>{% endif %}
-      </label>
+              <div class="row g-3">
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="{{ form.length_cm.id_for_label }}">Dĺžka (cm)</label>
+                  {{ form.length_cm }}
+                  {% if form.length_cm.errors %}
+                    <div class="invalid-feedback d-block">{{ form.length_cm.errors }}</div>
+                  {% endif %}
+                </div>
 
-      <div class="grid">
-        <label>
-          Dĺžka (cm)
-          {{ form.length_cm }}
-          {% if form.length_cm.errors %}<small>{{ form.length_cm.errors }}</small>{% endif %}
-        </label>
+                <div class="col-12 col-md-6">
+                  <label class="form-label" for="{{ form.weight_kg.id_for_label }}">Váha (kg)</label>
+                  {{ form.weight_kg }}
+                  {% if form.weight_kg.errors %}
+                    <div class="invalid-feedback d-block">{{ form.weight_kg.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
 
-        <label>
-          Váha (kg)
-          {{ form.weight_kg }}
-          {% if form.weight_kg.errors %}<small>{{ form.weight_kg.errors }}</small>{% endif %}
-        </label>
+              <div class="mt-3">
+                <label class="form-label" for="{{ form.caught_at.id_for_label }}">Čas úlovku</label>
+                {{ form.caught_at }}
+                {% if form.caught_at.errors %}
+                  <div class="invalid-feedback d-block">{{ form.caught_at.errors }}</div>
+                {% endif %}
+              </div>
+
+              <div class="mt-3">
+                <label class="form-label" for="{{ form.note.id_for_label }}">Poznámka</label>
+                {{ form.note }}
+                {% if form.note.errors %}
+                  <div class="invalid-feedback d-block">{{ form.note.errors }}</div>
+                {% endif %}
+              </div>
+
+              <div class="mt-3">
+                <label class="form-label" for="{{ form.photo.id_for_label }}">Fotka</label>
+                {{ form.photo }}
+                {% if form.photo.errors %}
+                  <div class="invalid-feedback d-block">{{ form.photo.errors }}</div>
+                {% endif %}
+                <div class="form-text text-secondary">Tip: fotka pomôže organizátorovi pri schvaľovaní.</div>
+              </div>
+
+              <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary">Pridať úlovok</button>
+                <a class="btn btn-outline-light" href="{% url 'core:dashboard' %}">Zrušiť</a>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
+    </div>
 
-      <label>
-        Čas úlovku
-        {{ form.caught_at }}
-        {% if form.caught_at.errors %}<small>{{ form.caught_at.errors }}</small>{% endif %}
-      </label>
-
-      <label>
-        Poznámka
-        {{ form.note }}
-        {% if form.note.errors %}<small>{{ form.note.errors }}</small>{% endif %}
-      </label>
-
-      <label>
-        Fotka
-        {{ form.photo }}
-        {% if form.photo.errors %}<small>{{ form.photo.errors }}</small>{% endif %}
-      </label>
-
-      <button type="submit">Pridať úlovok</button>
-    </form>
-
+    <div class="mt-4">
+    <div class="card border-secondary">
+      <div class="card-header fw-semibold">TODO</div>
+      <div class="card-body">
+        <ul class="mb-0">
+          <li>Loading screen kým sa nahrá fotka</li>
+        </ul>
+      </div>
+    </div>
+  </div>
   {% endif %}
 {% endblock %}

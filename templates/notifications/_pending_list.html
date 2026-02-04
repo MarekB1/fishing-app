@@ -1,53 +1,63 @@
 {% if pending_catches %}
-  <table>
-    <thead>
-      <tr>
-        <th>Čas</th>
-        <th>Súťaž</th>
-        <th>Súťažiaci</th>
-        <th>Druh</th>
-        <th>Detail</th>
-        <th>Akcie</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for c in pending_catches %}
-        <tr id="catch-{{ c.id }}">
-          <td>{{ c.created_at|date:"d.m.Y H:i" }}</td>
-          <td><a href="{% url 'competitions:detail' c.competition.id %}">{{ c.competition.name }}</a></td>
-          <td>{{ c.user.username }}</td>
-          <td>{{ c.species }}</td>
-          <td><a href="{% url 'catches:detail' c.id %}">otvoriť</a></td>
-          <td>
-            <div class="row-actions" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
-              <form
-                method="post"
-                action="{% url 'catches:approve' c.id %}"
-                hx-post="{% url 'catches:approve' c.id %}"
-                hx-target="#catch-{{ c.id }}"
-                hx-swap="outerHTML"
-              >
-                {% csrf_token %}
-                <button type="submit" class="contrast">Schváliť</button>
-              </form>
-
-              <form
-                method="post"
-                action="{% url 'catches:reject' c.id %}"
-                hx-post="{% url 'catches:reject' c.id %}"
-                hx-target="#catch-{{ c.id }}"
-                hx-swap="outerHTML"
-                hx-prompt="Dôvod odmietnutia? (voliteľné)"
-              >
-                {% csrf_token %}
-                <button type="submit" class="secondary">Odmietnuť</button>
-              </form>
-            </div>
-          </td>
+  <div class="table-responsive">
+    <table class="table table-dark table-hover mb-0 align-middle">
+      <thead>
+        <tr>
+          <th>Čas</th>
+          <th>Súťaž</th>
+          <th>Súťažiaci</th>
+          <th>Druh</th>
+          <th class="text-end">Detail</th>
+          <th class="text-end">Akcie</th>
         </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+      </thead>
+      <tbody>
+        {% for c in pending_catches %}
+          <tr id="catch-{{ c.id }}">
+            <td class="text-secondary">{{ c.created_at|date:"d.m.Y H:i" }}</td>
+            <td>
+              <a class="link-light text-decoration-none" href="{% url 'competitions:detail' c.competition.id %}">
+                {{ c.competition.name }}
+              </a>
+            </td>
+            <td>{{ c.user.username }}</td>
+            <td class="fw-semibold">{{ c.species }}</td>
+            <td class="text-end">
+              <a class="btn btn-outline-light btn-sm" href="{% url 'catches:detail' c.id %}">Otvoriť</a>
+            </td>
+            <td class="text-end">
+              <div class="d-inline-flex flex-wrap gap-2">
+                <form
+                  method="post"
+                  action="{% url 'catches:approve' c.id %}"
+                  hx-post="{% url 'catches:approve' c.id %}"
+                  hx-target="#catch-{{ c.id }}"
+                  hx-swap="outerHTML"
+                >
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-success btn-sm">Schváliť</button>
+                </form>
+
+                <form
+                  method="post"
+                  action="{% url 'catches:reject' c.id %}"
+                  hx-post="{% url 'catches:reject' c.id %}"
+                  hx-target="#catch-{{ c.id }}"
+                  hx-swap="outerHTML"
+                  hx-prompt="Dôvod odmietnutia? (voliteľné)"
+                >
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-outline-danger btn-sm">Odmietnuť</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 {% else %}
-  <article><strong>Žiadne pending úlovky.</strong></article>
+  <div class="p-3">
+    <div class="alert alert-info mb-0"><strong>Žiadne pending úlovky.</strong></div>
+  </div>
 {% endif %}

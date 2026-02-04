@@ -1,29 +1,83 @@
-<nav class="container">
-  <ul>
-    <li><strong><a href="{% url 'core:home' %}">🎣 Fishing app</a></strong></li>
-  </ul>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-secondary">
+  <div class="container">
+    <a class="navbar-brand fw-semibold" href="{% url 'core:home' %}">🎣 Fishing app</a>
 
-  <ul>
-    {% if user.is_authenticated %}
-      <li><a href="{% url 'core:dashboard' %}">Dashboard</a></li>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+            aria-controls="mainNavbar" aria-expanded="false" aria-label="Menu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
 
-      <!-- Sem pôjdu reálne routes: súťaže, úlovky, pending -->
-      <li><a href="{% url 'competitions:my_competitions' %}">Moje súťaže</a></li>
-      <li><a href="{% url 'catches:catch_create' %}">Nový úlovok</a></li>
-      <li><a href="{% url 'competitions:competition_create' %}">Vytvoriť súťaž</a></li>
-      <li>
-        <li>
-          <a href="{% url 'notifications:pending' %}">
-            Pending
-            <mark id="pending-count-nav" {% if not unread_notifications %}style="display:none"{% endif %}>
-              {(<span id="pending-count-dashboard">{{ unread_notifications|default:0 }}</span>)}
-            </mark>
-          </a>
-        </li>
+    <div class="collapse navbar-collapse" id="mainNavbar">
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+        {% if user.is_authenticated %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'core:dashboard' %}">Dashboard</a>
+          </li>
 
-      <li><a href="{% url 'logout' %}">Odhlásiť</a></li>
-    {% else %}
-      <li><a href="{% url 'login' %}">Prihlásiť</a></li>
-    {% endif %}
-  </ul>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'competitions:my_competitions' %}">Moje súťaže</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'catches:catch_create' %}">Nový úlovok</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'catches:my_catches' %}">Moje úlovky</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'competitions:competition_create' %}">Vytvoriť súťaž</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'competitions:invitations' %}">Pozvánky</a>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link d-flex align-items-center gap-2" href="{% url 'notifications:pending' %}">
+              Pending
+              <span
+                id="pending-count-nav"
+                class="badge rounded-pill text-bg-danger"
+                data-pending-count
+                data-pending-hide-zero="1"
+                {% if not unread_notifications %}style="display:none"{% endif %}
+              >
+                {{ unread_notifications|default:0 }}
+              </span>
+            </a>
+          </li>
+
+          <!-- ✅ USER DROPDOWN -->
+          <li class="nav-item dropdown ms-lg-3">
+            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
+               href="#"
+               role="button"
+               data-bs-toggle="dropdown"
+               aria-expanded="false">
+              👤 {% firstof user.get_full_name user.username user.email %}
+            </a>
+
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li>
+                <a class="dropdown-item" href="{% url 'core:profile' %}">Profil</a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'core:dashboard' %}">Dashboard</a>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li>
+                <a class="dropdown-item text-danger" href="{% url 'logout' %}">Odhlásiť</a>
+              </li>
+            </ul>
+          </li>
+        {% else %}
+          <li class="nav-item">
+            <a class="btn btn-primary btn-sm" href="{% url 'login' %}">Prihlásiť</a>
+          </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
 </nav>

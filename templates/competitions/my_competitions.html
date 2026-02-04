@@ -2,35 +2,51 @@
 {% block title %}Moje súťaže{% endblock %}
 
 {% block content %}
-  <h1>Moje súťaže</h1>
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="h3 fw-bold mb-0">Moje súťaže</h1>
+    <a class="btn btn-primary btn-sm" href="{% url 'competitions:competition_create' %}">+ Nová súťaž</a>
+  </div>
 
   {% if items %}
-    <div class="grid">
+    <div class="row g-3">
       {% for it in items %}
-        <article>
-          <h3>{{ it.name }}</h3>
+        <div class="col-12 col-md-6 col-lg-4">
+          <div class="card h-100 shadow-sm">
+            <div class="card-body">
+              <h2 class="h5 fw-semibold mb-2">{{ it.name }}</h2>
 
-          <p>
-            <strong>Status:</strong> {{ it.status }}<br>
-            <strong>Rola:</strong> {{ it.role }}<br>
-            <strong>Od:</strong> {{ it.starts|date:"d.m.Y H:i" }}<br>
-            <strong>Do:</strong> {{ it.ends|date:"d.m.Y H:i" }}<br>
-          </p>
+              <div class="small text-secondary">
+                <div><span class="fw-semibold">Status:</span> {{ it.status }}</div>
+                <div><span class="fw-semibold">Rola:</span> {{ it.role }}</div>
+                <div><span class="fw-semibold">Od:</span> {{ it.starts|date:"d.m.Y H:i" }}</div>
+                <div><span class="fw-semibold">Do:</span> {{ it.ends|date:"d.m.Y H:i" }}</div>
+              </div>
 
-          <a href="{% url 'competitions:detail' it.competition.pk %}" role="button">Detail</a>
-        </article>
+              <div class="mt-3">
+                <a class="btn btn-outline-light btn-sm" href="{% url 'competitions:detail' it.competition.pk %}">
+                  Detail
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
       {% endfor %}
     </div>
 
-    <p>TODO:
-        <ul>
-            <li>Zrušenie súťaže</li>
-            <li>Zobrazenie členov aj počet (ak je organizátor)</li>
-            <li>Zobrazenie bodov súťažiacich (ak je organizátor)</li>
-            <li>Info o súťaži (kde sa koná, konkrétne miesto)</li>
+    <div class="mt-4 card border-secondary">
+      <div class="card-header fw-semibold">TODO</div>
+      <div class="card-body">
+        <ul class="mb-0">
+          <li>Zrušenie súťaže</li>
+          <li>Zobrazenie členov aj počet (ak je organizátor)</li>
+          <li>Zobrazenie bodov súťažiacich (ak je organizátor)</li>
+          <li>Info o súťaži (kde sa koná, konkrétne miesto)</li>
         </ul>
-    </p>
+      </div>
+    </div>
   {% else %}
-    <p>Zatiaľ nie si v žiadnej súťaži.</p>
+    <div class="alert alert-info">
+      Zatiaľ nie si v žiadnej súťaži.
+    </div>
   {% endif %}
 {% endblock %}

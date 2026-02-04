@@ -2,58 +2,88 @@
 {% block title %}Moje úlovky{% endblock %}
 
 {% block content %}
-  <a href="{% url 'core:dashboard' %}">← späť na dashboard</a>
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Moje úlovky</h1>
+      <p class="text-secondary mb-0">Prehľad všetkých tvojich úlovkov (naprieč súťažami) + stav schválenia.</p>
+    </div>
+    <a class="btn btn-outline-light btn-sm" href="{% url 'core:dashboard' %}">Dashboard</a>
+  </div>
 
-  <h1>Moje úlovky</h1>
-  <p>Prehľad všetkých tvojich úlovkov (naprieč súťažami) + stav schválenia.</p>
-
-  <form method="get" style="margin: 1rem 0;">
-    <label>
-      Filter podľa súťaže
-      <select name="competition" onchange="this.form.submit()">
-        <option value="">Všetky súťaže</option>
-        {% for comp in competitions %}
-          <option value="{{ comp.id }}" {% if active_competition_id == comp.id %}selected{% endif %}>
-            {{ comp.name }}
-          </option>
-        {% endfor %}
-      </select>
-    </label>
-    <noscript><button type="submit">Filtrovať</button></noscript>
-  </form>
+  <div class="card border-secondary shadow-sm mb-3">
+    <div class="card-body">
+      <form method="get" class="row g-2 align-items-end">
+        <div class="col-12 col-md-8">
+          <label class="form-label mb-1">Filter podľa súťaže</label>
+          <select class="form-select" name="competition" onchange="this.form.submit()">
+            <option value="">Všetky súťaže</option>
+            {% for comp in competitions %}
+              <option value="{{ comp.id }}" {% if active_competition_id == comp.id %}selected{% endif %}>
+                {{ comp.name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-12 col-md-4 d-none d-md-block">
+          <button type="submit" class="btn btn-primary w-100">Filtrovať</button>
+        </div>
+        <noscript class="col-12">
+          <button type="submit" class="btn btn-primary">Filtrovať</button>
+        </noscript>
+      </form>
+    </div>
+  </div>
 
   {% if catches %}
-    <table>
-      <thead>
-        <tr>
-          <th>Súťaž</th>
-          <th>Druh</th>
-          <th>Čas</th>
-          <th>Status</th>
-          <th>Detail</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for c in catches %}
-          <tr>
-            <td>
-              <a href="{% url 'competitions:detail' c.competition.id %}">{{ c.competition.name }}</a>
-            </td>
-            <td>{{ c.species }}</td>
-            <td>{{ c.caught_at|date:"d.m.Y H:i" }}</td>
-            <td><strong>{{ c.get_status_display }}</strong></td>
-            <td>
-              <a href="{% url 'catches:detail' c.id %}?next={{ request.get_full_path|urlencode }}">otvoriť</a>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="card shadow-sm">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-dark table-hover mb-0 align-middle">
+            <thead>
+              <tr>
+                <th>Súťaž</th>
+                <th>Druh</th>
+                <th>Čas</th>
+                <th>Status</th>
+                <th class="text-end">Detail</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in catches %}
+                <tr>
+                  <td>
+                    <a class="link-light text-decoration-none" href="{% url 'competitions:detail' c.competition.id %}">
+                      {{ c.competition.name }}
+                    </a>
+                  </td>
+                  <td>{{ c.species }}</td>
+                  <td class="text-secondary">{{ c.caught_at|date:"d.m.Y H:i" }}</td>
+                  <td>
+                    {% if c.status == "APPROVED" %}
+                      <span class="badge text-bg-success">{{ c.get_status_display }}</span>
+                    {% elif c.status == "REJECTED" %}
+                      <span class="badge text-bg-danger">{{ c.get_status_display }}</span>
+                    {% else %}
+                      <span class="badge text-bg-warning">{{ c.get_status_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    <a class="btn btn-outline-light btn-sm" href="{% url 'catches:detail' c.id %}?next={{ request.get_full_path|urlencode }}">
+                      Otvoriť
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   {% else %}
-    <article>
-      <strong>Zatiaľ nemáš žiadne úlovky.</strong>
-      <p>Keď si v aktívnej súťaži ako súťažiaci, môžeš pridať úlovok.</p>
-      <a href="{% url 'catches:catch_create' %}" role="button">Pridať úlovok</a>
-    </article>
+    <div class="alert alert-info">
+      <div class="fw-semibold mb-1">Zatiaľ nemáš žiadne úlovky.</div>
+      <div class="mb-2">Keď si v aktívnej súťaži ako súťažiaci, môžeš pridať úlovok.</div>
+      <a class="btn btn-primary btn-sm" href="{% url 'catches:catch_create' %}">Pridať úlovok</a>
+    </div>
   {% endif %}
 {% endblock %}

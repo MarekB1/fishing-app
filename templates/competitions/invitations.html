@@ -2,104 +2,183 @@
 {% block title %}Pozvánky{% endblock %}
 
 {% block content %}
-  <h1>Pozvánky</h1>
-  <p>Vytváranie invite linkov a správa pozvaných (len pre organizátorov).</p>
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Pozvánky</h1>
+      <p class="text-secondary mb-0">Vytváranie invite linkov a správa pozvaných (len pre organizátorov).</p>
+    </div>
+    <a class="btn btn-outline-light btn-sm" href="{% url 'core:dashboard' %}">Dashboard</a>
+  </div>
 
   {% if competitions %}
-    <article>
-      <h3>➕ Vytvoriť pozvánku</h3>
+    <div class="row g-3">
+      <div class="col-12 col-lg-5">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h2 class="h5 fw-semibold mb-3">➕ Vytvoriť pozvánku</h2>
 
-      <form method="post">
-        {% csrf_token %}
+            <form method="post" novalidate>
+              {% csrf_token %}
 
-        <div class="grid">
-          <label>
-            Súťaž
-            {{ form.competition }}
-            {% if form.competition.errors %}<small>{{ form.competition.errors }}</small>{% endif %}
-          </label>
+              {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+              {% endif %}
 
-          <label>
-            Email
-            {{ form.email }}
-            {% if form.email.errors %}<small>{{ form.email.errors }}</small>{% endif %}
-          </label>
+              <div class="mb-3">
+                <label class="form-label" for="{{ form.competition.id_for_label }}">Súťaž</label>
+                {{ form.competition }}
+                {% if form.competition.errors %}
+                  <div class="invalid-feedback d-block">{{ form.competition.errors }}</div>
+                {% endif %}
+              </div>
 
-          <label>
-            Expirácia (voliteľné)
-            {{ form.expires_at }}
-            {% if form.expires_at.errors %}<small>{{ form.expires_at.errors }}</small>{% endif %}
-          </label>
+              <div class="mb-3">
+                <label class="form-label" for="{{ form.email.id_for_label }}">Email</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                  <div class="invalid-feedback d-block">{{ form.email.errors }}</div>
+                {% endif %}
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label" for="{{ form.expires_at.id_for_label }}">Expirácia (voliteľné)</label>
+                {{ form.expires_at }}
+                {% if form.expires_at.errors %}
+                  <div class="invalid-feedback d-block">{{ form.expires_at.errors }}</div>
+                {% endif %}
+              </div>
+
+              <button type="submit" class="btn btn-primary">Vytvoriť pozvánku</button>
+            </form>
+          </div>
         </div>
 
-        <button type="submit">Vytvoriť pozvánku</button>
-      </form>
-    </article>
-
-    <article>
-      <h3>Filtrovať podľa súťaže</h3>
-      <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
-        <a href="{% url 'competitions:invitations' %}" role="button" class="secondary">Všetky</a>
-        {% for c in competitions %}
-          <a href="{% url 'competitions:invitations' %}?competition={{ c.id }}" role="button" class="secondary">
-            {{ c.name }}
-          </a>
-        {% endfor %}
+        <div class="mt-3 card border-secondary">
+          <div class="card-header fw-semibold">Filtrovať podľa súťaže</div>
+          <div class="card-body">
+            <div class="d-flex flex-wrap gap-2">
+              <a class="btn btn-outline-light btn-sm {% if not active_competition_id %}active{% endif %}"
+                 href="{% url 'competitions:invitations' %}">
+                Všetky
+              </a>
+              {% for c in competitions %}
+                <a class="btn btn-outline-light btn-sm {% if active_competition_id == c.id %}active{% endif %}"
+                   href="{% url 'competitions:invitations' %}?competition={{ c.id }}">
+                  {{ c.name }}
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
       </div>
-    </article>
 
-    {% if items %}
-      <h3>Zoznam pozvánok</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Súťaž</th>
-            <th>Email</th>
-            <th>Status</th>
-            <th>Vytvorené</th>
-            <th>Expirácia</th>
-            <th>Link</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for it in items %}
-            <tr>
-              <td>
-                <a href="{% url 'competitions:detail' it.competition.id %}">{{ it.competition.name }}</a>
-              </td>
-              <td>{{ it.email }}</td>
-              <td>{{ it.status }}</td>
-              <td>{{ it.created_at|date:"d.m.Y H:i" }}</td>
-              <td>
-                {% if it.expires_at %}
-                  {{ it.expires_at|date:"d.m.Y H:i" }}
-                {% else %}
-                  —
-                {% endif %}
-              </td>
-              <td>
-                <input type="text" value="{{ it.link }}" readonly onclick="this.select()" style="min-width: 360px;">
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      <p><small>Tip: klikni do políčka s linkom – automaticky sa označí na kopírovanie.</small></p>
-    {% else %}
-      <p>Zatiaľ nemáš žiadne pozvánky.</p>
-    {% endif %}
+      <div class="col-12 col-lg-7">
+        <div class="card shadow-sm">
+          <div class="card-header border-secondary d-flex align-items-center justify-content-between">
+            <span class="fw-semibold">Zoznam pozvánok</span>
+            <span class="text-secondary small">Klikni do linku – označí sa na kopírovanie.</span>
+          </div>
 
+          <div class="card-body p-0">
+            {% if items %}
+              <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0 align-middle">
+                  <thead>
+                    <tr>
+                      <th>Súťaž</th>
+                      <th>Email</th>
+                      <th>Status</th>
+                      <th>Vytvorené</th>
+                      <th>Expirácia</th>
+                      <th>Link</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for it in items %}
+                      <tr>
+                        <td>
+                          <a class="link-light text-decoration-none" href="{% url 'competitions:detail' it.competition.id %}">
+                            {{ it.competition.name }}
+                          </a>
+                        </td>
+                        <td>{{ it.email }}</td>
+                        <td>
+                          {% if it.status == "USED" %}
+                            <span class="badge text-bg-secondary">{{ it.status }}</span>
+                          {% elif it.status == "EXPIRED" %}
+                            <span class="badge text-bg-warning">{{ it.status }}</span>
+                          {% else %}
+                            <span class="badge text-bg-success">{{ it.status }}</span>
+                          {% endif %}
+                        </td>
+                        <td class="text-secondary">{{ it.created_at|date:"d.m.Y H:i" }}</td>
+                        <td class="text-secondary">
+                          {% if it.expires_at %}
+                            {{ it.expires_at|date:"d.m.Y H:i" }}
+                          {% else %}
+                            —
+                          {% endif %}
+                        </td>
+                        <td style="min-width: 320px;">
+                          <div class="input-group input-group-sm">
+                            <input class="form-control" type="text" value="{{ it.link }}" readonly onclick="this.select()">
+                            <button class="btn btn-outline-light" type="button" data-copy="{{ it.link }}">Copy</button>
+                          </div>
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            {% else %}
+              <div class="p-3">
+                <div class="alert alert-info mb-0">
+                  Zatiaľ nemáš žiadne pozvánky.
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="mt-3 card border-secondary">
+          <div class="card-header fw-semibold">TODO</div>
+          <div class="card-body">
+            <ul class="mb-0">
+              <li>Link nemá byť len pre jedného účastníka, ale pre všetkých</li>
+              <li>Schválenie pozvánok</li>
+              <li>Invite aj cez QR code</li>
+              <li>Zmazanie pozvánok</li>
+              <li>Pridanie cez meno</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
   {% else %}
-    <p>Nemáš žiadne súťaže, kde si organizátor – preto tu zatiaľ nie je čo spravovať.</p>
+    <div class="alert alert-warning">
+      Nemáš žiadne súťaže, kde si organizátor – preto tu zatiaľ nie je čo spravovať.
+    </div>
   {% endif %}
-
-  <p>TODO:
-    <ul>
-        <li>Link nemá byť len pre jedného účastníka, ale pre všetkých</li>
-        <li>Schválenie pozvánok</li>
-        <li>Invite aj cez QR code</li>
-        <li>Zmazanie pozvánok</li>
-        <li>Pridanie cez meno</li>
-    </ul>
-  </p>
 {% endblock %}
+
+{% block extra_js %}
+      <script>
+        (() => {
+          document.addEventListener("click", async (e) => {
+            const btn = e.target.closest("[data-copy]");
+            if (!btn) return;
+            const text = btn.getAttribute("data-copy");
+            try {
+              await navigator.clipboard.writeText(text);
+              const prev = btn.textContent;
+              btn.textContent = "OK";
+              setTimeout(() => btn.textContent = prev, 900);
+            } catch {
+              // fallback: select nearest input
+              const input = btn.parentElement?.querySelector("input");
+              if (input) { input.focus(); input.select(); }
+            }
+          });
+        })();
+      </script>
+    {% endblock %}
