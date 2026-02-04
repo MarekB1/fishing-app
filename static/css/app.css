@@ -1,3 +1,21 @@
+/* static/css/app.css */
+
+:root {
+  --pico-border-radius: 0.75rem;
+  --pico-spacing: 0.9rem;
+
+  /* farby (Pico primary) */
+  --pico-primary: #1e88e5;
+  --pico-primary-hover: #1565c0;
+  --pico-primary-focus: rgba(30, 136, 229, 0.2);
+}
+
+/* tvoje existujúce */
 .message { padding: 0.75rem; border-radius: 0.5rem; }
 .message.success { border: 1px solid #2d7; }
 .message.error { border: 1px solid #d33; }
+
+/* príklad: uprav si karty na dashboarde */
+article {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+}
