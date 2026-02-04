@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Profil{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h1 class="h4 mb-3">Profil</h1>
+
+          <dl class="row mb-0">
+            <dt class="col-sm-4 text-muted">Meno</dt>
+            <dd class="col-sm-8">{% firstof user.get_full_name "-" %}</dd>
+
+            <dt class="col-sm-4 text-muted">Username</dt>
+            <dd class="col-sm-8">{{ user.username }}</dd>
+
+            <dt class="col-sm-4 text-muted">Email</dt>
+            <dd class="col-sm-8">{% firstof user.email "-" %}</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
