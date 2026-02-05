@@ -12,7 +12,14 @@
   <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 
   {% load static %}
+  <!-- CSS -->
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <!-- Favivons -->
+  <link rel="icon" href="{% static 'favicon/favicon.ico' %}" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'favicon/favicon-32x32.png' %}">
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'favicon/favicon-16x16.png' %}">
+  <link rel="apple-touch-icon" sizes="180x180" href="{% static 'favicon/apple-touch-icon.png' %}">
+  <link rel="manifest" href="{% static 'favicon/site.webmanifest' %}">
   {% block extra_css %}{% endblock %}
 </head>
 
