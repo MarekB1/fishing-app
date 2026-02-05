@@ -27,6 +27,39 @@
             </div>
 
             <div class="mb-3">
+              <label class="form-label" for="{{ form.location_name.id_for_label }}">Miesto konania</label>
+              {{ form.location_name }}
+              {% if form.location_name.errors %}
+                <div class="invalid-feedback d-block">{{ form.location_name.errors }}</div>
+              {% endif %}
+            </div>
+
+            <div class="row g-3">
+              <div class="col-12 col-md-5">
+                <label class="form-label" for="{{ form.fishing_spots_count.id_for_label }}">Počet miest na lov</label>
+                {{ form.fishing_spots_count }}
+                {% if form.fishing_spots_count.errors %}
+                  <div class="invalid-feedback d-block">{{ form.fishing_spots_count.errors }}</div>
+                {% endif %}
+                <div class="form-text text-secondary">Neskôr sa tieto miesta priradia súťažiacim.</div>
+              </div>
+            </div>  
+
+              <div class="col-12 col-md-6 d-flex align-items-end">
+                <div class="form-check form-switch">
+                  {{ form.allow_photos }}
+                  <label class="form-check-label" for="{{ form.allow_photos.id_for_label }}">
+                    Povoliť fotky úlovkov
+                  </label>
+                  {% if form.allow_photos.errors %}
+                    <div class="invalid-feedback d-block">{{ form.allow_photos.errors }}</div>
+                  {% endif %}
+                  <div class="form-text text-secondary">Ak je vypnuté, úlovky sa budú pridávať bez fotky.</div>
+                </div>
+              </div>
+            
+
+            <div class="mb-3">
               <label class="form-label" for="{{ form.description.id_for_label }}">Popis</label>
               {{ form.description }}
               {% if form.description.errors %}
@@ -62,10 +95,10 @@
               <div class="card-body">
                 <ul class="mb-0">
                   <li>Pridať vytváranie vlastných pravidiel</li>
-                  <li>Pridať názov miesta, kde sa koná súťaž</li>
+                  <li><s>Pridať názov miesta, kde sa koná súťaž</s></li>
                   <li>Pridať max počet účastníkov</li>
-                  <li>Pridať počet miest z ktorých sa loví</li>
-                  <li>Checkbox pre pridávanie fotky (áno/nie)</li>
+                  <li><s>Pridať počet miest z ktorých sa loví</s></li>
+                  <li><s>Checkbox pre pridávanie fotky (áno/nie)</s></li>
                 </ul>
               </div>
             </div>

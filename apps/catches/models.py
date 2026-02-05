@@ -36,7 +36,7 @@ class Catch(models.Model):
     caught_at = models.DateTimeField(default=timezone.now)
     note = models.TextField(blank=True)
 
-    photo = models.ImageField(upload_to=catch_photo_upload_to)
+    photo = models.ImageField(upload_to=catch_photo_upload_to, blank=True, null=True)
 
     status = models.CharField(
         max_length=20, choices=Status.choices, default=Status.PENDING, db_index=True

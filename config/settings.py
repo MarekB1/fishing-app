@@ -86,6 +86,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 "apps.notifications.context_processors.unread_notifications",
                 "core.context_processors.nav_user_roles",
+                "django.template.context_processors.request",
             ],
         },
     },

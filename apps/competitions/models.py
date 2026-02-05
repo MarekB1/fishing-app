@@ -4,16 +4,23 @@ from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.utils import timezone
-
+from django.core.validators import MinValueValidator
 
 class Competition(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
 
+    # ✅ NOVÉ
+    location_name = models.CharField(max_length=255, default="")  # názov miesta
+    fishing_spots_count = models.PositiveSmallIntegerField(
+        default=1,
+        validators=[MinValueValidator(1)],
+    )  # počet miest
+    allow_photos = models.BooleanField(default=True)  # povoliť fotky úlovkov
+
     starts_at = models.DateTimeField()
     ends_at = models.DateTimeField()
 
-    # jednoduché, rozšírime neskôr (napr. scoring config)
     scoring_rules = models.JSONField(default=dict, blank=True)
 
     created_by = models.ForeignKey(

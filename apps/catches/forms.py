@@ -26,7 +26,7 @@ class CatchCreateForm(forms.ModelForm):
     def clean_photo(self):
         photo = self.cleaned_data.get("photo")
         if not photo:
-            raise forms.ValidationError("Fotografia je povinná.")
+            return photo  # ✅ už nie je povinná
 
         max_mb = 8
         if photo.size > max_mb * 1024 * 1024:
@@ -39,13 +39,18 @@ class CatchCreateForm(forms.ModelForm):
 
         return photo
 
+
     def clean(self):
         cleaned = super().clean()
         competition = cleaned.get("competition")
         caught_at = cleaned.get("caught_at")
+        photo = cleaned.get("photo")
 
         length_cm = cleaned.get("length_cm")
         weight_kg = cleaned.get("weight_kg")
+
+        if competition and not getattr(competition, "allow_photos", True) and photo:
+            self.add_error("photo", "Táto súťaž nepovoľuje pridávanie fotiek.")
 
         if length_cm is not None and length_cm <= 0:
             self.add_error("length_cm", "Dĺžka musí byť väčšia ako 0.")

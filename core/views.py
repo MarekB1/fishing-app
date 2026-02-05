@@ -14,7 +14,10 @@ def home(request):
 
 @login_required
 def dashboard(request):
-    return render(request, "core/dashboard.html")
+    return render(request, "core/dashboard.html", {
+        "hide_nav_links_desktop": True,
+    })
+
 
 
 @login_required
