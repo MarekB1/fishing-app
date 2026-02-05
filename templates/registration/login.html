@@ -7,22 +7,13 @@
       <div class="card shadow-sm">
         <div class="card-body">
           <h1 class="h3 fw-bold mb-1">Prihlásenie</h1>
-          <p class="text-secondary mb-4">Prihlás sa do aplikácie.</p>
+          <p class="text-secondary mb-4">Prihlás sa do aplikácie cez e-mail.</p>
 
           <style>
-            input[name="username"] {
-              width: 100%;
-            }
+            input[name="username"] { width: 100%; }
 
-            .field-with-toggle {
-              position: relative;
-            }
-
-            .field-with-toggle input {
-              width: 100%;
-              padding-right: 2.75rem; /* miesto pre ikonku */
-            }
-
+            .field-with-toggle { position: relative; }
+            .field-with-toggle input { width: 100%; padding-right: 2.75rem; }
             .field-with-toggle .toggle-btn {
               position: absolute;
               top: 50%;
@@ -34,10 +25,7 @@
               line-height: 1;
               color: var(--bs-secondary-color);
             }
-
-            .field-with-toggle .toggle-btn:hover {
-              color: var(--bs-body-color);
-            }
+            .field-with-toggle .toggle-btn:hover { color: var(--bs-body-color); }
           </style>
 
           <form method="post" novalidate>
@@ -50,46 +38,53 @@
             {% endif %}
 
             <div class="row align-items-center mb-3">
-            <label class="col-12 col-md-5 col-form-label" for="{{ form.username.id_for_label }}">
-              Používateľské meno:
-            </label>
-            <div class="col-12 col-md-7">
-              {{ form.username }}
-              {% if form.username.errors %}
-                <div class="invalid-feedback d-block">{{ form.username.errors }}</div>
-              {% endif %}
-            </div>
-          </div>
-
-          <div class="row align-items-center mb-3">
-            <label class="col-12 col-md-5 col-form-label" for="{{ form.password.id_for_label }}">
-              Heslo:
-            </label>
-
-            <div class="col-12 col-md-7">
-              <div class="field-with-toggle">
-                {{ form.password }}
-
-                <button
-                  class="toggle-btn"
-                  type="button"
-                  data-password-toggle="#{{ form.password.id_for_label }}"
-                  aria-label="Zobraziť heslo"
-                  aria-pressed="false">
-                  <i class="bi bi-eye js-eye"></i>
-                  <i class="bi bi-eye-slash d-none js-eye-slash"></i>
-                </button>
+              <label class="col-12 col-md-5 col-form-label" for="{{ form.username.id_for_label }}">
+                E-mail:
+              </label>
+              <div class="col-12 col-md-7">
+                {{ form.username }}
+                {% if form.username.errors %}
+                  <div class="invalid-feedback d-block">{{ form.username.errors }}</div>
+                {% endif %}
               </div>
-
-              {% if form.password.errors %}
-                <div class="invalid-feedback d-block">{{ form.password.errors }}</div>
-              {% endif %}
             </div>
-          </div>
+
+            <div class="row align-items-center mb-3">
+              <label class="col-12 col-md-5 col-form-label" for="{{ form.password.id_for_label }}">
+                Heslo:
+              </label>
+
+              <div class="col-12 col-md-7">
+                <div class="field-with-toggle">
+                  {{ form.password }}
+
+                  <button
+                    class="toggle-btn"
+                    type="button"
+                    data-password-toggle="#{{ form.password.id_for_label }}"
+                    aria-label="Zobraziť heslo"
+                    aria-pressed="false">
+                    <i class="bi bi-eye js-eye"></i>
+                    <i class="bi bi-eye-slash d-none js-eye-slash"></i>
+                  </button>
+                </div>
+
+                {% if form.password.errors %}
+                  <div class="invalid-feedback d-block">{{ form.password.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
 
             <div class="d-flex align-items-center justify-content-between gap-2">
               <button type="submit" class="btn btn-primary">Prihlásiť</button>
-              <a class="btn btn-link text-decoration-none px-0" href="{% url 'password_reset' %}">Zabudol som heslo</a>
+              <a class="btn btn-link text-decoration-none px-0" href="{% url 'password_reset' %}">
+                Zabudol som heslo
+              </a>
+            </div>
+
+            <div class="mt-3 text-center">
+              <span class="text-secondary small">Nemáš účet?</span>
+              <a class="link-primary text-decoration-none" href="{% url 'signup' %}">Zaregistruj sa</a>
             </div>
           </form>
         </div>

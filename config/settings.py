@@ -174,6 +174,11 @@ LOGIN_REDIRECT_URL = "/dashboard/"
 LOGOUT_REDIRECT_URL = "/"
 LOGIN_URL = "/accounts/login/"
 
+AUTHENTICATION_BACKENDS = [
+    "apps.accounts.backends.EmailBackend",
+    "django.contrib.auth.backends.ModelBackend",  # fallback (napr. admin / username)
+]
+
 # --- Email / Password reset (DEV default) ---
 # --- Email (DEV via MailHog) ---
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

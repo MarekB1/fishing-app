@@ -41,7 +41,23 @@ class ProfileUpdateForm(BootstrapFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # chceme aby bol email povinný (User.email má defaultne blank=True)
+        if "email" in self.fields:
+            self.fields["email"].required = True
+
         self._bootstrapify()
+
+    def clean_email(self):
+        email = (self.cleaned_data.get("email") or "").strip()
+        if not email:
+            return email
+
+        # jedinečnosť pre login cez email (case-insensitive)
+        qs = User._default_manager.filter(email__iexact=email).exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError("Tento e-mail je už používaný iným účtom.")
+        return email
 
 
 class BootstrapPasswordChangeForm(BootstrapFormMixin, PasswordChangeForm):
@@ -62,3 +78,4 @@ class BootstrapPasswordChangeForm(BootstrapFormMixin, PasswordChangeForm):
             self.fields["new_password2"].widget.attrs["autocomplete"] = "new-password"
 
         self._bootstrapify()
+        

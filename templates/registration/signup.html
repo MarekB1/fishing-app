@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Registrácia{% endblock %}
+
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-10 col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h1 class="h3 fw-bold mb-1">Registrácia</h1>
+          <p class="text-secondary mb-4">Vytvor si účet a môžeš sa pripojiť do súťaží.</p>
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+                {{ form.non_field_errors }}
+              </div>
+            {% endif %}
+
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.username.id_for_label }}">{{ form.username.label }}</label>
+              {{ form.username }}
+              {% if form.username.errors %}
+                <div class="invalid-feedback d-block">{{ form.username.errors }}</div>
+              {% endif %}
+              <div class="form-text">Používateľské meno sa neskôr v profile nedá zmeniť.</div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="{{ form.first_name.id_for_label }}">{{ form.first_name.label }}</label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}
+                  <div class="invalid-feedback d-block">{{ form.first_name.errors }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-12 col-md-6">
+                <label class="form-label" for="{{ form.last_name.id_for_label }}">{{ form.last_name.label }}</label>
+                {{ form.last_name }}
+                {% if form.last_name.errors %}
+                  <div class="invalid-feedback d-block">{{ form.last_name.errors }}</div>
+                {% endif %}
+              </div>
+
+              <div class="col-12">
+                <label class="form-label" for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                  <div class="invalid-feedback d-block">{{ form.email.errors }}</div>
+                {% endif %}
+              </div>
+            </div>
+
+            <hr class="my-4">
+
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.password1.id_for_label }}">{{ form.password1.label }}</label>
+              <div class="input-group">
+                {{ form.password1 }}
+                <button
+                  class="btn btn-outline-secondary"
+                  type="button"
+                  data-password-toggle="#{{ form.password1.id_for_label }}"
+                  aria-label="Zobraziť heslo"
+                  aria-pressed="false">
+                  <i class="bi bi-eye js-eye"></i>
+                  <i class="bi bi-eye-slash d-none js-eye-slash"></i>
+                </button>
+              </div>
+
+              {% if form.password1.help_text %}
+                <div class="form-text">{{ form.password1.help_text|safe }}</div>
+              {% endif %}
+              {% if form.password1.errors %}
+                <div class="invalid-feedback d-block">{{ form.password1.errors }}</div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.password2.id_for_label }}">{{ form.password2.label }}</label>
+              <div class="input-group">
+                {{ form.password2 }}
+                <button
+                  class="btn btn-outline-secondary"
+                  type="button"
+                  data-password-toggle="#{{ form.password2.id_for_label }}"
+                  aria-label="Zobraziť heslo"
+                  aria-pressed="false">
+                  <i class="bi bi-eye js-eye"></i>
+                  <i class="bi bi-eye-slash d-none js-eye-slash"></i>
+                </button>
+              </div>
+
+              {% if form.password2.errors %}
+                <div class="invalid-feedback d-block">{{ form.password2.errors }}</div>
+              {% endif %}
+            </div>
+
+            <div class="d-flex align-items-center justify-content-between gap-2">
+              <button type="submit" class="btn btn-primary">Vytvoriť účet</button>
+              <a class="btn btn-outline-light" href="{% url 'login' %}">Už mám účet</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="text-center text-secondary small mt-3">
+        Registráciou súhlasíš s pravidlami súťaže (MVP – text doplníme neskôr).
+      </div>
+    </div>
+  </div>
+{% endblock %}
