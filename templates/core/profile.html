@@ -5,22 +5,208 @@
 <div class="container py-4">
   <div class="row justify-content-center">
     <div class="col-12 col-lg-8">
+
       <div class="card shadow-sm">
         <div class="card-body">
-          <h1 class="h4 mb-3">Profil</h1>
+          <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+            <div>
+              <h1 class="h4 mb-1">Profil</h1>
+              <div class="text-secondary small">Upravíš meno, priezvisko, email a heslo.</div>
+            </div>
+          </div>
 
-          <dl class="row mb-0">
-            <dt class="col-sm-4 text-muted">Meno</dt>
-            <dd class="col-sm-8">{% firstof user.get_full_name "-" %}</dd>
+          <!-- Tabs -->
+          <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link {% if active_tab == 'profile' %}active{% endif %}"
+                data-bs-toggle="tab"
+                data-bs-target="#tab-profile"
+                type="button"
+                role="tab"
+                aria-controls="tab-profile"
+                aria-selected="{% if active_tab == 'profile' %}true{% else %}false{% endif %}">
+                Osobné údaje
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button
+                class="nav-link {% if active_tab == 'password' %}active{% endif %}"
+                data-bs-toggle="tab"
+                data-bs-target="#tab-password"
+                type="button"
+                role="tab"
+                aria-controls="tab-password"
+                aria-selected="{% if active_tab == 'password' %}true{% else %}false{% endif %}">
+                Heslo
+              </button>
+            </li>
+          </ul>
 
-            <dt class="col-sm-4 text-muted">Username</dt>
-            <dd class="col-sm-8">{{ user.username }}</dd>
+          <div class="tab-content pt-3">
+            <!-- TAB: Profile -->
+            <div
+              class="tab-pane fade {% if active_tab == 'profile' %}show active{% endif %}"
+              id="tab-profile"
+              role="tabpanel">
 
-            <dt class="col-sm-4 text-muted">Email</dt>
-            <dd class="col-sm-8">{% firstof user.email "-" %}</dd>
-          </dl>
+              <form method="post" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="action" value="profile">
+
+                {% if profile_form.non_field_errors %}
+                  <div class="alert alert-danger">
+                    {{ profile_form.non_field_errors }}
+                  </div>
+                {% endif %}
+
+                <div class="mb-3">
+                  <label class="form-label">Používateľské meno</label>
+                  <input type="text" class="form-control" value="{{ user.username }}" disabled readonly>
+                  <div class="form-text">Používateľské meno sa nedá meniť.</div>
+                </div>
+
+                <div class="row g-3">
+                  <div class="col-12 col-md-6">
+                    <label class="form-label" for="{{ profile_form.first_name.id_for_label }}">
+                      {{ profile_form.first_name.label }}
+                    </label>
+                    {{ profile_form.first_name }}
+                    {% if profile_form.first_name.errors %}
+                      <div class="invalid-feedback d-block">{{ profile_form.first_name.errors }}</div>
+                    {% endif %}
+                  </div>
+
+                  <div class="col-12 col-md-6">
+                    <label class="form-label" for="{{ profile_form.last_name.id_for_label }}">
+                      {{ profile_form.last_name.label }}
+                    </label>
+                    {{ profile_form.last_name }}
+                    {% if profile_form.last_name.errors %}
+                      <div class="invalid-feedback d-block">{{ profile_form.last_name.errors }}</div>
+                    {% endif %}
+                  </div>
+
+                  <div class="col-12">
+                    <label class="form-label" for="{{ profile_form.email.id_for_label }}">
+                      {{ profile_form.email.label }}
+                    </label>
+                    {{ profile_form.email }}
+                    {% if profile_form.email.errors %}
+                      <div class="invalid-feedback d-block">{{ profile_form.email.errors }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+
+                <div class="mt-4 d-flex gap-2">
+                  <button type="submit" class="btn btn-primary">Uložiť zmeny</button>
+                  <a class="btn btn-outline-light" href="{% url 'core:dashboard' %}">Späť</a>
+                </div>
+              </form>
+            </div>
+
+            <!-- TAB: Password -->
+            <div
+              class="tab-pane fade {% if active_tab == 'password' %}show active{% endif %}"
+              id="tab-password"
+              role="tabpanel">
+
+              <form method="post" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="action" value="password">
+
+                {% if password_form.non_field_errors %}
+                  <div class="alert alert-danger">
+                    {{ password_form.non_field_errors }}
+                  </div>
+                {% endif %}
+
+                <div class="mb-3">
+                  <label class="form-label" for="{{ password_form.old_password.id_for_label }}">
+                    {{ password_form.old_password.label }}
+                  </label>
+
+                  <div class="input-group">
+                    {{ password_form.old_password }}
+                    <button
+                      class="btn btn-outline-secondary"
+                      type="button"
+                      data-password-toggle="#{{ password_form.old_password.id_for_label }}"
+                      aria-label="Zobraziť heslo"
+                      aria-pressed="false">
+                      <i class="bi bi-eye js-eye"></i>
+                      <i class="bi bi-eye-slash d-none js-eye-slash"></i>
+                    </button>
+                  </div>
+
+                  {% if password_form.old_password.errors %}
+                    <div class="invalid-feedback d-block">{{ password_form.old_password.errors }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label" for="{{ password_form.new_password1.id_for_label }}">
+                    {{ password_form.new_password1.label }}
+                  </label>
+
+                  <div class="input-group">
+                    {{ password_form.new_password1 }}
+                    <button
+                      class="btn btn-outline-secondary"
+                      type="button"
+                      data-password-toggle="#{{ password_form.new_password1.id_for_label }}"
+                      aria-label="Zobraziť heslo"
+                      aria-pressed="false">
+                      <i class="bi bi-eye js-eye"></i>
+                      <i class="bi bi-eye-slash d-none js-eye-slash"></i>
+                    </button>
+                  </div>
+
+                  {% if password_form.new_password1.help_text %}
+                    <div class="form-text">{{ password_form.new_password1.help_text|safe }}</div>
+                  {% endif %}
+                  {% if password_form.new_password1.errors %}
+                    <div class="invalid-feedback d-block">{{ password_form.new_password1.errors }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="mb-3">
+                  <label class="form-label" for="{{ password_form.new_password2.id_for_label }}">
+                    {{ password_form.new_password2.label }}
+                  </label>
+
+                  <div class="input-group">
+                    {{ password_form.new_password2 }}
+                    <button
+                      class="btn btn-outline-secondary"
+                      type="button"
+                      data-password-toggle="#{{ password_form.new_password2.id_for_label }}"
+                      aria-label="Zobraziť heslo"
+                      aria-pressed="false">
+                      <i class="bi bi-eye js-eye"></i>
+                      <i class="bi bi-eye-slash d-none js-eye-slash"></i>
+                    </button>
+                  </div>
+
+                  {% if password_form.new_password2.errors %}
+                    <div class="invalid-feedback d-block">{{ password_form.new_password2.errors }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="mt-4 d-flex gap-2">
+                  <button type="submit" class="btn btn-primary">Zmeniť heslo</button>
+                </div>
+
+                <div class="text-secondary small mt-3">
+                  Pozn.: Po zmene hesla ostaneš prihlásený.
+                </div>
+              </form>
+            </div>
+
+          </div>
         </div>
       </div>
+
     </div>
   </div>
 </div>

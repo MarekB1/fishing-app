@@ -10,8 +10,33 @@
           <p class="text-secondary mb-4">Prihlás sa do aplikácie.</p>
 
           <style>
-            .login-form input {
-              width: 60%;
+            input[name="username"] {
+              width: 100%;
+            }
+
+            .field-with-toggle {
+              position: relative;
+            }
+
+            .field-with-toggle input {
+              width: 100%;
+              padding-right: 2.75rem; /* miesto pre ikonku */
+            }
+
+            .field-with-toggle .toggle-btn {
+              position: absolute;
+              top: 50%;
+              right: .75rem;
+              transform: translateY(-50%);
+              border: 0;
+              background: transparent;
+              padding: 0;
+              line-height: 1;
+              color: var(--bs-secondary-color);
+            }
+
+            .field-with-toggle .toggle-btn:hover {
+              color: var(--bs-body-color);
             }
           </style>
 
@@ -24,21 +49,43 @@
               </div>
             {% endif %}
 
-            <div class="login-form d-flex flex-column flex-md-row justify-content-md-between mb-3">
-              <label class="form-label col-5" for="{{ form.username.id_for_label }}">{{ form.username.label|default:"Používateľ" }}:</label>
+            <div class="row align-items-center mb-3">
+            <label class="col-12 col-md-5 col-form-label" for="{{ form.username.id_for_label }}">
+              Používateľské meno:
+            </label>
+            <div class="col-12 col-md-7">
               {{ form.username }}
               {% if form.username.errors %}
                 <div class="invalid-feedback d-block">{{ form.username.errors }}</div>
               {% endif %}
             </div>
+          </div>
 
-            <div class="login-form d-flex flex-column flex-md-row justify-content-md-between mb-3">
-              <label class="form-label col-5" for="{{ form.password.id_for_label }}">{{ form.password.label|default:"Heslo" }}:</label>
-              {{ form.password }}
+          <div class="row align-items-center mb-3">
+            <label class="col-12 col-md-5 col-form-label" for="{{ form.password.id_for_label }}">
+              Heslo:
+            </label>
+
+            <div class="col-12 col-md-7">
+              <div class="field-with-toggle">
+                {{ form.password }}
+
+                <button
+                  class="toggle-btn"
+                  type="button"
+                  data-password-toggle="#{{ form.password.id_for_label }}"
+                  aria-label="Zobraziť heslo"
+                  aria-pressed="false">
+                  <i class="bi bi-eye js-eye"></i>
+                  <i class="bi bi-eye-slash d-none js-eye-slash"></i>
+                </button>
+              </div>
+
               {% if form.password.errors %}
                 <div class="invalid-feedback d-block">{{ form.password.errors }}</div>
               {% endif %}
             </div>
+          </div>
 
             <div class="d-flex align-items-center justify-content-between gap-2">
               <button type="submit" class="btn btn-primary">Prihlásiť</button>
