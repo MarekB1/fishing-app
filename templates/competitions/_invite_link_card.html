@@ -1,0 +1,70 @@
+{% if not selected_competition and active_competition_id %}
+  {# fallback: keď include ide z invitations.html a nemá selected_competition v kontexte #}
+  <form
+    method="post"
+    action="{% url 'competitions:invite_link_create' %}"
+    hx-post="{% url 'competitions:invite_link_create' %}"
+    hx-target="#share-link-card"
+    hx-swap="outerHTML"
+  >
+    {% csrf_token %}
+    <input type="hidden" name="competition_id" value="{{ active_competition_id }}">
+    <button type="submit" class="btn btn-primary btn-sm">Zobraziť / vytvoriť link</button>
+  </form>
+{% else %}
+
+  {% if share_invite %}
+    <div class="mb-2">
+      <div class="text-secondary small mb-1">Link pre súťaž:</div>
+      <div class="input-group input-group-sm">
+        <input class="form-control" type="text" value="{{ share_link }}" readonly onclick="this.select()">
+        <a class="btn btn-outline-light" href="{{ share_link }}">Open</a>
+      </div>
+    </div>
+
+    <div class="d-flex gap-3 align-items-start flex-wrap">
+      <div>
+        <div class="text-secondary small mb-1">QR kód:</div>
+        <img
+          src="{% url 'competitions:invite_qr' share_invite.token %}"
+          alt="QR"
+          style="width:160px;height:160px;"
+          class="border rounded"
+        >
+        <div class="mt-2">
+          <a class="btn btn-outline-light btn-sm"
+             href="{% url 'competitions:invite_qr' share_invite.token %}?download=1">
+            Stiahnuť QR
+          </a>
+        </div>
+      </div>
+
+      <div class="text-secondary small">
+        <div><strong>Použitia:</strong> {{ share_invite.uses_count }}{% if share_invite.max_uses %} / {{ share_invite.max_uses }}{% endif %}</div>
+        {% if share_invite.expires_at %}
+          <div><strong>Expirácia:</strong> {{ share_invite.expires_at|date:"d.m.Y H:i" }}</div>
+        {% else %}
+          <div><strong>Expirácia:</strong> —</div>
+        {% endif %}
+      </div>
+    </div>
+
+  {% else %}
+    <div class="text-secondary small mb-2">
+      Zatiaľ nemáš vytvorený zdieľateľný link pre túto súťaž.
+    </div>
+  {% endif %}
+
+  <form
+    method="post"
+    action="{% url 'competitions:invite_link_create' %}"
+    hx-post="{% url 'competitions:invite_link_create' %}"
+    hx-target="#share-link-card"
+    hx-swap="outerHTML"
+  >
+    {% csrf_token %}
+    <input type="hidden" name="competition_id" value="{{ selected_competition.id }}">
+    <button type="submit" class="btn btn-primary btn-sm">Zobraziť / vytvoriť link</button>
+  </form>
+
+{% endif %}

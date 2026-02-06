@@ -1,6 +1,11 @@
+import io
+import re
+
+from django.contrib.auth import get_user_model
+from django.views.decorators.http import require_GET, require_POST
+from django.http import Http404, HttpResponse, HttpResponseBadRequest
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.shortcuts import redirect, render
@@ -9,10 +14,11 @@ from django.db.models import Q
 from django.urls import reverse
 
 from .forms import CompetitionForm
-from .models import Competition, CompetitionMembership, Invitation
+from .models import Competition, CompetitionMembership, Invitation, InvitationUse
 from .forms import InvitationCreateForm
 from apps.catches.models import Catch
 from django.contrib.auth.views import redirect_to_login
+from apps.friends.models import Friendship
 
 
 def _status_for_competition(c: Competition) -> str:
@@ -168,15 +174,19 @@ def invitations(request):
     organizer_competitions = _organizer_competitions_qs(request.user)
 
     # filter ?competition=ID (voliteľné)
-    competition_id = request.GET.get("competition")
+    competition_id_raw = request.GET.get("competition")
+    active_competition_id = None
     filtered_competitions = organizer_competitions
-    if competition_id:
+
+    if competition_id_raw:
         try:
-            competition_id = int(competition_id)
-            filtered_competitions = organizer_competitions.filter(id=competition_id)
+            active_competition_id = int(competition_id_raw)
+            filtered_competitions = organizer_competitions.filter(id=active_competition_id)
         except ValueError:
+            active_competition_id = None
             filtered_competitions = organizer_competitions
 
+    # POST: vytvorenie klasickej email pozvánky
     if request.method == "POST":
         form = InvitationCreateForm(request.POST, competition_qs=organizer_competitions)
         if form.is_valid():
@@ -198,6 +208,7 @@ def invitations(request):
 
     now = timezone.now()
     items = []
+
     for inv in inv_qs:
         if inv.used_at:
             status = "Použitá"
@@ -222,13 +233,47 @@ def invitations(request):
             "link": link,
         })
 
+    # --- NEW: selected_competition + share_invite + share_link (pre zdieľateľný link/QR) ---
+    selected_competition = (
+        organizer_competitions.filter(id=active_competition_id).first()
+        if active_competition_id else None
+    )
+
+    share_invite = None
+    share_link = None
+
+    # Guard: ak model Invitation ešte nemá "kind"
+    try:
+        Invitation._meta.get_field("kind")
+        kind_link_value = Invitation.Kind.LINK
+    except Exception:
+        kind_link_value = None
+
+    if selected_competition and kind_link_value:
+        share_invite = Invitation.objects.filter(
+            competition=selected_competition,
+            kind=kind_link_value,
+        ).first()
+
+        if share_invite:
+            share_link = request.build_absolute_uri(
+                reverse("competitions:invite_accept", kwargs={"token": str(share_invite.token)})
+            )
+
     return render(request, "competitions/invitations.html", {
         "form": form,
         "items": items,
         "competitions": organizer_competitions,
-        "active_competition_id": int(competition_id) if str(competition_id).isdigit() else None,
+        "active_competition_id": active_competition_id,
+
+        # NEW:
+        "selected_competition": selected_competition,
+        "share_invite": share_invite,
+        "share_link": share_link,
     })
 
+
+    
 def invite_accept(request, token):
     invite = get_object_or_404(Invitation, token=token)
 
@@ -236,29 +281,205 @@ def invite_accept(request, token):
     if not request.user.is_authenticated:
         return redirect_to_login(request.get_full_path())
 
+    # rýchla kontrola
     if not invite.is_valid():
-        messages.error(request, "Táto pozvánka je neplatná alebo už použitá.")
+        messages.error(request, "Táto pozvánka je neplatná alebo už nie je použiteľná.")
         return redirect("core:dashboard")
 
-    # ak sa pozývalo emailom, skontrolujeme zhodu (MVP bezpečnosť)
-    if invite.email and (request.user.email or "").lower() != invite.email.lower():
-        messages.error(request, "Táto pozvánka je určená pre iný email.")
-        return redirect("core:dashboard")
+    # DIRECT email bezpečnosť
+    if invite.kind == Invitation.Kind.DIRECT:
+        if invite.email and (request.user.email or "").lower() != invite.email.lower():
+            messages.error(request, "Táto pozvánka je určená pre iný email.")
+            return redirect("core:dashboard")
 
     with transaction.atomic():
+        # zamkneme invite pri LINK aby sme korektne riešili max_uses
+        invite = Invitation.objects.select_for_update().get(pk=invite.pk)
+
+        if not invite.is_valid():
+            messages.error(request, "Táto pozvánka už nie je použiteľná.")
+            return redirect("core:dashboard")
+
         CompetitionMembership.objects.get_or_create(
             competition=invite.competition,
             user=request.user,
             defaults={"role": CompetitionMembership.Role.CONTESTANT},
         )
 
-        # označ pozvánku ako použitú
-        invite.invited_user = request.user
-        invite.used_at = timezone.now()
-        invite.save(update_fields=["invited_user", "used_at"])
+        if invite.kind == Invitation.Kind.DIRECT:
+            invite.invited_user = request.user
+            invite.used_at = timezone.now()
+            invite.save(update_fields=["invited_user", "used_at"])
+
+        else:
+            # LINK: 1x per user + increment uses_count iba pri prvom použití
+            use, created = InvitationUse.objects.get_or_create(
+                invitation=invite,
+                user=request.user,
+            )
+            if created:
+                invite.uses_count += 1
+                invite.save(update_fields=["uses_count"])
+            else:
+                messages.info(request, "Túto pozvánku si už použil. Si už v súťaži.")
 
     messages.success(request, f"Vstúpil si do súťaže: {invite.competition.name}")
     return redirect("competitions:detail", pk=invite.competition_id)
+
+@require_POST
+@login_required
+def invite_link_create(request):
+    competition_id = request.POST.get("competition_id")
+    if not competition_id or not str(competition_id).isdigit():
+        return HttpResponseBadRequest("Missing competition_id")
+
+    competition = get_object_or_404(Competition, pk=int(competition_id))
+    _require_organizer_or_404(request.user, competition)
+
+    invite, _created = Invitation.objects.get_or_create(
+        competition=competition,
+        kind=Invitation.Kind.LINK,
+        defaults={"created_by": request.user},
+    )
+
+    link = request.build_absolute_uri(
+        reverse("competitions:invite_accept", kwargs={"token": str(invite.token)})
+    )
+
+    return render(request, "competitions/_invite_link_card.html", {
+        "selected_competition": competition,
+        "share_invite": invite,
+        "share_link": link,
+    })
+
+def invite_qr(request, token):
+    invite = get_object_or_404(Invitation, token=token, kind=Invitation.Kind.LINK)
+
+    url = request.build_absolute_uri(
+        reverse("competitions:invite_accept", kwargs={"token": str(invite.token)})
+    )
+
+    try:
+        import qrcode
+    except ImportError:
+        raise Http404("QR dependency missing (pip install qrcode[pil])")
+
+    img = qrcode.make(url)
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+
+    resp = HttpResponse(buf.getvalue(), content_type="image/png")
+    if request.GET.get("download") == "1":
+        resp["Content-Disposition"] = f'attachment; filename="competition-invite-{invite.competition_id}.png"'
+    return resp
+
+@require_GET
+@login_required
+def invite_user_search(request):
+    competition_id = request.GET.get("competition_id")
+    q = request.GET.get("q", "")
+    friends_only = request.GET.get("friends_only") == "1"
+
+    if not competition_id or not str(competition_id).isdigit():
+        return HttpResponseBadRequest("Missing competition_id")
+
+    competition = get_object_or_404(Competition, pk=int(competition_id))
+    _require_organizer_or_404(request.user, competition)
+
+    tokens = _tokenize(q)
+    if not tokens:
+        return render(request, "competitions/_invite_user_search_results.html", {
+            "results": [],
+            "q": q,
+            "competition": competition,
+        })
+
+    qs = (
+        User.objects
+        .filter(is_active=True)
+        .exclude(id=request.user.id)
+        .filter(_build_search_q(tokens))
+        .order_by("first_name", "last_name", "username")
+    )
+
+    users = list(qs[:10])
+    user_ids = [u.id for u in users]
+
+    # kto je už člen súťaže
+    member_ids = set(
+        CompetitionMembership.objects
+        .filter(competition=competition, user_id__in=user_ids)
+        .values_list("user_id", flat=True)
+    )
+
+    # kto je priateľ
+    friend_ids = set()
+    fr_qs = (
+        Friendship.objects
+        .filter(status=Friendship.Status.ACCEPTED)
+        .filter(
+            Q(user_a_id=request.user.id, user_b_id__in=user_ids)
+            | Q(user_b_id=request.user.id, user_a_id__in=user_ids)
+        )
+        .select_related("user_a", "user_b")
+    )
+    for fr in fr_qs:
+        other = fr.other_user(request.user)
+        friend_ids.add(other.id)
+
+    if friends_only:
+        users = [u for u in users if u.id in friend_ids]
+
+    results = []
+    for u in users:
+        results.append({
+            "user": u,
+            "is_member": u.id in member_ids,
+            "is_friend": u.id in friend_ids,
+        })
+
+    return render(request, "competitions/_invite_user_search_results.html", {
+        "results": results,
+        "q": q,
+        "competition": competition,
+    })
+
+
+@require_POST
+@login_required
+@transaction.atomic
+def invite_user_add(request, user_id: int):
+    competition_id = request.POST.get("competition_id")
+    if not competition_id or not str(competition_id).isdigit():
+        return HttpResponseBadRequest("Missing competition_id")
+
+    competition = get_object_or_404(Competition, pk=int(competition_id))
+    _require_organizer_or_404(request.user, competition)
+
+    other = get_object_or_404(User, pk=user_id, is_active=True)
+
+    CompetitionMembership.objects.get_or_create(
+        competition=competition,
+        user=other,
+        defaults={"role": CompetitionMembership.Role.CONTESTANT},
+    )
+
+    # zistíme či je friend (na badge)
+    is_friend = Friendship.objects.filter(
+        status=Friendship.Status.ACCEPTED
+    ).filter(
+        Friendship.pair_q(request.user.id, other.id)
+    ).exists()
+
+    return render(request, "competitions/_invite_user_row.html", {
+        "competition": competition,
+        "u": other,
+        "is_member": True,
+        "is_friend": is_friend,
+    })
+
+
 
 @login_required
 def competition_my_catch_list(request, pk: int):
@@ -287,3 +508,35 @@ def competition_my_catch_list(request, pk: int):
         "catches": catches_qs,
         "back_url": reverse("competitions:detail", kwargs={"pk": competition.pk}),
     })
+
+User = get_user_model()
+
+def _require_organizer_or_404(user, competition: Competition):
+    membership = (
+        CompetitionMembership.objects
+        .filter(competition=competition, user=user)
+        .first()
+    )
+    is_creator = (competition.created_by_id == user.id)
+    is_organizer = is_creator or (membership and membership.role == CompetitionMembership.Role.ORGANIZER)
+    if not is_organizer:
+        raise Http404("Competition not found")
+
+
+def _tokenize(q: str) -> list[str]:
+    q = (q or "").strip()
+    if not q:
+        return []
+    parts = re.split(r"\s+", q)
+    return [p for p in parts if p]
+
+
+def _build_search_q(tokens: list[str]):
+    qq = Q()
+    for t in tokens:
+        qq &= (
+            Q(username__icontains=t)
+            | Q(first_name__icontains=t)
+            | Q(last_name__icontains=t)
+        )
+    return qq

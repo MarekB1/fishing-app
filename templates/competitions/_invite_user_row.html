@@ -1,0 +1,28 @@
+<div class="list-group-item d-flex justify-content-between align-items-center" id="invite-user-{{ u.id }}">
+  <div class="me-3">
+    <div class="fw-semibold">{% firstof u.get_full_name u.username %}</div>
+    <div class="text-secondary small">@{{ u.username }}</div>
+  </div>
+
+  <div class="d-flex gap-2 align-items-center">
+    {% if is_friend %}
+      <span class="badge text-bg-success">Priateľ</span>
+    {% endif %}
+
+    {% if is_member %}
+      <button type="button" class="btn btn-outline-light btn-sm" disabled>Už v súťaži</button>
+    {% else %}
+      <form
+        method="post"
+        action="{% url 'competitions:invite_user_add' u.id %}"
+        hx-post="{% url 'competitions:invite_user_add' u.id %}"
+        hx-target="#invite-user-{{ u.id }}"
+        hx-swap="outerHTML"
+      >
+        {% csrf_token %}
+        <input type="hidden" name="competition_id" value="{{ competition.id }}">
+        <button type="submit" class="btn btn-primary btn-sm">Pozvať</button>
+      </form>
+    {% endif %}
+  </div>
+</div>

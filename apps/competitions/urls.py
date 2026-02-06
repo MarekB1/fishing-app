@@ -8,7 +8,15 @@ urlpatterns = [
     path("<int:pk>/", views.competition_detail, name="detail"),
     path("<int:pk>/catches/", views.competition_catch_list, name="catch_list"),
     path("new/", views.competition_create, name="competition_create"),
+
     path("invitations/", views.invitations, name="invitations"),
     path("invite/<uuid:token>/", views.invite_accept, name="invite_accept"),
+
+    # NEW:
+    path("invitations/link/", views.invite_link_create, name="invite_link_create"),
+    path("invite/<uuid:token>/qr/", views.invite_qr, name="invite_qr"),
+    path("invitations/search-users/", views.invite_user_search, name="invite_user_search"),
+    path("invitations/add-user/<int:user_id>/", views.invite_user_add, name="invite_user_add"),
+
     path("<int:pk>/my-catches/", views.competition_my_catch_list, name="my_catch_list"),
 ]

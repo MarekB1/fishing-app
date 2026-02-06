@@ -1,0 +1,11 @@
+{% if results %}
+  <div class="list-group">
+    {% for r in results %}
+      {% include "competitions/_invite_user_row.html" with u=r.user is_member=r.is_member is_friend=r.is_friend competition=competition %}
+    {% endfor %}
+  </div>
+{% else %}
+  {% if q %}
+    <div class="text-secondary small">Nič som nenašiel.</div>
+  {% endif %}
+{% endif %}

@@ -84,11 +84,30 @@ class CompetitionMembership(models.Model):
 
 
 class Invitation(models.Model):
+    class Kind(models.TextChoices):
+        DIRECT = "DIRECT", "Direct (single-use)"   # email / jednorazová
+        LINK = "LINK", "Share link (multi-use)"    # zdieľateľná
+
     competition = models.ForeignKey(
-        Competition, on_delete=models.CASCADE, related_name="invitations"
+        "Competition", on_delete=models.CASCADE, related_name="invitations"
     )
 
-    # pozývanie buď emailom, alebo priamo userom (stačí jedno)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="competition_invites_created",
+    )
+
+    kind = models.CharField(
+        max_length=12,
+        choices=Kind.choices,
+        default=Kind.DIRECT,
+        db_index=True,
+    )
+
+    # DIRECT: pozývanie buď emailom, alebo priamo userom (stačí jedno)
     email = models.EmailField(blank=True, null=True)
     invited_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -100,7 +119,13 @@ class Invitation(models.Model):
 
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 
+    # LINK: limity použitia (null = neobmedzené)
+    max_uses = models.PositiveIntegerField(null=True, blank=True)
+    uses_count = models.PositiveIntegerField(default=0)
+
     expires_at = models.DateTimeField(null=True, blank=True)
+
+    # DIRECT: jednorazové použitie
     used_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -108,15 +133,59 @@ class Invitation(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=["token"]),
+            models.Index(fields=["competition", "kind"]),
             models.Index(fields=["competition", "used_at"]),
+        ]
+        constraints = [
+            # 1 share-link (LINK) na súťaž (PostgreSQL partial unique)
+            models.UniqueConstraint(
+                fields=["competition"],
+                condition=Q(kind="LINK"),
+                name="uniq_competition_share_link",
+            )
         ]
 
     def __str__(self) -> str:
-        return f"Invite {self.token} -> {self.competition}"
+        return f"Invite {self.token} -> {self.competition} ({self.kind})"
 
     def is_valid(self) -> bool:
-        if self.used_at is not None:
+        now = timezone.now()
+
+        if self.expires_at and now > self.expires_at:
             return False
-        if self.expires_at is None:
-            return True
-        return timezone.now() <= self.expires_at
+
+        if self.kind == self.Kind.DIRECT:
+            return self.used_at is None
+
+        # LINK:
+        if self.max_uses is not None and self.uses_count >= self.max_uses:
+            return False
+        return True
+
+
+class InvitationUse(models.Model):
+    """Log použitia multi-use linku (1x per user)."""
+    invitation = models.ForeignKey(
+        Invitation, on_delete=models.CASCADE, related_name="uses"
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="competition_invite_uses",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["invitation", "user"],
+                name="uniq_invitation_use_invitation_user",
+            )
+        ]
+        indexes = [
+            models.Index(fields=["invitation", "created_at"]),
+            models.Index(fields=["user", "created_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.user_id} used {self.invitation_id}"
