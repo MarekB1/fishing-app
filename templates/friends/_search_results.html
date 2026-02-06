@@ -1,0 +1,11 @@
+{% if q and not results %}
+  <div class="alert alert-warning mb-0">Nenašli sa žiadni používatelia.</div>
+{% elif not q %}
+  <div class="alert alert-secondary mb-0">Začni písať pre vyhľadávanie.</div>
+{% else %}
+  <div class="list-group">
+    {% for row in results %}
+      {% include "friends/_search_result_row.html" with u=row.user state=row.state friendship=row.friendship %}
+    {% endfor %}
+  </div>
+{% endif %}

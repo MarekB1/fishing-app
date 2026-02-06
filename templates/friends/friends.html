@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Priatelia{% endblock %}
+
+{% block content %}
+  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div>
+      <h1 class="h3 fw-bold mb-1">Priatelia</h1>
+      <p class="text-secondary mb-0">Vyhľadaj používateľov podľa username, mena alebo priezviska a pridaj si ich medzi priateľov.</p>
+    </div>
+  </div>
+
+  <div class="card shadow-sm mb-3">
+    <div class="card-body">
+      <label class="form-label fw-semibold" for="friend-q">Pridať priateľa</label>
+      <input
+        id="friend-q"
+        name="q"
+        type="text"
+        class="form-control"
+        placeholder="napr. Janko Mrkvička / janko123"
+        autocomplete="off"
+        hx-get="{% url 'friends:search' %}"
+        hx-trigger="keyup changed delay:250ms"
+        hx-target="#friend-search-results"
+        hx-swap="innerHTML"
+      >
+      <div class="form-text text-secondary">
+        Výsledky sa filtrujú priebežne počas písania. Zobrazí sa max. 10 používateľov.
+      </div>
+
+      <div id="friend-search-results" class="mt-3">
+        {% include "friends/_search_results.html" %}
+      </div>
+    </div>
+  </div>
+
+  <div id="friends-lists"
+       hx-get="{% url 'friends:lists' %}"
+       hx-trigger="friendsRefresh from:body"
+       hx-swap="innerHTML"
+  >
+    {% include "friends/_lists.html" %}
+  </div>
+{% endblock %}

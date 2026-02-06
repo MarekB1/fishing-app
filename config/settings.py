@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     "apps.catches.apps.CatchesConfig",
     "apps.notifications.apps.NotificationsConfig",
     "core.apps.CoreConfig",
+    "apps.friends.apps.FriendsConfig",
 ]
 
 MIDDLEWARE = [

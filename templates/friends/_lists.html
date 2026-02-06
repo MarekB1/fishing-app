@@ -1,0 +1,138 @@
+{% load friends_extras %}
+<div class="row g-3">
+  <div class="col-12 col-lg-4">
+    <div class="card h-100 border-secondary">
+      <div class="card-header fw-semibold d-flex align-items-center justify-content-between">
+        <span>✅ Priatelia</span>
+        <span class="badge text-bg-secondary">{{ friends_accepted|length }}</span>
+      </div>
+      <div class="card-body p-0">
+        {% if friends_accepted %}
+          <div class="list-group list-group-flush">
+            {% for fr in friends_accepted %}
+              {% with u=fr|other_user:request.user %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                  <div class="me-3">
+                    <div class="fw-semibold">{% firstof u.get_full_name u.username %}</div>
+                    <div class="text-secondary small">@{{ u.username }}</div>
+                  </div>
+
+                  <form
+                    method="post"
+                    action="{% url 'friends:remove_friend' fr.id %}"
+                    hx-post="{% url 'friends:remove_friend' fr.id %}"
+                    hx-target="#friends-lists"
+                    hx-swap="innerHTML"
+                  >
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-danger btn-sm">Odstrániť</button>
+                  </form>
+                </div>
+              {% endwith %}
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="p-3">
+            <div class="alert alert-info mb-0">Zatiaľ nemáš žiadnych priateľov.</div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="card h-100 border-secondary">
+      <div class="card-header fw-semibold d-flex align-items-center justify-content-between">
+        <span>📩 Prijaté žiadosti</span>
+        <span class="badge text-bg-secondary">{{ friends_incoming|length }}</span>
+      </div>
+      <div class="card-body p-0">
+        {% if friends_incoming %}
+          <div class="list-group list-group-flush">
+            {% for fr in friends_incoming %}
+              {% with u=fr|other_user:request.user %}
+                <div class="list-group-item">
+                  <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div class="me-2">
+                      <div class="fw-semibold">{% firstof u.get_full_name u.username %}</div>
+                      <div class="text-secondary small">@{{ u.username }}</div>
+                      <div class="text-secondary small">Žiadosť: {{ fr.created_at|date:"d.m.Y H:i" }}</div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                      <form
+                        method="post"
+                        action="{% url 'friends:accept_request' fr.id %}"
+                        hx-post="{% url 'friends:accept_request' fr.id %}"
+                        hx-target="#friends-lists"
+                        hx-swap="innerHTML"
+                      >
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-sm">Prijať</button>
+                      </form>
+
+                      <form
+                        method="post"
+                        action="{% url 'friends:decline_request' fr.id %}"
+                        hx-post="{% url 'friends:decline_request' fr.id %}"
+                        hx-target="#friends-lists"
+                        hx-swap="innerHTML"
+                      >
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Zamietnuť</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              {% endwith %}
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="p-3">
+            <div class="alert alert-secondary mb-0">Žiadne prijaté žiadosti.</div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="card h-100 border-secondary">
+      <div class="card-header fw-semibold d-flex align-items-center justify-content-between">
+        <span>📤 Odoslané žiadosti</span>
+        <span class="badge text-bg-secondary">{{ friends_outgoing|length }}</span>
+      </div>
+      <div class="card-body p-0">
+        {% if friends_outgoing %}
+          <div class="list-group list-group-flush">
+            {% for fr in friends_outgoing %}
+              {% with u=fr|other_user:request.user %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                  <div class="me-3">
+                    <div class="fw-semibold">{% firstof u.get_full_name u.username %}</div>
+                    <div class="text-secondary small">@{{ u.username }}</div>
+                    <div class="text-secondary small">Odoslané: {{ fr.created_at|date:"d.m.Y H:i" }}</div>
+                  </div>
+
+                  <form
+                    method="post"
+                    action="{% url 'friends:remove_friend' fr.id %}"
+                    hx-post="{% url 'friends:remove_friend' fr.id %}"
+                    hx-target="#friends-lists"
+                    hx-swap="innerHTML"
+                  >
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-light btn-sm">Zrušiť</button>
+                  </form>
+                </div>
+              {% endwith %}
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="p-3">
+            <div class="alert alert-secondary mb-0">Žiadne odoslané žiadosti.</div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>

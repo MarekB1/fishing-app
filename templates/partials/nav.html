@@ -72,6 +72,14 @@
                 </span>
               </a>
             </li>
+
+            <!-- <li class="nav-item {% if hide_desktop %}d-lg-none{% endif %}">
+              <a class="nav-link {% if current_view == 'friends:home' %}active{% endif %}"
+                {% if current_view == 'friends:home' %}aria-current="page"{% endif %}
+                href="{% url 'friends:home' %}">
+                Priatelia
+              </a>
+            </li> -->
           {% endwith %}
           {% endwith %}
 
@@ -93,7 +101,7 @@
                 <a class="dropdown-item" href="{% url 'core:profile' %}">Profil</a>
               </li>
               <li>
-                <a class="dropdown-item" href="{% url 'core:dashboard' %}">Dashboard</a>
+                <a class="dropdown-item" href="{% url 'friends:home' %}">Priatelia</a>
               </li>
               <li><hr class="dropdown-divider"></li>
               <li>

@@ -14,7 +14,7 @@ urlpatterns = [
     path("competitions/", include("apps.competitions.urls")),
     path("catches/", include("apps.catches.urls")),
     path("notifications/", include("apps.notifications.urls")),
-
+    path("friends/", include("apps.friends.urls")),
     path(
         "favicon.ico",
         RedirectView.as_view(url=staticfiles_storage.url("favicon/favicon.ico"), permanent=True),
