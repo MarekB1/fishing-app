@@ -18,6 +18,23 @@
               </div>
             {% endif %}
 
+            <!-- OFICIÁLNE SÚŤAŽE -->
+            {% if can_create_official %}
+              <div class="mb-3">
+                <label class="form-label" for="{{ form.tier.id_for_label }}">Typ súťaže</label>
+                {{ form.tier }}
+                {% if form.tier.errors %}
+                  <div class="invalid-feedback d-block">{{ form.tier.errors }}</div>
+                {% endif %}
+                <div class="form-text text-secondary">
+                  Oficiálne súťaže budú neskôr spoplatnené (zatIAľ len pripravené).
+                </div>
+              </div>
+            {% else %}
+              {# hidden input, aby sa tier posielal aj v POST #}
+              {{ form.tier }}
+            {% endif %}
+
             <div class="mb-3">
               <label class="form-label" for="{{ form.name.id_for_label }}">Názov</label>
               {{ form.name }}

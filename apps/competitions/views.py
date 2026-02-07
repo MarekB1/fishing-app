@@ -40,6 +40,17 @@ def _organizer_competitions_qs(user):
         .order_by("-starts_at")
     )
 
+UNOFFICIAL_MAX_CONTESTANTS = 5
+
+def _unofficial_limit_reached(competition: Competition) -> bool:
+    if competition.is_official:
+        return False
+    return (
+        CompetitionMembership.objects
+        .filter(competition=competition, role=CompetitionMembership.Role.CONTESTANT)
+        .count()
+        >= UNOFFICIAL_MAX_CONTESTANTS
+    )
 
 @login_required
 def my_competitions(request):
@@ -68,33 +79,33 @@ def my_competitions(request):
 
 @login_required
 def competition_create(request):
+    can_create_official = request.user.has_perm("competitions.can_create_official_competitions")
+
     if request.method == "POST":
-        form = CompetitionForm(request.POST)
+        form = CompetitionForm(request.POST, user=request.user)
         if form.is_valid():
             with transaction.atomic():
                 competition = form.save(commit=False)
-
-                # ak máš v modeli pole created_by, nastav:
                 if hasattr(competition, "created_by_id"):
                     competition.created_by = request.user
-
                 competition.save()
 
-                # vytvor membership organizátora
-                # prispôsob názvy: CompetitionMembership, role field, enumy...
                 CompetitionMembership.objects.get_or_create(
                     competition=competition,
                     user=request.user,
-                    # defaults={"role": CompetitionMembership.Role.ORGANIZER},
-                    defaults = {"role": "ORGANIZER"},
+                    defaults={"role": "ORGANIZER"},
                 )
 
             messages.success(request, "Súťaž bola vytvorená.")
             return redirect("competitions:my_competitions")
     else:
-        form = CompetitionForm()
+        form = CompetitionForm(user=request.user)
 
-    return render(request, "competitions/competition_form.html", {"form": form})
+    return render(request, "competitions/competition_form.html", {
+        "form": form,
+        "can_create_official": can_create_official,
+    })
+
 
 
 @login_required
@@ -161,6 +172,10 @@ def competition_catch_list(request, pk: int):
         .select_related("user")
         .order_by("caught_at", "created_at")
     )
+
+    if competition.is_official and not is_organizer:
+        raise Http404("Competition not found")
+
 
     return render(request, "competitions/_catch_list.html", {
         "competition": competition,
@@ -299,6 +314,17 @@ def invite_accept(request, token):
         if not invite.is_valid():
             messages.error(request, "Táto pozvánka už nie je použiteľná.")
             return redirect("core:dashboard")
+        
+        competition = invite.competition
+
+        already_member = CompetitionMembership.objects.filter(
+            competition=competition,
+            user=request.user,
+        ).exists()
+
+        if (not already_member) and _unofficial_limit_reached(competition):
+            messages.error(request, "Táto neoficiálna súťaž už má maximum 5 účastníkov.")
+            return redirect("core:dashboard")
 
         CompetitionMembership.objects.get_or_create(
             competition=invite.competition,
@@ -389,10 +415,12 @@ def invite_user_search(request):
 
     tokens = _tokenize(q)
     if not tokens:
+        limit_reached = _unofficial_limit_reached(competition)
         return render(request, "competitions/_invite_user_search_results.html", {
             "results": [],
             "q": q,
             "competition": competition,
+            "limit_reached": limit_reached,
         })
 
     qs = (
@@ -445,7 +473,6 @@ def invite_user_search(request):
         "competition": competition,
     })
 
-
 @require_POST
 @login_required
 @transaction.atomic
@@ -457,29 +484,55 @@ def invite_user_add(request, user_id: int):
     competition = get_object_or_404(Competition, pk=int(competition_id))
     _require_organizer_or_404(request.user, competition)
 
+    # ✅ najprv si načítaj "other" – používame ho nižšie
     other = get_object_or_404(User, pk=user_id, is_active=True)
 
-    CompetitionMembership.objects.get_or_create(
-        competition=competition,
-        user=other,
-        defaults={"role": CompetitionMembership.Role.CONTESTANT},
-    )
-
-    # zistíme či je friend (na badge)
+    # zistíme či je friend (na badge) – len raz
     is_friend = Friendship.objects.filter(
         status=Friendship.Status.ACCEPTED
     ).filter(
         Friendship.pair_q(request.user.id, other.id)
     ).exists()
 
+    # je už člen?
+    already_member = CompetitionMembership.objects.filter(
+        competition=competition,
+        user=other,
+    ).exists()
+
+    if already_member:
+        return render(request, "competitions/_invite_user_row.html", {
+            "competition": competition,
+            "u": other,
+            "is_member": True,
+            "is_friend": is_friend,
+            "limit_reached": False,
+        })
+
+    # ✅ ak je limit (iba neoficiálna) a user ešte nie je člen → blok
+    if _unofficial_limit_reached(competition):
+        return render(request, "competitions/_invite_user_row.html", {
+            "competition": competition,
+            "u": other,
+            "is_member": False,
+            "is_friend": is_friend,
+            "limit_reached": True,
+        })
+
+    # inak pridaj člena
+    CompetitionMembership.objects.get_or_create(
+        competition=competition,
+        user=other,
+        defaults={"role": CompetitionMembership.Role.CONTESTANT},
+    )
+
     return render(request, "competitions/_invite_user_row.html", {
         "competition": competition,
         "u": other,
         "is_member": True,
         "is_friend": is_friend,
+        "limit_reached": False,
     })
-
-
 
 @login_required
 def competition_my_catch_list(request, pk: int):

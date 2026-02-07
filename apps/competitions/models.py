@@ -7,10 +7,20 @@ from django.utils import timezone
 from django.core.validators import MinValueValidator
 
 class Competition(models.Model):
+    class Tier(models.TextChoices):
+        UNOFFICIAL = "UNOFFICIAL", "Neoficiálna"
+        OFFICIAL = "OFFICIAL", "Oficiálna"
+
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
 
-    # ✅ NOVÉ
+    tier = models.CharField(
+        max_length=12,
+        choices=Tier.choices,
+        default=Tier.UNOFFICIAL,
+        db_index=True,
+    )
+
     location_name = models.CharField(max_length=255, default="")  # názov miesta
     fishing_spots_count = models.PositiveSmallIntegerField(
         default=1,
@@ -45,11 +55,20 @@ class Competition(models.Model):
 
     def __str__(self) -> str:
         return self.name
-
+    
     @property
     def is_running(self) -> bool:
         now = timezone.now()
         return self.starts_at <= now <= self.ends_at
+    
+    @property
+    def is_official(self) -> bool:
+        return self.tier == self.Tier.OFFICIAL
+
+    @property
+    def max_contestants(self):
+        """UNOFFICIAL: max 5 contestantov, OFFICIAL: bez limitu."""
+        return None if self.is_official else 5
 
 
 class CompetitionMembership(models.Model):

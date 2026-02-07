@@ -11,14 +11,16 @@
 
     {% if is_member %}
       <button type="button" class="btn btn-outline-light btn-sm" disabled>Už v súťaži</button>
+    {% elif limit_reached %}
+      <button type="button" class="btn btn-outline-warning btn-sm" disabled>Limit 5 účastníkov</button>
     {% else %}
-      <form
-        method="post"
-        action="{% url 'competitions:invite_user_add' u.id %}"
-        hx-post="{% url 'competitions:invite_user_add' u.id %}"
-        hx-target="#invite-user-{{ u.id }}"
-        hx-swap="outerHTML"
-      >
+        <form
+          method="post"
+          action="{% url 'competitions:invite_user_add' u.id %}"
+          hx-post="{% url 'competitions:invite_user_add' u.id %}"
+          hx-target="#invite-user-{{ u.id }}"
+          hx-swap="outerHTML"
+        >
         {% csrf_token %}
         <input type="hidden" name="competition_id" value="{{ competition.id }}">
         <button type="submit" class="btn btn-primary btn-sm">Pozvať</button>
