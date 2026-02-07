@@ -60,6 +60,7 @@
               </a>
             </li>
 
+            {% if nav_is_organizer %}
             <li class="nav-item {% if hide_desktop %}d-lg-none{% endif %}">
               <a class="nav-link {% if current_view == 'notifications:pending' %}active{% endif %} d-flex align-items-center gap-2"
                 {% if current_view == 'notifications:pending' %}aria-current="page"{% endif %}
@@ -72,14 +73,8 @@
                 </span>
               </a>
             </li>
+            {% endif %}
 
-            <!-- <li class="nav-item {% if hide_desktop %}d-lg-none{% endif %}">
-              <a class="nav-link {% if current_view == 'friends:home' %}active{% endif %}"
-                {% if current_view == 'friends:home' %}aria-current="page"{% endif %}
-                href="{% url 'friends:home' %}">
-                Priatelia
-              </a>
-            </li> -->
           {% endwith %}
           {% endwith %}
 
