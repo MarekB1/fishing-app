@@ -1,0 +1,43 @@
+<tr id="member-row-{{ m.id }}">
+  <td>
+    <div class="fw-semibold">{% firstof m.user.get_full_name m.user.username %}</div>
+    <div class="text-secondary small">@{{ m.user.username }}</div>
+  </td>
+
+  <td>
+    <form
+      class="w-100"
+      method="post"
+      action="{% url 'competitions:membership_set_spot' competition.pk m.pk %}"
+      hx-post="{% url 'competitions:membership_set_spot' competition.pk m.pk %}"
+      hx-target="#member-row-{{ m.id }}"
+      hx-swap="outerHTML"
+    >
+      {% csrf_token %}
+
+      <div class="d-flex gap-2 align-items-center">
+        <select
+          name="spot_number"
+          class="form-select form-select-sm {% if error %}is-invalid{% endif %}"
+          style="max-width: 180px;"
+        >
+          <option value="" {% if not m.spot_number %}selected{% endif %}>— nepridelené —</option>
+
+          {% for n in spots_range %}
+            <option value="{{ n }}" {% if m.spot_number == n %}selected{% endif %}>{{ n }}</option>
+          {% endfor %}
+        </select>
+
+        <button class="btn btn-outline-light btn-sm" type="submit">Uložiť</button>
+      </div>
+
+      {% if error %}
+        <div class="invalid-feedback d-block">{{ error }}</div>
+      {% else %}
+        <div class="form-text text-secondary mb-0">
+          Max: {{ competition.fishing_spots_count }} miest.
+        </div>
+      {% endif %}
+    </form>
+  </td>
+</tr>

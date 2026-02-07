@@ -12,6 +12,8 @@ from django.shortcuts import redirect, render
 from django.db import transaction
 from django.db.models import Q
 from django.urls import reverse
+from django.db import IntegrityError
+
 
 from .forms import CompetitionForm
 from .models import Competition, CompetitionMembership, Invitation, InvitationUse
@@ -137,6 +139,16 @@ def competition_detail(request, pk: int):
 
     my_catches_qs = catches_qs.filter(user=request.user)
 
+    contestant_memberships = []
+    spots_range = range(1, competition.fishing_spots_count + 1)
+    if is_organizer:
+        contestant_memberships = (
+            CompetitionMembership.objects
+            .filter(competition=competition, role=CompetitionMembership.Role.CONTESTANT)
+            .select_related("user")
+            .order_by("spot_number", "user__username")
+        )
+
     context = {
         "competition": competition,
         "membership": membership,
@@ -145,9 +157,76 @@ def competition_detail(request, pk: int):
         "is_contestant": bool(is_contestant),
         "catches": catches_qs,
         "my_catches": my_catches_qs,
+        "contestant_memberships": contestant_memberships,
+        "spots_range": spots_range,
     }
     return render(request, "competitions/detail.html", context)
 
+@require_POST
+@login_required
+@transaction.atomic
+def membership_set_spot(request, pk: int, membership_id: int):
+    competition = get_object_or_404(Competition, pk=pk)
+    _require_organizer_or_404(request.user, competition)
+
+    m = get_object_or_404(
+        CompetitionMembership.objects.select_related("user"),
+        pk=membership_id,
+        competition=competition,
+        role=CompetitionMembership.Role.CONTESTANT,
+    )
+
+    spots_range = range(1, competition.fishing_spots_count + 1)
+    raw = (request.POST.get("spot_number") or "").strip()
+    error = None
+
+    if raw == "":
+        spot = None  # vymazanie priradenia
+    else:
+        if not raw.isdigit():
+            error = "Zadaj číslo."
+            spot = m.spot_number
+        else:
+            spot = int(raw)
+
+            if spot < 1 or spot > competition.fishing_spots_count:
+                error = f"Povolené je 1 až {competition.fishing_spots_count}."
+            elif CompetitionMembership.objects.filter(
+                competition=competition,
+                spot_number=spot,
+            ).exclude(pk=m.pk).exists():
+                error = f"Miesto {spot} je už obsadené."
+
+    if error:
+        return render(request, "competitions/_member_row.html", {
+            "competition": competition,
+            "m": m,
+            "error": error,
+            "spots_range": spots_range,
+        })
+
+    m.spot_number = spot
+
+    if spot < 1 or spot > competition.fishing_spots_count:
+        error = f"Povolené je 1 až {competition.fishing_spots_count}."
+
+    try:
+        m.save(update_fields=["spot_number"])
+    except IntegrityError:
+        # safety net pri race condition
+        return render(request, "competitions/_member_row.html", {
+            "competition": competition,
+            "m": m,
+            "error": "Toto miesto je už obsadené.",
+            "spots_range": spots_range,
+        })
+
+    return render(request, "competitions/_member_row.html", {
+        "competition": competition,
+        "m": m,
+        "error": None,
+        "spots_range": spots_range,
+    })
 
 @login_required
 def competition_catch_list(request, pk: int):

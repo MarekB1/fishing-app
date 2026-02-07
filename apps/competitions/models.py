@@ -84,6 +84,8 @@ class CompetitionMembership(models.Model):
     )
     role = models.CharField(max_length=20, choices=Role.choices)
 
+    spot_number = models.PositiveSmallIntegerField(null=True, blank=True, db_index=True)
+
     joined_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -91,8 +93,14 @@ class CompetitionMembership(models.Model):
             models.UniqueConstraint(
                 fields=["competition", "user"],
                 name="uniq_membership_competition_user",
-            )
+            ),
+            models.UniqueConstraint(
+                fields=["competition", "spot_number"],
+                condition=Q(spot_number__isnull=False),
+                name="uniq_membership_competition_spot_number",
+            ),
         ]
+        
         indexes = [
             models.Index(fields=["competition", "role"]),
             models.Index(fields=["user"]),

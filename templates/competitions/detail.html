@@ -6,7 +6,7 @@
     <div class="d-flex align-items-center gap-2">
       <a class="btn btn-outline-light btn-sm" href="{% url 'competitions:my_competitions' %}">← Moje súťaže</a>
 
-      {% if is_organizer %}
+      <!-- {% if is_organizer %}
         <a class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2" href="{% url 'notifications:pending' %}">
           Pending
           <span class="badge rounded-pill text-bg-danger" data-pending-count data-pending-hide-zero="1"
@@ -14,7 +14,7 @@
             {{ unread_notifications|default:0 }}
           </span>
         </a>
-      {% endif %}
+      {% endif %} -->
     </div>
 
     <div class="d-flex flex-wrap gap-2">
@@ -116,6 +116,21 @@
   </div>
 
   <div class="row g-3">
+    {% if is_contestant %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <div class="text-secondary small">Miesto číslo</div>
+        <div class="h4 fw-bold mb-0">
+          {% if membership.spot_number %}
+            {{ membership.spot_number }}
+          {% else %}
+            <span class="text-secondary">nepridelené</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
     {% if not competition.is_official or is_organizer %}
     <div class="col-12 col-lg-6">
       <div class="card shadow-sm">
@@ -162,15 +177,48 @@
     </div>
   </div>
 
+  {% if is_organizer %}
+    <div class="card shadow-sm mb-4">
+      <div class="card-header border-secondary">
+        <div class="fw-semibold">👥 Účastníci – Miesto číslo</div>
+        <div class="small text-secondary">
+          Priraď miesto účastníkom (1–{{ competition.fishing_spots_count }}). Každé miesto môže byť len raz.
+        </div>
+      </div>
+
+      <div class="card-body p-0">
+        {% if contestant_memberships %}
+          <div class="table-responsive">
+            <table class="table table-dark table-striped table-hover mb-0 align-middle">
+              <thead>
+                <tr>
+                  <th>Účastník</th>
+                  <th style="width: 260px;">Miesto číslo</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for m in contestant_memberships %}
+                  {% include "competitions/_member_row.html" with competition=competition m=m %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="p-3 text-secondary">Zatiaľ tu nie sú žiadni účastníci.</div>
+        {% endif %}
+      </div>
+    </div>
+  {% endif %}
+
   <div class="mt-4 card border-secondary">
     <div class="card-header fw-semibold">TODO</div>
     <div class="card-body">
       <ul class="mb-0">
         <li>Zobraziť členov + info (body, počet rýb...)</li>
-        <li>Pridať úlovky, ktoré do teraz boli schválené</li>
-        <li>Schválené úlovky vidí iba organizátor</li>
-        <li>Zvýrazniť to, keď user vstúpy do súťaže (Vstúpil si do súťaže:)
-        </li>
+        <li><s>Pridať úlovky, ktoré do teraz boli schválené</s></li>
+        <li><s>Schválené úlovky vidí iba organizátor</s></li>
+        <li>Zvýrazniť to, keď user vstúpy do súťaže (Vstúpil si do súťaže:)</li>
+        <li>Možnosť otvoriť si profil účastníka, kde sa zobrazia jeho úlovky v danej súťaži</li>
       </ul>
     </div>
   </div>
