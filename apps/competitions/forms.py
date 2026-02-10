@@ -4,6 +4,46 @@ from .models import Invitation, Competition
 
 DT_LOCAL_FORMAT = "%Y-%m-%dT%H:%M"
 
+class InvitationCreateForm(forms.ModelForm):
+    """Klasická (DIRECT) email pozvánka.
+
+    Lovné miesto vyberáme globálne v toolbar-e na stránke /competitions/invitations
+    (select #spotPicker) a hodnota sa spracuje vo view (nepatrí do tohto formu).
+    """
+
+    class Meta:
+        model = Invitation
+        fields = ["competition", "email", "expires_at"]
+        widgets = {
+            "expires_at": forms.DateTimeInput(
+                format=DT_LOCAL_FORMAT,
+                attrs={"type": "datetime-local"},
+            ),
+        }
+
+    def __init__(self, *args, competition_qs=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if competition_qs is not None:
+            self.fields["competition"].queryset = competition_qs
+
+        # Bootstrap triedy
+        self.fields["competition"].widget.attrs.setdefault("class", "form-select")
+        self.fields["email"].widget.attrs.setdefault("class", "form-control")
+        self.fields["expires_at"].widget.attrs.setdefault("class", "form-control")
+
+    def clean_email(self):
+        email = (self.cleaned_data.get("email") or "").strip()
+        if not email:
+            raise forms.ValidationError("Zadaj email pozývaného.")
+        return email
+
+    def clean_expires_at(self):
+        expires_at = self.cleaned_data.get("expires_at")
+        if expires_at and expires_at <= timezone.now():
+            raise forms.ValidationError("Expirácia musí byť v budúcnosti.")
+        return expires_at
+
 class CompetitionForm(forms.ModelForm):
     class Meta:
         model = Competition

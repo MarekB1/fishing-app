@@ -13,7 +13,7 @@ from django.db import transaction
 from django.db.models import Q
 from django.urls import reverse
 from django.db import IntegrityError
-
+from django.db import transaction, IntegrityError
 
 from .forms import CompetitionForm
 from .models import Competition, CompetitionMembership, Invitation, InvitationUse
@@ -264,6 +264,46 @@ def competition_catch_list(request, pk: int):
     })
 
 @login_required
+def _parse_spot_number(raw: str | None) -> int | None:
+    raw = (raw or "").strip()
+    if raw == "":
+        return None
+    if not raw.isdigit():
+        return None
+    return int(raw)
+
+
+def _free_spots_for_competition(competition: Competition, *, exclude_invitation_id: int | None = None) -> list[int]:
+    """Voľné miesta = nie sú obsadené membershipom a nie sú rezervované aktívnou DIRECT pozvánkou."""
+    now = timezone.now()
+
+    taken = set(
+        CompetitionMembership.objects
+        .filter(competition=competition, spot_number__isnull=False)
+        .values_list("spot_number", flat=True)
+    )
+
+    reserved_qs = (
+        Invitation.objects
+        .filter(
+            competition=competition,
+            kind=Invitation.Kind.DIRECT,
+            spot_number__isnull=False,
+            used_at__isnull=True,
+        )
+        .filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+    )
+    if exclude_invitation_id:
+        reserved_qs = reserved_qs.exclude(pk=exclude_invitation_id)
+
+    reserved = set(reserved_qs.values_list("spot_number", flat=True))
+
+    return [
+        i for i in range(1, competition.fishing_spots_count + 1)
+        if i not in taken and i not in reserved
+    ]
+
+
 def invitations(request):
     organizer_competitions = _organizer_competitions_qs(request.user)
 
@@ -280,18 +320,46 @@ def invitations(request):
             active_competition_id = None
             filtered_competitions = organizer_competitions
 
-    # POST: vytvorenie klasickej email pozvánky
+    active_competition = (
+        organizer_competitions.filter(id=active_competition_id).first()
+        if active_competition_id else None
+    )
+
+    # POST: vytvorenie klasickej email pozvánky (DIRECT)
     if request.method == "POST":
         form = InvitationCreateForm(request.POST, competition_qs=organizer_competitions)
         if form.is_valid():
-            invite = form.save()
-            link = request.build_absolute_uri(
-                reverse("competitions:invite_accept", kwargs={"token": str(invite.token)})
-            )
-            messages.success(request, f"Pozvánka vytvorená. Link: {link}")
-            return redirect("competitions:invitations")
+            invite = form.save(commit=False)
+            invite.created_by = request.user
+            invite.kind = Invitation.Kind.DIRECT
+
+            # lovné miesto sa vyberá v hornom toolbar-e (select #spotPicker)
+            spot = _parse_spot_number(request.POST.get("spot_number"))
+            if spot is not None:
+                if spot < 1 or spot > invite.competition.fishing_spots_count:
+                    form.add_error(None, f"Povolené je 1 až {invite.competition.fishing_spots_count}.")
+                else:
+                    free = _free_spots_for_competition(invite.competition)
+                    if spot not in free:
+                        form.add_error(None, f"Miesto {spot} je už obsadené alebo rezervované.")
+                    else:
+                        invite.spot_number = spot
+
+            if form.errors:
+                # spadne to do renderu nižšie
+                pass
+            else:
+                invite.save()
+                link = request.build_absolute_uri(
+                    reverse("competitions:invite_accept", kwargs={"token": str(invite.token)})
+                )
+                messages.success(request, f"Pozvánka vytvorená. Link: {link}")
+                return redirect(f"{reverse('competitions:invitations')}?competition={invite.competition_id}")
     else:
-        form = InvitationCreateForm(competition_qs=organizer_competitions)
+        form = InvitationCreateForm(
+            competition_qs=organizer_competitions,
+            initial=({"competition": active_competition_id} if active_competition_id else None),
+        )
 
     inv_qs = (
         Invitation.objects
@@ -301,8 +369,42 @@ def invitations(request):
     )
 
     now = timezone.now()
-    items = []
 
+    comp_list = list(filtered_competitions)
+    comp_ids = [c.id for c in comp_list]
+
+    taken_map: dict[int, set[int]] = {}
+    for cid, spot in (
+        CompetitionMembership.objects
+        .filter(competition_id__in=comp_ids, spot_number__isnull=False)
+        .values_list("competition_id", "spot_number")
+    ):
+        taken_map.setdefault(cid, set()).add(int(spot))
+
+    reserved_map: dict[int, set[int]] = {}
+    for cid, spot in (
+        Invitation.objects
+        .filter(
+            competition_id__in=comp_ids,
+            kind=Invitation.Kind.DIRECT,
+            spot_number__isnull=False,
+            used_at__isnull=True,
+        )
+        .filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+        .values_list("competition_id", "spot_number")
+    ):
+        reserved_map.setdefault(cid, set()).add(int(spot))
+
+    free_map: dict[int, list[int]] = {}
+    for c in comp_list:
+        taken = taken_map.get(c.id, set())
+        reserved = reserved_map.get(c.id, set())
+        free_map[c.id] = [
+            i for i in range(1, c.fishing_spots_count + 1)
+            if i not in taken and i not in reserved
+        ]
+
+    items = []
     for inv in inv_qs:
         if inv.used_at:
             status = "Použitá"
@@ -325,48 +427,130 @@ def invitations(request):
             "used_at": inv.used_at,
             "status": status,
             "link": link,
+
+            # per-pozvánka dropdown (DIRECT)
+            "spots": (
+                ([inv.spot_number] if inv.spot_number and inv.spot_number not in free_map.get(inv.competition_id, []) else [])
+                + list(free_map.get(inv.competition_id, []))
+            ),
+            "taken_spots": sorted(list(taken_map.get(inv.competition_id, set()))),
+            "reserved_spots": sorted(list(reserved_map.get(inv.competition_id, set()))),
+            "is_locked": bool(inv.used_at or (inv.expires_at and inv.expires_at < now)),
         })
 
-    # --- NEW: selected_competition + share_invite + share_link (pre zdieľateľný link/QR) ---
-    selected_competition = (
-        organizer_competitions.filter(id=active_competition_id).first()
-        if active_competition_id else None
-    )
-
-    share_invite = None
-    share_link = None
-
-    # Guard: ak model Invitation ešte nemá "kind"
-    try:
-        Invitation._meta.get_field("kind")
-        kind_link_value = Invitation.Kind.LINK
-    except Exception:
-        kind_link_value = None
-
-    if selected_competition and kind_link_value:
-        share_invite = Invitation.objects.filter(
-            competition=selected_competition,
-            kind=kind_link_value,
-        ).first()
-
-        if share_invite:
-            share_link = request.build_absolute_uri(
-                reverse("competitions:invite_accept", kwargs={"token": str(share_invite.token)})
-            )
+    spot_picker_spots = free_map.get(active_competition_id, []) if active_competition_id else []
+    spot_picker_value = (request.POST.get("spot_number") or "").strip() if request.method == "POST" else ""
+    spot_picker_selected = int(spot_picker_value) if spot_picker_value.isdigit() else None
 
     return render(request, "competitions/invitations.html", {
         "form": form,
         "items": items,
         "competitions": organizer_competitions,
         "active_competition_id": active_competition_id,
-
-        # NEW:
-        "selected_competition": selected_competition,
-        "share_invite": share_invite,
-        "share_link": share_link,
+        "active_competition": active_competition,
+        "spot_picker_spots": spot_picker_spots,
+        "spot_picker_value": spot_picker_value,
+        "spot_picker_selected": spot_picker_selected,
     })
 
+@require_POST
+@login_required
+@transaction.atomic
+def invitation_set_spot(request, invitation_id: int):
+    inv = get_object_or_404(
+        Invitation.objects.select_related("competition").select_for_update(),
+        pk=invitation_id,
+    )
+    competition = inv.competition
+    _require_organizer_or_404(request.user, competition)
 
+    if inv.kind != Invitation.Kind.DIRECT:
+        return HttpResponseBadRequest("Only DIRECT invitations can have a fishing spot.")
+
+    now = timezone.now()
+    is_locked = bool(inv.used_at or (inv.expires_at and inv.expires_at < now))
+    if is_locked:
+        return render(request, "competitions/_invitation_spot_select.html", {
+            "inv": inv,
+            "competition": competition,
+            "spots": ([inv.spot_number] if getattr(inv, "spot_number", None) else []),
+            "taken_spots": [],
+            "reserved_spots": [],
+            "error": "Pozvánka už nie je aktívna.",
+            "is_locked": True,
+        })
+
+    raw = (request.POST.get("spot_number") or "").strip()
+    error = None
+
+    if raw == "":
+        spot = None
+    else:
+        if not raw.isdigit():
+            error = "Zadaj číslo."
+            spot = inv.spot_number
+        else:
+            spot = int(raw)
+
+            if spot < 1 or spot > competition.fishing_spots_count:
+                error = f"Povolené je 1 až {competition.fishing_spots_count}."
+            elif CompetitionMembership.objects.filter(
+                competition=competition,
+                spot_number=spot,
+            ).exists():
+                error = f"Miesto {spot} je už obsadené."
+            else:
+                reserved = Invitation.objects.filter(
+                    competition=competition,
+                    kind=Invitation.Kind.DIRECT,
+                    spot_number=spot,
+                    used_at__isnull=True,
+                ).filter(
+                    Q(expires_at__isnull=True) | Q(expires_at__gt=now)
+                ).exclude(pk=inv.pk).exists()
+
+                if reserved:
+                    error = f"Miesto {spot} je už rezervované inou pozvánkou."
+
+    if not error:
+        inv.spot_number = spot
+        inv.save(update_fields=["spot_number"])
+
+    taken_spots = set(
+        CompetitionMembership.objects
+        .filter(competition=competition, spot_number__isnull=False)
+        .values_list("spot_number", flat=True)
+    )
+
+    reserved_spots = set(
+        Invitation.objects
+        .filter(
+            competition=competition,
+            kind=Invitation.Kind.DIRECT,
+            spot_number__isnull=False,
+            used_at__isnull=True,
+        )
+        .filter(Q(expires_at__isnull=True) | Q(expires_at__gt=now))
+        .exclude(pk=inv.pk)
+        .values_list("spot_number", flat=True)
+    )
+
+    free = [
+        i for i in range(1, competition.fishing_spots_count + 1)
+        if i not in taken_spots and i not in reserved_spots
+    ]
+
+    spots = ([inv.spot_number] if inv.spot_number and inv.spot_number not in free else []) + free
+
+    return render(request, "competitions/_invitation_spot_select.html", {
+        "inv": inv,
+        "competition": competition,
+        "spots": spots,
+        "taken_spots": sorted(list(taken_spots)),
+        "reserved_spots": sorted(list(reserved_spots)),
+        "error": error,
+        "is_locked": False,
+    })
     
 def invite_accept(request, token):
     invite = get_object_or_404(Invitation, token=token)
@@ -388,12 +572,12 @@ def invite_accept(request, token):
 
     with transaction.atomic():
         # zamkneme invite pri LINK aby sme korektne riešili max_uses
-        invite = Invitation.objects.select_for_update().get(pk=invite.pk)
+        invite = Invitation.objects.select_for_update().select_related("competition").get(pk=invite.pk)
 
         if not invite.is_valid():
             messages.error(request, "Táto pozvánka už nie je použiteľná.")
             return redirect("core:dashboard")
-        
+
         competition = invite.competition
 
         already_member = CompetitionMembership.objects.filter(
@@ -405,13 +589,40 @@ def invite_accept(request, token):
             messages.error(request, "Táto neoficiálna súťaž už má maximum 5 účastníkov.")
             return redirect("core:dashboard")
 
-        CompetitionMembership.objects.get_or_create(
-            competition=invite.competition,
+        membership, _created = CompetitionMembership.objects.get_or_create(
+            competition=competition,
             user=request.user,
             defaults={"role": CompetitionMembership.Role.CONTESTANT},
         )
 
+        # zamkneme membership riadok (ak existuje), aby sme bezpečne priraďovali spot
+        membership = CompetitionMembership.objects.select_for_update().get(pk=membership.pk)
+
+        # ✅ Prenos lovného miesta z DIRECT pozvánky na membership
         if invite.kind == Invitation.Kind.DIRECT:
+            spot_from_invite = getattr(invite, "spot_number", None)
+
+            if spot_from_invite and membership.spot_number is None:
+                try:
+                    spot_int = int(spot_from_invite)
+                except (TypeError, ValueError):
+                    spot_int = None
+
+                if spot_int and 1 <= spot_int <= competition.fishing_spots_count:
+                    taken = CompetitionMembership.objects.filter(
+                        competition=competition,
+                        spot_number=spot_int,
+                    ).exclude(pk=membership.pk).exists()
+
+                    if not taken:
+                        membership.spot_number = spot_int
+                        try:
+                            membership.save(update_fields=["spot_number"])
+                        except IntegrityError:
+                            # ak máš unique constraint na (competition, spot_number),
+                            # tak pri race condition to sem spadne a spot sa nepriradí
+                            pass
+
             invite.invited_user = request.user
             invite.used_at = timezone.now()
             invite.save(update_fields=["invited_user", "used_at"])
@@ -430,6 +641,7 @@ def invite_accept(request, token):
 
     messages.success(request, f"Vstúpil si do súťaže: {invite.competition.name}")
     return redirect("competitions:detail", pk=invite.competition_id)
+
 
 @require_POST
 @login_required
@@ -574,18 +786,19 @@ def invite_user_add(request, user_id: int):
     ).exists()
 
     # je už člen?
-    already_member = CompetitionMembership.objects.filter(
+    membership = CompetitionMembership.objects.filter(
         competition=competition,
         user=other,
-    ).exists()
+    ).first()
 
-    if already_member:
+    if membership:
         return render(request, "competitions/_invite_user_row.html", {
             "competition": competition,
             "u": other,
             "is_member": True,
             "is_friend": is_friend,
             "limit_reached": False,
+            "assigned_spot": membership.spot_number,
         })
 
     # ✅ ak je limit (iba neoficiálna) a user ešte nie je člen → blok
@@ -598,12 +811,35 @@ def invite_user_add(request, user_id: int):
             "limit_reached": True,
         })
 
-    # inak pridaj člena
-    CompetitionMembership.objects.get_or_create(
+    # lovné miesto je vybraté v hornom toolbar-e (select #spotPicker)
+    spot = _parse_spot_number(request.POST.get("spot_number"))
+    spot_error = None
+
+    if spot is not None:
+        if spot < 1 or spot > competition.fishing_spots_count:
+            spot_error = f"Povolené je 1 až {competition.fishing_spots_count}."
+            spot = None
+        else:
+            free = _free_spots_for_competition(competition)
+            if spot not in free:
+                spot_error = f"Miesto {spot} je už obsadené alebo rezervované."
+                spot = None
+
+    membership, _created = CompetitionMembership.objects.get_or_create(
         competition=competition,
         user=other,
         defaults={"role": CompetitionMembership.Role.CONTESTANT},
     )
+
+    # ak je spot zvolený a membership ho ešte nemá → priraď
+    if spot is not None and membership.spot_number is None:
+        membership.spot_number = spot
+        try:
+            membership.save(update_fields=["spot_number"])
+        except IntegrityError:
+            # race condition / unikátny constraint (competition, spot_number)
+            spot_error = f"Miesto {spot} už niekto medzičasom obsadil."
+            membership.refresh_from_db(fields=["spot_number"])
 
     return render(request, "competitions/_invite_user_row.html", {
         "competition": competition,
@@ -611,6 +847,8 @@ def invite_user_add(request, user_id: int):
         "is_member": True,
         "is_friend": is_friend,
         "limit_reached": False,
+        "assigned_spot": membership.spot_number,
+        "spot_error": spot_error,
     })
 
 @login_required

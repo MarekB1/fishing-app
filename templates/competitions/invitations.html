@@ -23,9 +23,28 @@
             </option>
           {% endfor %}
         </select>
+
+        {# GLOBAL spot picker (len pre email + friends; nie pre LINK/QR) #}
+        {% if active_competition_id %}
+          <select
+            class="form-select form-select-sm w-auto"
+            id="spotPicker"
+            name="spot_number"
+            form="emailInviteForm"
+            style="border: 1px solid #0d6efd;"
+          >
+            <option value="" {% if not spot_picker_selected %}selected{% endif %}>Lovné miesto — (nepriradené)</option>
+            {% for s in spot_picker_spots %}
+              <option value="{{ s }}" {% if spot_picker_selected == s %}selected{% endif %}>Miesto {{ s }}</option>
+            {% endfor %}
+          </select>
+        {% else %}
+          <select class="form-select form-select-sm w-auto" id="spotPicker" disabled style="border: 1px solid #0d6efd;">
+            <option value="" selected>Najprv vyber súťaž</option>
+          </select>
+        {% endif %}
       {% endif %}
     </div>
-  </div>
 
   {% if competitions %}
     <div class="row g-3">
@@ -103,7 +122,7 @@
               Toto je klasická email pozvánka (typicky jednorazová). Zdieľateľný link rieš vyššie.
             </p>
 
-            <form method="post" novalidate>
+            <form id="emailInviteForm" method="post" novalidate>
               {% csrf_token %}
 
               {% if form.non_field_errors %}
@@ -130,8 +149,8 @@
                 <label class="form-label" for="{{ form.expires_at.id_for_label }}">Expirácia (voliteľné)</label>
                 {{ form.expires_at }}
                 {% if form.expires_at.errors %}
-                  <div class="invalid-feedback d-block">{{ form.expires_at.errors }}</div>
                 {% endif %}
+                <div class="form-text">Zobrazujú sa len voľné miesta (nezobrazia sa obsadené ani rezervované).</div>
               </div>
 
               <button type="submit" class="btn btn-primary">Vytvoriť pozvánku</button>
@@ -156,6 +175,8 @@
                     <tr>
                       <th>Súťaž</th>
                       <th>Email</th>
+                      <th>Email</th>
+                      <th>Miesto</th>
                       <th>Status</th>
                       <th>Vytvorené</th>
                       <th>Expirácia</th>
@@ -172,6 +193,17 @@
                         </td>
 
                         <td>{{ it.email|default:"—" }}</td>
+                        <td style="min-width: 180px;">
+                          {% include "competitions/_invitation_spot_select.html" with
+                              inv=it.inv
+                              competition=it.competition
+                              spots=it.spots
+                              taken_spots=it.taken_spots
+                              reserved_spots=it.reserved_spots
+                              error=None
+                              is_locked=it.is_locked
+                          %}
+                        </td>
 
                         <td>
                           {% if it.status == "Použitá" %}
@@ -218,9 +250,8 @@
           <div class="card-header fw-semibold">Poznámky / ďalšie kroky</div>
           <div class="card-body">
             <ul class="mb-0">
-              <li>Voliteľné: limit použitia zdieľateľného linku (max_uses), expirácia</li>
-              <li>Voliteľné: zmazanie / regenerácia zdieľateľného linku</li>
-              <li>Voliteľné: poslať notifikáciu pozvanému (Channels) po pridaní do súťaže</li>
+              <li>Dokončiť chybu pri pozývaní cez</li>
+              <li>Schovať pozvanie keď nie je vybrané lovné miesto</li>
             </ul>
           </div>
         </div>

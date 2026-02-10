@@ -144,6 +144,8 @@ class Invitation(models.Model):
         related_name="competition_invitations",
     )
 
+    spot_number = models.PositiveSmallIntegerField(null=True, blank=True, db_index=True)
+
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 
     # LINK: limity použitia (null = neobmedzené)

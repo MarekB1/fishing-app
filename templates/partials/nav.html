@@ -60,6 +60,34 @@
               </a>
             </li>
 
+{% if nav_missing_spots_total %}
+<li class="nav-item dropdown {% if hide_desktop %}d-lg-none{% endif %}">
+  <a
+    class="nav-link dropdown-toggle d-flex align-items-center gap-2"
+    href="#"
+    role="button"
+    data-bs-toggle="dropdown"
+    aria-expanded="false"
+  >
+    <span class="badge text-bg-danger">{{ nav_missing_spots_total }}</span>
+    Bez miesta
+  </a>
+
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li class="dropdown-header">Účastníci bez lovného miesta</li>
+    {% for row in nav_missing_spots %}
+      <li>
+        <a class="dropdown-item d-flex justify-content-between align-items-center"
+           href="{% url 'competitions:detail' row.competition_id %}">
+          <span>{{ row.competition_name }}</span>
+          <span class="badge text-bg-secondary">{{ row.count }}</span>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</li>
+{% endif %}
+
             {% if nav_is_organizer %}
             <li class="nav-item {% if hide_desktop %}d-lg-none{% endif %}">
               <a class="nav-link {% if current_view == 'notifications:pending' %}active{% endif %} d-flex align-items-center gap-2"

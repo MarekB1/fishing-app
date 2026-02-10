@@ -1,0 +1,34 @@
+<div id="inv-spot-{{ inv.id }}">
+  <form
+    method="post"
+    hx-post="{% url 'competitions:invitation_set_spot' inv.id %}"
+    hx-target="#inv-spot-{{ inv.id }}"
+    hx-swap="outerHTML"
+    class="m-0"
+  >
+    {% csrf_token %}
+    <select
+      name="spot_number"
+      class="form-select form-select-sm {% if error %}is-invalid{% endif %}"
+      {% if is_locked or inv.kind != "DIRECT" %}disabled{% endif %}
+      onchange="this.form.requestSubmit()"
+    >
+      <option value="" {% if not inv.spot_number %}selected{% endif %}>—</option>
+
+      {% for s in spots %}
+        <option value="{{ s }}" {% if inv.spot_number == s %}selected{% endif %}>
+          Miesto {{ s }}
+          {% if inv.spot_number == s and (s in taken_spots) %}
+            (obsadené)
+          {% elif inv.spot_number == s and (s in reserved_spots) %}
+            (rezervované)
+          {% endif %}
+        </option>
+      {% endfor %}
+    </select>
+
+    {% if error %}
+      <div class="invalid-feedback d-block">{{ error }}</div>
+    {% endif %}
+  </form>
+</div>

@@ -19,4 +19,5 @@ urlpatterns = [
     path("invitations/add-user/<int:user_id>/", views.invite_user_add, name="invite_user_add"),
     path("<int:pk>/members/<int:membership_id>/spot/", views.membership_set_spot, name="membership_set_spot"),
     path("<int:pk>/my-catches/", views.competition_my_catch_list, name="my_catch_list"),
+    path("invitations/<int:invitation_id>/spot/", views.invitation_set_spot, name="invitation_set_spot"),
 ]
