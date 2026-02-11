@@ -263,7 +263,6 @@ def competition_catch_list(request, pk: int):
         "back_url": reverse("competitions:detail", kwargs={"pk": competition.pk}),
     })
 
-@login_required
 def _parse_spot_number(raw: str | None) -> int | None:
     raw = (raw or "").strip()
     if raw == "":
@@ -271,7 +270,6 @@ def _parse_spot_number(raw: str | None) -> int | None:
     if not raw.isdigit():
         return None
     return int(raw)
-
 
 def _free_spots_for_competition(competition: Competition, *, exclude_invitation_id: int | None = None) -> list[int]:
     """Voľné miesta = nie sú obsadené membershipom a nie sú rezervované aktívnou DIRECT pozvánkou."""

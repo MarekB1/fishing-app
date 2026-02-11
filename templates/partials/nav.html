@@ -63,14 +63,14 @@
 {% if nav_missing_spots_total %}
 <li class="nav-item dropdown {% if hide_desktop %}d-lg-none{% endif %}">
   <a
-    class="nav-link dropdown-toggle d-flex align-items-center gap-2"
+    class="nav-link dropdown-toggle d-flex align-items-center"
     href="#"
     role="button"
     data-bs-toggle="dropdown"
     aria-expanded="false"
   >
-    <span class="badge text-bg-danger">{{ nav_missing_spots_total }}</span>
     Bez miesta
+    <span class="badge text-bg-danger ms-1">{{ nav_missing_spots_total }}</span>
   </a>
 
   <ul class="dropdown-menu dropdown-menu-end">
