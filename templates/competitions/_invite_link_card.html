@@ -18,7 +18,7 @@
       <div class="text-secondary small mb-1">Link pre súťaž:</div>
       <div class="input-group input-group-sm">
         <input class="form-control" type="text" value="{{ share_link }}" readonly onclick="this.select()">
-        <a class="btn btn-outline-light" href="{{ share_link }}">Open</a>
+        <button class="btn btn-outline-light" type="button" data-copy="{{ share_link }}">Copy</button>
       </div>
     </div>
 
@@ -39,15 +39,13 @@
         </div>
       </div>
 
-      <div class="text-secondary small">
+      <!-- <div class="text-secondary small">
         <div><strong>Použitia:</strong> {{ share_invite.uses_count }}{% if share_invite.max_uses %} / {{ share_invite.max_uses }}{% endif %}</div>
         {% if share_invite.expires_at %}
           <div><strong>Expirácia:</strong> {{ share_invite.expires_at|date:"d.m.Y H:i" }}</div>
-        {% else %}
-          <div><strong>Expirácia:</strong> —</div>
         {% endif %}
       </div>
-    </div>
+    </div> -->
 
   {% else %}
     <div class="text-secondary small mb-2">
@@ -55,6 +53,7 @@
     </div>
   {% endif %}
 
+  {% if not share_invite %}
   <form
     method="post"
     action="{% url 'competitions:invite_link_create' %}"
@@ -66,5 +65,6 @@
     <input type="hidden" name="competition_id" value="{{ selected_competition.id }}">
     <button type="submit" class="btn btn-primary btn-sm">Zobraziť / vytvoriť link</button>
   </form>
+{% endif %}
 
 {% endif %}

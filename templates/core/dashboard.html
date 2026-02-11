@@ -22,7 +22,7 @@
       <div class="card h-100 shadow-sm">
         <div class="card-body d-flex flex-column">
           <div class="fw-semibold mb-2">➕ Vytvoriť súťaž</div>
-          <p class="text-secondary flex-grow-1 mb-3">Organizátor vytvorí novú súťaž a nastaví pravidlá.</p>
+          <p class="text-secondary flex-grow-1 mb-3">Vytvorenie novej súťaže a nastavie pravidiel.</p>
           <a class="btn btn-primary" href="{% url 'competitions:competition_create' %}">Nová súťaž</a>
         </div>
       </div>
@@ -32,7 +32,7 @@
       <div class="card h-100 shadow-sm">
         <div class="card-body d-flex flex-column">
           <div class="fw-semibold mb-2">✉️ Pozvánky</div>
-          <p class="text-secondary flex-grow-1 mb-3">Generovanie invite linku a správa pozvaných.</p>
+          <p class="text-secondary flex-grow-1 mb-3">Pozvať ďalších účastníkov do súťaže.</p>
           <a class="btn btn-primary" href="{% url 'competitions:invitations' %}">Pozvánky</a>
         </div>
       </div>
@@ -52,10 +52,10 @@
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="card h-100 shadow-sm">
         <div class="card-body d-flex flex-column">
-          <div class="fw-semibold mb-2">✅ Pending schválenia</div>
+          <div class="fw-semibold mb-2">✅ Čaká na schválenie</div>
           <p class="text-secondary flex-grow-1 mb-3">Úlovky čakajúce na kontrolu.</p>
           <a class="btn btn-warning d-flex align-items-center justify-content-between" href="{% url 'notifications:pending' %}">
-            <span>Pending</span>
+            <span>Čaká na spracovanie</span>
             <span class="badge text-bg-dark" id="pending-count-dashboard" data-pending-count>
               {{ unread_notifications|default:0 }}
             </span>
