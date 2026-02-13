@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-secondary">
   <div class="container">
-    <a class="navbar-brand fw-semibold" href="{% url 'core:home' %}">🎣 Máš záber!</a>
+    <a class="navbar-brand fw-semibold" href="{% url 'core:home' %}">🎣 Mám záber!</a>
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
             aria-controls="mainNavbar" aria-expanded="false" aria-label="Menu">
@@ -16,7 +16,7 @@
               <a class="nav-link {% if current_view == 'core:dashboard' %}active{% endif %}"
                 {% if current_view == 'core:dashboard' %}aria-current="page"{% endif %}
                 href="{% url 'core:dashboard' %}">
-                Dashboard
+                Domov
               </a>
             </li>
 
@@ -60,33 +60,33 @@
               </a>
             </li>
 
-{% if nav_missing_spots_total %}
-<li class="nav-item dropdown {% if hide_desktop %}d-lg-none{% endif %}">
-  <a
-    class="nav-link dropdown-toggle d-flex align-items-center"
-    href="#"
-    role="button"
-    data-bs-toggle="dropdown"
-    aria-expanded="false"
-  >
-    Bez miesta
-    <span class="badge text-bg-danger ms-1">{{ nav_missing_spots_total }}</span>
-  </a>
+            {% if nav_missing_spots_total %}
+            <li class="nav-item dropdown {% if hide_desktop %}d-lg-none{% endif %}">
+              <a
+                class="nav-link dropdown-toggle d-flex align-items-center"
+                href="#"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                Bez miesta
+                <span class="badge text-bg-danger ms-1">{{ nav_missing_spots_total }}</span>
+              </a>
 
-  <ul class="dropdown-menu dropdown-menu-end">
-    <li class="dropdown-header">Účastníci bez lovného miesta</li>
-    {% for row in nav_missing_spots %}
-      <li>
-        <a class="dropdown-item d-flex justify-content-between align-items-center"
-           href="{% url 'competitions:detail' row.competition_id %}">
-          <span>{{ row.competition_name }}</span>
-          <span class="badge text-bg-secondary">{{ row.count }}</span>
-        </a>
-      </li>
-    {% endfor %}
-  </ul>
-</li>
-{% endif %}
+              <ul class="dropdown-menu dropdown-menu-end">
+                <li class="dropdown-header">Účastníci bez lovného miesta</li>
+                {% for row in nav_missing_spots %}
+                  <li>
+                    <a class="dropdown-item d-flex justify-content-between align-items-center"
+                      href="{% url 'competitions:detail' row.competition_id %}">
+                      <span>{{ row.competition_name }}</span>
+                      <span class="badge text-bg-secondary">{{ row.count }}</span>
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </li>
+            {% endif %}
 
             {% if nav_is_organizer %}
             <li class="nav-item {% if hide_desktop %}d-lg-none{% endif %}">
@@ -114,7 +114,7 @@
               data-bs-toggle="dropdown"
               aria-expanded="false">
                 {% if nav_is_organizer %}
-                  <span class="badge text-bg-warning text-dark">Organizer</span>
+                  <span class="badge text-bg-warning text-dark">Organizátor</span>
                 {% endif %}
                 👤 {% firstof user.get_full_name user.username user.email %}
             </a>

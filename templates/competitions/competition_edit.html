@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-3">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div>
+      <h3 class="mb-0">Upraviť súťaž</h3>
+      <div class="text-muted">{{ competition.name }}</div>
+    </div>
+    <a class="btn btn-outline-light" href="{% url 'competitions:detail' competition.pk %}">Späť</a>
+  </div>
+
+  <div class="card bg-dark text-light border-secondary">
+    <div class="card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+          <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Názov</label>
+            {{ form.name }}
+            {{ form.name.errors }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Typ</label>
+            {{ form.tier }}
+            {{ form.tier.errors }}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Popis</label>
+            {{ form.description }}
+            {{ form.description.errors }}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Miesto</label>
+            {{ form.location_name }}
+            {{ form.location_name.errors }}
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Počet miest</label>
+            {{ form.fishing_spots_count }}
+            {{ form.fishing_spots_count.errors }}
+          </div>
+
+          <div class="col-md-3 d-flex align-items-end">
+            <div class="form-check">
+              {{ form.allow_photos }}
+              <label class="form-check-label">Povoliť fotky</label>
+              {{ form.allow_photos.errors }}
+            </div>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Začiatok</label>
+            {{ form.starts_at }}
+            {{ form.starts_at.errors }}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Koniec</label>
+            {{ form.ends_at }}
+            {{ form.ends_at.errors }}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Scoring rules (JSON)</label>
+            {{ form.scoring_rules }}
+            {{ form.scoring_rules.errors }}
+            <div class="form-text text-muted">Nechaj prázdne alebo vlož JSON.</div>
+          </div>
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+          <button class="btn btn-primary" type="submit">Uložiť</button>
+          <a class="btn btn-outline-light" href="{% url 'competitions:detail' competition.pk %}">Zrušiť</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

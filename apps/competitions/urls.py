@@ -20,4 +20,6 @@ urlpatterns = [
     path("<int:pk>/members/<int:membership_id>/spot/", views.membership_set_spot, name="membership_set_spot"),
     path("<int:pk>/my-catches/", views.competition_my_catch_list, name="my_catch_list"),
     path("invitations/<int:invitation_id>/spot/", views.invitation_set_spot, name="invitation_set_spot"),
+    path("<int:pk>/cancel/", views.competition_cancel, name="competition_cancel"),
+    path("<int:pk>/edit/", views.competition_edit, name="competition_edit"),
 ]

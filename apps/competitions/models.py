@@ -21,6 +21,8 @@ class Competition(models.Model):
         db_index=True,
     )
 
+    cancelled_at = models.DateTimeField(null=True, blank=True, db_index=True)
+
     location_name = models.CharField(max_length=255, default="")  # názov miesta
     fishing_spots_count = models.PositiveSmallIntegerField(
         default=1,
@@ -57,11 +59,6 @@ class Competition(models.Model):
         return self.name
     
     @property
-    def is_running(self) -> bool:
-        now = timezone.now()
-        return self.starts_at <= now <= self.ends_at
-    
-    @property
     def is_official(self) -> bool:
         return self.tier == self.Tier.OFFICIAL
 
@@ -69,12 +66,23 @@ class Competition(models.Model):
     def max_contestants(self):
         """UNOFFICIAL: max 5 contestantov, OFFICIAL: bez limitu."""
         return None if self.is_official else 5
+    
+    @property
+    def is_cancelled(self) -> bool:
+        return self.cancelled_at is not None
+    
+    @property
+    def is_running(self) -> bool:
+        if self.is_cancelled:
+            return False
+        now = timezone.now()
+        return self.starts_at <= now <= self.ends_at
 
 
 class CompetitionMembership(models.Model):
     class Role(models.TextChoices):
-        ORGANIZER = "ORGANIZER", "Organizer"
-        CONTESTANT = "CONTESTANT", "Contestant"
+        ORGANIZER = "ORGANIZER", "Organizátor" # Nie je zdroj 
+        CONTESTANT = "CONTESTANT", "Súťažiaci"
 
     competition = models.ForeignKey(
         Competition, on_delete=models.CASCADE, related_name="memberships"

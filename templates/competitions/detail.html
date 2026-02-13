@@ -19,7 +19,11 @@
 
     <div class="d-flex flex-wrap gap-2">
       {% if is_organizer %}
-        <a class="btn btn-outline-light btn-sm" href="{% url 'competitions:invitations' %}?competition={{ competition.pk }}">Pozvánky</a>
+        <a class="btn btn-outline-light btn-sm"
+        href="{% url 'competitions:competition_edit' competition.pk %}">
+        Upraviť
+      </a>
+      <a class="btn btn-outline-light btn-sm" href="{% url 'competitions:invitations' %}?competition={{ competition.pk }}">Pozvánky</a>
       {% endif %}
       {% if is_contestant %}
         <a class="btn btn-primary btn-sm" href="{% url 'catches:catch_create' %}?competition={{ competition.id }}">+ Pridať úlovok</a>
@@ -220,6 +224,7 @@
         <li>Zvýrazniť to, keď user vstúpy do súťaže (Vstúpil si do súťaže:)</li>
         <li>Možnosť otvoriť si profil účastníka, kde sa zobrazia jeho úlovky v danej súťaži</li>
         <li>Úprava úlovku organizátorom</li>
+        <li>notifikácia ak sa uloží lovné miesto</li>
       </ul>
     </div>
   </div>

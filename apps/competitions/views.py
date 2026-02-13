@@ -1,6 +1,7 @@
 import io
 import re
 
+from django.views.decorators.http import require_http_methods
 from django.contrib.auth import get_user_model
 from django.views.decorators.http import require_GET, require_POST
 from django.http import Http404, HttpResponse, HttpResponseBadRequest
@@ -8,12 +9,11 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect
 from django.db import transaction
 from django.db.models import Q
 from django.urls import reverse
 from django.db import IntegrityError
-from django.db import transaction, IntegrityError
 
 from .forms import CompetitionForm
 from .models import Competition, CompetitionMembership, Invitation, InvitationUse
@@ -24,12 +24,14 @@ from apps.friends.models import Friendship
 
 
 def _status_for_competition(c: Competition) -> str:
+    if getattr(c, "cancelled_at", None):
+        return "Zrušená"
     now = timezone.now()
     if now < c.starts_at:
-        return "plánovaná"
+        return "Plánovaná"
     if now > c.ends_at:
-        return "ukončená"
-    return "prebieha"
+        return "Ukončená"
+    return "Prebieha"
 
 def _organizer_competitions_qs(user):
     return (
@@ -66,6 +68,8 @@ def my_competitions(request):
     items = []
     for m in memberships:
         c = m.competition
+        is_creator = (c.created_by_id == request.user.id)
+        is_organizer = is_creator or (m.role == CompetitionMembership.Role.ORGANIZER)
         items.append({
             "competition": c,
             "name": c.name,
@@ -73,11 +77,30 @@ def my_competitions(request):
             "ends": c.ends_at,
             "status": _status_for_competition(c),
             "role": m.get_role_display(),  # Organizer / Contestant
+            "can_cancel": is_organizer and not getattr(c, "cancelled_at", None),
         })
 
     return render(request, "competitions/my_competitions.html", {
         "items": items,
     })
+
+@require_POST
+@login_required
+@transaction.atomic
+def competition_cancel(request, pk: int):
+    competition = get_object_or_404(Competition, pk=pk)
+    _require_organizer_or_404(request.user, competition)
+
+    if competition.cancelled_at:
+        messages.info(request, "Súťaž už je zrušená.")
+        return redirect("competitions:my_competitions")
+
+    competition.cancelled_at = timezone.now()
+    competition.save(update_fields=["cancelled_at"])
+
+    messages.success(request, "Súťaž bola zrušená.")
+    return redirect("competitions:my_competitions")
+
 
 @login_required
 def competition_create(request):
@@ -108,7 +131,26 @@ def competition_create(request):
         "can_create_official": can_create_official,
     })
 
+@require_http_methods(["GET", "POST"])
+@login_required
+def competition_edit(request, pk: int):
+    competition = get_object_or_404(Competition, pk=pk)
+    _require_organizer_or_404(request.user, competition)
 
+    if competition.cancelled_at:
+        messages.warning(request, "Zrušenú súťaž nie je možné upravovať.")
+        return redirect("competitions:detail", pk=competition.pk)
+
+    if request.method == "POST":
+        form = CompetitionForm(request.POST, instance=competition)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Súťaž bola upravená.")
+            return redirect("competitions:detail", pk=competition.pk)
+    else:
+        form = CompetitionForm(instance=competition)
+
+    return render(request, "competitions/competition_edit.html", {"competition": competition, "form": form})
 
 @login_required
 def competition_detail(request, pk: int):
