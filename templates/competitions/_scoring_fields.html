@@ -1,0 +1,170 @@
+{# templates/competitions/_scoring_fields.html #}
+
+<div class="mt-4">
+  <h5 class="fw-semibold mb-3">Bodovanie</h5>
+
+  <div class="row g-3">
+    <div class="col-12 col-md-6">
+      <label class="form-label" for="{{ form.scoring_mode.id_for_label }}">{{ form.scoring_mode.label }}</label>
+      {{ form.scoring_mode }}
+      {% if form.scoring_mode.errors %}
+        <div class="invalid-feedback d-block">{{ form.scoring_mode.errors }}</div>
+      {% endif %}
+    </div>
+
+    <div class="col-12 col-md-6">
+      <label class="form-label" for="{{ form.tie_breaker_preset.id_for_label }}">{{ form.tie_breaker_preset.label }}</label>
+      {{ form.tie_breaker_preset }}
+      {% if form.tie_breaker_preset.errors %}
+        <div class="invalid-feedback d-block">{{ form.tie_breaker_preset.errors }}</div>
+      {% endif %}
+      {% if form.tie_breaker_preset.help_text %}
+        <div class="form-text text-secondary">{{ form.tie_breaker_preset.help_text }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# COUNT #}
+  <div class="mt-3" data-scoring-section="COUNT">
+    <div class="mb-3">
+      <label class="form-label" for="{{ form.count_points_per_catch.id_for_label }}">{{ form.count_points_per_catch.label }}</label>
+      {{ form.count_points_per_catch }}
+      {% if form.count_points_per_catch.errors %}
+        <div class="invalid-feedback d-block">{{ form.count_points_per_catch.errors }}</div>
+      {% endif %}
+      <div class="form-text text-secondary">{{ form.count_points_per_catch.help_text }}</div>
+    </div>
+  </div>
+
+  {# SUM_LENGTH / BEST_LENGTH #}
+  <div class="mt-3" data-scoring-section="SUM_LENGTH">
+    <div class="mb-3">
+      <label class="form-label" for="{{ form.length_points_per_cm.id_for_label }}">{{ form.length_points_per_cm.label }}</label>
+      {{ form.length_points_per_cm }}
+      {% if form.length_points_per_cm.errors %}
+        <div class="invalid-feedback d-block">{{ form.length_points_per_cm.errors }}</div>
+      {% endif %}
+      <div class="form-text text-secondary">{{ form.length_points_per_cm.help_text }}</div>
+    </div>
+  </div>
+
+  <div class="mt-3" data-scoring-section="BEST_LENGTH">
+    <div class="mb-3">
+      <label class="form-label" for="{{ form.length_points_per_cm.id_for_label }}">{{ form.length_points_per_cm.label }}</label>
+      {{ form.length_points_per_cm }}
+      {% if form.length_points_per_cm.errors %}
+        <div class="invalid-feedback d-block">{{ form.length_points_per_cm.errors }}</div>
+      {% endif %}
+      <div class="form-text text-secondary">
+        {{ form.length_points_per_cm.help_text }} (berie sa len najväčšia ryba)
+      </div>
+    </div>
+  </div>
+
+  {# SUM_WEIGHT #}
+  <div class="mt-3" data-scoring-section="SUM_WEIGHT">
+    <div class="mb-3">
+      <label class="form-label" for="{{ form.weight_points_per_kg.id_for_label }}">{{ form.weight_points_per_kg.label }}</label>
+      {{ form.weight_points_per_kg }}
+      {% if form.weight_points_per_kg.errors %}
+        <div class="invalid-feedback d-block">{{ form.weight_points_per_kg.errors }}</div>
+      {% endif %}
+      <div class="form-text text-secondary">{{ form.weight_points_per_kg.help_text }}</div>
+    </div>
+  </div>
+
+  {# SPECIES_TABLE #}
+  <div class="mt-3" data-scoring-section="SPECIES_TABLE">
+    <div class="mb-3">
+      <label class="form-label" for="{{ form.species_points_text.id_for_label }}">{{ form.species_points_text.label }}</label>
+      {{ form.species_points_text }}
+      {% if form.species_points_text.errors %}
+        <div class="invalid-feedback d-block">{{ form.species_points_text.errors }}</div>
+      {% endif %}
+      <div class="form-text text-secondary">{{ form.species_points_text.help_text }}</div>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label" for="{{ form.species_default_points.id_for_label }}">{{ form.species_default_points.label }}</label>
+      {{ form.species_default_points }}
+      {% if form.species_default_points.errors %}
+        <div class="invalid-feedback d-block">{{ form.species_default_points.errors }}</div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# COMBO #}
+  <div class="mt-3" data-scoring-section="COMBO">
+    <div class="row g-3">
+      <div class="col-12 col-md-4">
+        <label class="form-label" for="{{ form.combo_base_points_per_catch.id_for_label }}">{{ form.combo_base_points_per_catch.label }}</label>
+        {{ form.combo_base_points_per_catch }}
+        {% if form.combo_base_points_per_catch.errors %}
+          <div class="invalid-feedback d-block">{{ form.combo_base_points_per_catch.errors }}</div>
+        {% endif %}
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label" for="{{ form.combo_length_multiplier.id_for_label }}">{{ form.combo_length_multiplier.label }}</label>
+        {{ form.combo_length_multiplier }}
+        {% if form.combo_length_multiplier.errors %}
+          <div class="invalid-feedback d-block">{{ form.combo_length_multiplier.errors }}</div>
+        {% endif %}
+      </div>
+
+      <div class="col-12 col-md-4">
+        <label class="form-label" for="{{ form.combo_weight_multiplier.id_for_label }}">{{ form.combo_weight_multiplier.label }}</label>
+        {{ form.combo_weight_multiplier }}
+        {% if form.combo_weight_multiplier.errors %}
+          <div class="invalid-feedback d-block">{{ form.combo_weight_multiplier.errors }}</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="mt-3">
+      <label class="form-label" for="{{ form.combo_top_n.id_for_label }}">{{ form.combo_top_n.label }}</label>
+      {{ form.combo_top_n }}
+      {% if form.combo_top_n.errors %}
+        <div class="invalid-feedback d-block">{{ form.combo_top_n.errors }}</div>
+      {% endif %}
+      <div class="form-text text-secondary">{{ form.combo_top_n.help_text }}</div>
+    </div>
+
+    <div class="mt-3">
+      <label class="form-label" for="{{ form.species_points_text.id_for_label }}">{{ form.species_points_text.label }} (voliteľné)</label>
+      {{ form.species_points_text }}
+      {% if form.species_points_text.errors %}
+        <div class="invalid-feedback d-block">{{ form.species_points_text.errors }}</div>
+      {% endif %}
+      <div class="form-text text-secondary">Použije sa ako bonus podľa druhu v COMBO.</div>
+    </div>
+
+    <div class="mt-3">
+      <label class="form-label" for="{{ form.species_default_points.id_for_label }}">{{ form.species_default_points.label }}</label>
+      {{ form.species_default_points }}
+      {% if form.species_default_points.errors %}
+        <div class="invalid-feedback d-block">{{ form.species_default_points.errors }}</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const modeSelect = document.getElementById("id_scoring_mode");
+  const sections = document.querySelectorAll("[data-scoring-section]");
+
+  function update() {
+    const mode = modeSelect ? modeSelect.value : null;
+    sections.forEach((el) => {
+      const target = el.getAttribute("data-scoring-section");
+      el.classList.toggle("d-none", target !== mode);
+    });
+  }
+
+  if (modeSelect) {
+    modeSelect.addEventListener("change", update);
+    update();
+  }
+})();
+</script>

@@ -24,6 +24,7 @@ from django.contrib.admin.utils import NestedObjects
 from django.db import router
 from django.db.models.deletion import ProtectedError
 from apps.friends.models import Friendship
+from .scoring import build_scoreboard, describe_rules
 
 
 def _status_for_competition(c: Competition) -> str:
@@ -70,7 +71,7 @@ def my_competitions(request):
 
     now = timezone.now()
     items = []
-    
+
     for m in memberships:
         c = m.competition
         is_creator = (c.created_by_id == request.user.id)
@@ -172,13 +173,13 @@ def competition_edit(request, pk: int):
         return redirect("competitions:detail", pk=competition.pk)
 
     if request.method == "POST":
-        form = CompetitionForm(request.POST, instance=competition)
+        form = CompetitionForm(request.POST, instance=competition, user=request.user)
         if form.is_valid():
             form.save()
             messages.success(request, "Súťaž bola upravená.")
             return redirect("competitions:detail", pk=competition.pk)
     else:
-        form = CompetitionForm(instance=competition)
+        form = CompetitionForm(instance=competition, user=request.user)
 
     return render(request, "competitions/competition_edit.html", {"competition": competition, "form": form})
 
@@ -221,6 +222,15 @@ def competition_detail(request, pk: int):
             .order_by("spot_number", "user__username")
         )
 
+    approved_catches = (
+    Catch.objects
+    .filter(competition=competition, status=Catch.Status.APPROVED)
+    .select_related("user")
+)
+    scoreboard = build_scoreboard(approved_catches=approved_catches, rules=competition.scoring_rules)
+    scoring_description = describe_rules(competition.scoring_rules)
+
+
     context = {
         "competition": competition,
         "membership": membership,
@@ -231,6 +241,8 @@ def competition_detail(request, pk: int):
         "my_catches": my_catches_qs,
         "contestant_memberships": contestant_memberships,
         "spots_range": spots_range,
+        "scoreboard": scoreboard,
+        "scoring_description": scoring_description,
     }
     return render(request, "competitions/detail.html", context)
 

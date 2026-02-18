@@ -52,6 +52,15 @@ class CatchCreateForm(forms.ModelForm):
         if competition and not getattr(competition, "allow_photos", True) and photo:
             self.add_error("photo", "Táto súťaž nepovoľuje pridávanie fotiek.")
 
+        # NEW: povinnosť podľa scoring rules
+        if competition:
+            rules = getattr(competition, "scoring_rules", {}) or {}
+            req = rules.get("requirements", {}) or {}
+            if req.get("length_required") and not length_cm:
+                self.add_error("length_cm", "Pre toto bodovanie je dĺžka povinná.")
+            if req.get("weight_required") and not weight_kg:
+                self.add_error("weight_kg", "Pre toto bodovanie je váha povinná.")
+
         if length_cm is not None and length_cm <= 0:
             self.add_error("length_cm", "Dĺžka musí byť väčšia ako 0.")
         if weight_kg is not None and weight_kg <= 0:
@@ -62,3 +71,4 @@ class CatchCreateForm(forms.ModelForm):
                 self.add_error("caught_at", "Čas úlovku musí byť v rámci trvania súťaže.")
 
         return cleaned
+

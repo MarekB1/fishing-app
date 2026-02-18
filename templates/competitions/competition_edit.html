@@ -69,11 +69,15 @@
           </div>
 
           <div class="col-12">
+            {% include "competitions/_scoring_fields.html" %}
+          </div>
+
+          <!-- <div class="col-12">
             <label class="form-label">Scoring rules (JSON)</label>
             {{ form.scoring_rules }}
             {{ form.scoring_rules.errors }}
             <div class="form-text text-muted">Nechaj prázdne alebo vlož JSON.</div>
-          </div>
+          </div> -->
         </div>
 
         <div class="mt-4 d-flex gap-2">
