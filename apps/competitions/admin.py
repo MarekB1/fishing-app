@@ -1,12 +1,43 @@
 from django.contrib import admin
 from django.contrib.admin.sites import NotRegistered
+from django.utils import timezone
+
 from .models import Competition, CompetitionMembership, Invitation
 
 
 class CompetitionAdmin(admin.ModelAdmin):
-    list_display = ("name", "tier", "starts_at", "ends_at", "created_by", "created_at")
+    list_display = ("name", "status", "tier", "starts_at", "ends_at", "created_by", "created_at")
     list_filter = ("tier", "starts_at", "ends_at")
     search_fields = ("name",)
+
+    # Zobraz aj v editácii (read-only) a udrž poradie medzi name a tier.
+    readonly_fields = ("status",)
+    fields = (
+        "name",
+        "status",
+        "tier",
+        "description",
+        "cancelled_at",
+        "location_name",
+        "fishing_spots_count",
+        "allow_photos",
+        "starts_at",
+        "ends_at",
+        "scoring_rules",
+        "created_by",
+    )
+
+    @admin.display(description="Status")
+    def status(self, obj: Competition) -> str:
+        if obj.cancelled_at:
+            return "Zrušená"
+
+        now = timezone.now()
+        if now < obj.starts_at:
+            return "Plánovaná"
+        if now > obj.ends_at:
+            return "Ukončená"
+        return "Aktívna"
 
 
 class CompetitionMembershipAdmin(admin.ModelAdmin):

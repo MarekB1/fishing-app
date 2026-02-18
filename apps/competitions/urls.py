@@ -22,4 +22,5 @@ urlpatterns = [
     path("invitations/<int:invitation_id>/spot/", views.invitation_set_spot, name="invitation_set_spot"),
     path("<int:pk>/cancel/", views.competition_cancel, name="competition_cancel"),
     path("<int:pk>/edit/", views.competition_edit, name="competition_edit"),
+    path("<int:pk>/delete/", views.competition_delete, name="competition_delete"),
 ]

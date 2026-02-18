@@ -20,6 +20,9 @@ from .models import Competition, CompetitionMembership, Invitation, InvitationUs
 from .forms import InvitationCreateForm
 from apps.catches.models import Catch
 from django.contrib.auth.views import redirect_to_login
+from django.contrib.admin.utils import NestedObjects
+from django.db import router
+from django.db.models.deletion import ProtectedError
 from apps.friends.models import Friendship
 
 
@@ -65,11 +68,15 @@ def my_competitions(request):
         .order_by("-competition__starts_at")
     )
 
+    now = timezone.now()
     items = []
+    
     for m in memberships:
         c = m.competition
         is_creator = (c.created_by_id == request.user.id)
         is_organizer = is_creator or (m.role == CompetitionMembership.Role.ORGANIZER)
+        is_finished_or_cancelled = bool(getattr(c, "cancelled_at", None) or now > c.ends_at)
+
         items.append({
             "competition": c,
             "name": c.name,
@@ -78,6 +85,7 @@ def my_competitions(request):
             "status": _status_for_competition(c),
             "role": m.get_role_display(),  # Organizer / Contestant
             "can_cancel": is_organizer and not getattr(c, "cancelled_at", None),
+            "can_delete": bool(is_organizer and is_finished_or_cancelled),
         })
 
     return render(request, "competitions/my_competitions.html", {
@@ -101,6 +109,28 @@ def competition_cancel(request, pk: int):
     messages.success(request, "Súťaž bola zrušená.")
     return redirect("competitions:my_competitions")
 
+@require_POST
+@login_required
+@transaction.atomic
+def competition_delete(request, pk: int):
+    competition = get_object_or_404(Competition, pk=pk)
+    _require_organizer_or_404(request.user, competition)
+
+    now = timezone.now()
+    can_delete = bool(competition.cancelled_at or now > competition.ends_at)
+    if not can_delete:
+        messages.warning(request, "Súťaž je možné vymazať až po ukončení alebo zrušení.")
+        return redirect("competitions:my_competitions")
+
+    name = competition.name
+    try:
+        competition.delete()
+    except ProtectedError:
+        messages.error(request, "Súťaž nie je možné vymazať (niektoré objekty sú chránené).")
+        return redirect("competitions:my_competitions")
+
+    messages.success(request, f'Súťaž "{name}" bola vymazaná.')
+    return redirect("competitions:my_competitions")
 
 @login_required
 def competition_create(request):

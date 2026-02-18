@@ -44,7 +44,46 @@
                   </div>
                 {% endif %}
 
+                {% if it.can_delete %}
+                  <button type="button"
+                          class="btn btn-outline-danger btn-sm"
+                          data-bs-toggle="modal"
+                          data-bs-target="#deleteCompetitionModal-{{ it.competition.pk }}">
+                    Vymazať
+                  </button>
+                {% endif %}
+
               </div>
+
+              {% if it.can_delete %}
+                <!-- Delete modal -->
+                <div class="modal fade" id="deleteCompetitionModal-{{ it.competition.pk }}" tabindex="-1"
+                    aria-labelledby="deleteCompetitionModalLabel-{{ it.competition.pk }}" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="deleteCompetitionModalLabel-{{ it.competition.pk }}">
+                          Vymazať súťaž
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zavrieť"></button>
+                      </div>
+
+                      <div class="modal-body">
+                        Prajete si zmazať súťaž <strong>{{ it.name }}</strong>?
+                      </div>
+
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nie</button>
+
+                        <form method="post" action="{% url 'competitions:competition_delete' it.competition.pk %}">
+                          {% csrf_token %}
+                          <button type="submit" class="btn btn-danger">Áno, vymazať</button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% endif %}
             </div>
           </div>
         </div>
