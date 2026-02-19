@@ -20,8 +20,9 @@ from .models import Competition, CompetitionMembership, Invitation, InvitationUs
 from .forms import InvitationCreateForm
 from apps.catches.models import Catch
 from django.contrib.auth.views import redirect_to_login
-from django.contrib.admin.utils import NestedObjects
-from django.db import router
+# from django.contrib.admin.utils import NestedObjects
+# from django.db import router
+from .permissions import user_is_premium
 from django.db.models.deletion import ProtectedError
 from apps.friends.models import Friendship
 from .scoring import build_scoreboard, describe_rules
@@ -135,7 +136,7 @@ def competition_delete(request, pk: int):
 
 @login_required
 def competition_create(request):
-    can_create_official = request.user.has_perm("competitions.can_create_official_competitions")
+    can_create_official = user_is_premium(request.user)
 
     if request.method == "POST":
         form = CompetitionForm(request.POST, user=request.user)
@@ -161,6 +162,7 @@ def competition_create(request):
         "form": form,
         "can_create_official": can_create_official,
     })
+
 
 @require_http_methods(["GET", "POST"])
 @login_required

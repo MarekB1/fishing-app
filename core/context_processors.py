@@ -1,16 +1,13 @@
 from django.utils import timezone
 from django.db.models import Count, Q
+from apps.competitions.permissions import user_is_premium
 
-# core/context_processors.py
 def nav_user_roles(request):
-    """
-    Navbar helper:
-    - nav_is_organizer: True ak je user tvorca aspoň 1 súťaže alebo má membership rolu ORGANIZER
-    - nav_missing_spots_total / nav_missing_spots: počet účastníkov bez lovného miesta (pre organizátora)
-    """
     user = getattr(request, "user", None)
     if not user or not user.is_authenticated:
         return {}
+
+    is_premium = user_is_premium(user)
 
     try:
         from apps.competitions.models import Competition, CompetitionMembership
@@ -59,6 +56,7 @@ def nav_user_roles(request):
 
     return {
         "nav_is_organizer": is_organizer,
+        "nav_is_premium": is_premium,
         "nav_missing_spots_total": missing_total,
         "nav_missing_spots": missing,
     }

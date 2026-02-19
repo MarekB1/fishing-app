@@ -54,6 +54,9 @@ class Competition(models.Model):
                 name="competition_ends_after_starts",
             )
         ]
+        permissions = [
+            ("premium", "Premium"),
+        ]
 
     def __str__(self) -> str:
         return self.name

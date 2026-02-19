@@ -113,13 +113,27 @@
               role="button"
               data-bs-toggle="dropdown"
               aria-expanded="false">
-                {% if nav_is_organizer %}
-                  <span class="badge text-bg-warning text-dark">Organizátor</span>
-                {% endif %}
-                👤 {% firstof user.get_full_name user.username user.email %}
+
+              {% if nav_is_premium %}
+                <span class="badge text-bg-success">Premium</span>
+              {% else %}
+                <span class="badge text-bg-secondary">Základ</span>
+              {% endif %}
+
+              👤 {% firstof user.get_full_name user.username user.email %}
             </a>
 
             <ul class="dropdown-menu dropdown-menu-end">
+
+              {% if nav_is_organizer %}
+                <li>
+                  <span class="dropdown-item-text">
+                    <span class="badge text-bg-warning text-dark">Organizátor</span>
+                  </span>
+                </li>
+                <li><hr class="dropdown-divider"></li>
+              {% endif %}
+
               <li>
                 <a class="dropdown-item" href="{% url 'core:profile' %}">Profil</a>
               </li>
@@ -131,6 +145,7 @@
                 <a class="dropdown-item text-danger" href="{% url 'logout' %}">Odhlásiť</a>
               </li>
             </ul>
+
           </li>
 
         {% else %}

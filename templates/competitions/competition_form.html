@@ -19,7 +19,7 @@
             {% endif %}
 
             <!-- OFICIÁLNE SÚŤAŽE -->
-            {% if can_create_official %}
+            {% if is_premium  %}
               <div class="mb-3">
                 <label class="form-label" for="{{ form.tier.id_for_label }}">Typ súťaže</label>
                 {{ form.tier }}

@@ -2,6 +2,7 @@
 from decimal import Decimal
 from django import forms
 from django.utils import timezone
+from .permissions import user_is_premium
 
 from .models import Invitation, Competition
 from .scoring import (
@@ -153,11 +154,7 @@ class CompetitionForm(forms.ModelForm):
         self.user = user
         super().__init__(*args, **kwargs)
 
-        can_official = bool(
-            user
-            and getattr(user, "is_authenticated", False)
-            and user.has_perm("competitions.can_create_official_competitions")
-        )
+        can_official = user_is_premium(user)
 
         # bootstrap triedy (aj pre nové fields)
         for name, field in self.fields.items():
@@ -213,6 +210,7 @@ class CompetitionForm(forms.ModelForm):
         self.fields["combo_weight_multiplier"].initial = Decimal(str(params.get("weight_multiplier", "0")))
         self.fields["combo_top_n"].initial = params.get("top_n") or None
 
+
     def clean(self):
         cleaned = super().clean()
 
@@ -222,11 +220,14 @@ class CompetitionForm(forms.ModelForm):
             self.add_error("ends_at", "Koniec musí byť po začiatku.")
 
         tier = cleaned.get("tier")
-        can_official = bool(
-            self.user
-            and getattr(self.user, "is_authenticated", False)
-            and self.user.has_perm("competitions.can_create_official_competitions")
-        )
+        can_official = user_is_premium(self.user)
+
+        if (
+            tier == Competition.Tier.OFFICIAL
+            and not can_official
+            and not (self.instance and self.instance.tier == Competition.Tier.OFFICIAL)
+        ):
+            self.add_error("tier", "Nemáš oprávnenie vytvoriť oficiálnu súťaž.")
         if tier == Competition.Tier.OFFICIAL and not can_official and not (self.instance and self.instance.tier == Competition.Tier.OFFICIAL):
             self.add_error("tier", "Nemáš oprávnenie vytvoriť oficiálnu súťaž.")
 
