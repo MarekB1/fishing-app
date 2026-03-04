@@ -143,3 +143,17 @@ docker ps
 
 > Bez bežiaceho Redis servera realtime notifikácie cez WebSockets nemusia fungovať (podľa nastavenia `CHANNEL_LAYERS`).
 
+<!-- Pre tunel  -->
+```Install
+winget install --id Cloudflare.cloudflared
+```
+
+```Root priečinok (Docker beží)
+python manage.py runserver 127.0.0.1:8000
+```
+
+``` Nový PowerShell - zobrazí URL 
+cloudflared tunnel --url http://127.0.0.1:8000 --protocol http2
+```
+
+cloudflared tunnel --url http://127.0.0.1:8000 --protocol http2

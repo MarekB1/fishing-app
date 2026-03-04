@@ -27,10 +27,14 @@ SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key-change-me")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DJANGO_DEBUG", "0") == "1"
 
-ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,172.20.10.2,localhost").split(",") if h.strip()]
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", ".trycloudflare.com"]
 
-print("DJANGO_ALLOWED_HOSTS env =", os.getenv("DJANGO_ALLOWED_HOSTS"))
-print("ALLOWED_HOSTS =", ALLOWED_HOSTS)
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.trycloudflare.com",
+]
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
 
 # Application definition
 
