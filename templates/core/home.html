@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Fishing app{% endblock %}
+{% block title %}Máš záber!{% endblock %}
 
 {% block content %}
   <div class="row justify-content-center">
@@ -10,37 +10,6 @@
           Organizátor vytvorí súťaž, pozve účastníkov a schvaľuje úlovky.
           Súťažiaci pridávajú úlovky počas trvania súťaže.
         </p>
-
-        <div class="row g-3">
-          <div class="col-12 col-md-6">
-            <div class="card h-100 shadow-sm">
-              <div class="card-body">
-                <h3 class="h5">Organizátor</h3>
-                <ul class="mb-0">
-                  <li>Vytvorenie súťaže</li>
-                  <li>Pozvánky účastníkom</li>
-                  <li>Realtime notifikácie nových úlovkov</li>
-                  <li>Schválenie/odmietnutie</li>
-                  <li>Scoreboard</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-12 col-md-6">
-            <div class="card h-100 shadow-sm">
-              <div class="card-body">
-                <h3 class="h5">Súťažiaci</h3>
-                <ul class="mb-0">
-                  <li>Pripojenie cez pozvánku</li>
-                  <li>Pridanie úlovku (foto + parametre)</li>
-                  <li>Stav schválenia</li>
-                  <li>Poradie / výsledky</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
 
         <div class="mt-4 d-flex gap-2">
           {% if user.is_authenticated %}

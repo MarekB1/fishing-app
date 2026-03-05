@@ -23,6 +23,7 @@ urlpatterns = [
     path("<int:pk>/cancel/", views.competition_cancel, name="competition_cancel"),
     path("<int:pk>/edit/", views.competition_edit, name="competition_edit"),
     path("<int:pk>/delete/", views.competition_delete, name="competition_delete"),
+    path("scoreboard/", views.scoreboard_select, name="scoreboard_select"),
     path("<int:pk>/scoreboard/", views.competition_scoreboard, name="scoreboard"),
     path("<int:pk>/scoreboard/fragment/", views.competition_scoreboard_fragment, name="scoreboard_fragment"),
 ]

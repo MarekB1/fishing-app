@@ -155,5 +155,3 @@ python manage.py runserver 127.0.0.1:8000
 ``` Nový PowerShell - zobrazí URL 
 cloudflared tunnel --url http://127.0.0.1:8000 --protocol http2
 ```
-
-cloudflared tunnel --url http://127.0.0.1:8000 --protocol http2

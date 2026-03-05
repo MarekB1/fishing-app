@@ -21,12 +21,12 @@ class ScoringMode:
 
 
 SCORING_MODE_CHOICES = [
-    (ScoringMode.COUNT, "Počet úlovkov (COUNT)"),
-    (ScoringMode.SUM_LENGTH, "Súčet dĺžok (SUM_LENGTH)"),
-    (ScoringMode.BEST_LENGTH, "Najväčšia ryba podľa dĺžky (BEST_LENGTH)"),
-    (ScoringMode.SUM_WEIGHT, "Súčet váhy (SUM_WEIGHT)"),
-    (ScoringMode.SPECIES_TABLE, "Bodovanie podľa druhu (SPECIES_TABLE)"),
-    (ScoringMode.COMBO, "Kombinované bodovanie (COMBO)"),
+    (ScoringMode.COUNT, "Počet úlovkov"),
+    (ScoringMode.SUM_LENGTH, "Súčet dĺžok"),
+    (ScoringMode.BEST_LENGTH, "Najväčšia ryba podľa dĺžky"),
+    (ScoringMode.SUM_WEIGHT, "Súčet váhy"),
+    (ScoringMode.SPECIES_TABLE, "Bodovanie podľa druhu"),
+    (ScoringMode.COMBO, "Kombinované bodovanie"),
 ]
 
 

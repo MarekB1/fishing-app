@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Vyber súťaž</h2>
+
+    <div class="list-group">
+
+        {% for competition in competitions %}
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+               href="{% url 'competitions:scoreboard' competition.pk %}">
+
+                <div>
+                    <div class="fw-semibold">{{ competition.name }}</div>
+                    <div class="small text-muted">
+                        {{ competition.starts_at|date:"d.m.Y H:i" }} –
+                        {{ competition.ends_at|date:"d.m.Y H:i" }}
+                    </div>
+                </div>
+
+                <span class="badge bg-primary">Scoreboard</span>
+
+            </a>
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

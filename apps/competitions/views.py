@@ -305,6 +305,30 @@ def competition_scoreboard_fragment(request, pk: int):
         {"competition": competition, "scoreboard": scoreboard},
     )
 
+@login_required
+def scoreboard_select(request):
+    competitions = (
+        Competition.objects
+        .filter(
+            Q(created_by=request.user) |
+            Q(memberships__user=request.user)
+        )
+        .distinct()
+        .order_by("-starts_at")
+    )
+
+    if not competitions.exists():
+        messages.warning(request, "Nemáte žiadnu súťaž.")
+        return redirect("competitions:my_competitions")
+
+    if competitions.count() == 1:
+        competition = competitions.first()
+        return redirect("competitions:scoreboard", pk=competition.pk)
+
+    return render(request, "competitions/scoreboard_select.html", {
+        "competitions": competitions
+    })
+
 @require_POST
 @login_required
 @transaction.atomic

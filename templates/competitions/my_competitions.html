@@ -27,10 +27,6 @@
                   Detail
                 </a>
 
-                <a class="btn btn-outline-light btn-sm" href="{% url 'competitions:scoreboard' it.competition.pk %}">
-                  Scoreboard
-                </a>
-
                 {% if it.can_cancel %}
                   <div class="d-flex justify-content-center gap-2">
                     <a class="btn btn-outline-light btn-sm"
