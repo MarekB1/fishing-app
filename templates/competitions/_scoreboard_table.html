@@ -1,0 +1,30 @@
+{% if scoreboard %}
+  <div class="table-responsive">
+    <table class="table table-dark table-striped table-hover mb-0 align-middle">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Súťažiaci</th>
+          <th class="text-end">Body</th>
+          <th class="text-end">Úlovky</th>
+          <th class="text-end">Naj dĺžka</th>
+          <th class="text-end">Naj váha</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in scoreboard %}
+          <tr>
+            <td class="text-secondary">{{ forloop.counter }}</td>
+            <td class="fw-semibold">{{ r.user.username }}</td>
+            <td class="text-end">{{ r.points }}</td>
+            <td class="text-end">{{ r.catches_count }}</td>
+            <td class="text-end">{{ r.best_length }}</td>
+            <td class="text-end">{{ r.best_weight }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="p-3 text-secondary">Zatiaľ nie sú žiadne schválené úlovky.</div>
+{% endif %}

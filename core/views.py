@@ -2,7 +2,9 @@ from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
-
+from django.utils import timezone
+from django.db.models import Q
+from apps.competitions.models import Competition
 from .forms import ProfileUpdateForm, BootstrapPasswordChangeForm
 
 
@@ -14,10 +16,31 @@ def home(request):
 
 @login_required
 def dashboard(request):
+    user = request.user
+    now = timezone.now()
+
+    # Súťaže, kde je user tvorca alebo člen
+    base_qs = (
+        Competition.objects
+        .filter(Q(created_by=user) | Q(memberships__user=user))
+        .distinct()
+        .order_by("-starts_at")
+    )
+
+    # Preferuj bežiacu súťaž (ak existuje)
+    running = (
+        base_qs
+        .filter(cancelled_at__isnull=True, starts_at__lte=now, ends_at__gte=now)
+        .order_by("ends_at")
+        .first()
+    )
+
+    active_competition = running or base_qs.first()
+
     return render(request, "core/dashboard.html", {
         "hide_nav_links_desktop": True,
+        "active_competition": active_competition,
     })
-
 
 
 @login_required

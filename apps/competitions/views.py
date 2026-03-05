@@ -20,8 +20,7 @@ from .models import Competition, CompetitionMembership, Invitation, InvitationUs
 from .forms import InvitationCreateForm
 from apps.catches.models import Catch
 from django.contrib.auth.views import redirect_to_login
-# from django.contrib.admin.utils import NestedObjects
-# from django.db import router
+from django.template.response import TemplateResponse
 from .permissions import user_is_premium
 from django.db.models.deletion import ProtectedError
 from apps.friends.models import Friendship
@@ -247,6 +246,64 @@ def competition_detail(request, pk: int):
         "scoring_description": scoring_description,
     }
     return render(request, "competitions/detail.html", context)
+
+@login_required
+def competition_scoreboard(request, pk: int):
+    competition = get_object_or_404(Competition, pk=pk)
+
+    membership = (
+        CompetitionMembership.objects
+        .filter(competition=competition, user=request.user)
+        .first()
+    )
+
+    # ✅ prístup: člen súťaže alebo tvorca (pre obe roly)
+    is_creator = (competition.created_by_id == request.user.id)
+    if membership is None and not is_creator:
+        raise Http404("Competition not found")
+
+    approved_catches = (
+        Catch.objects
+        .filter(competition=competition, status=Catch.Status.APPROVED)
+        .select_related("user")
+    )
+
+    scoreboard = build_scoreboard(approved_catches=approved_catches, rules=competition.scoring_rules)
+    scoring_description = describe_rules(competition.scoring_rules)
+
+    return render(request, "competitions/scoreboard.html", {
+        "competition": competition,
+        "membership": membership,
+        "scoreboard": scoreboard,
+        "scoring_description": scoring_description,
+    })
+
+@login_required
+def competition_scoreboard_fragment(request, pk: int):
+    competition = get_object_or_404(Competition, pk=pk)
+
+    membership = (
+        CompetitionMembership.objects
+        .filter(competition=competition, user=request.user)
+        .first()
+    )
+    is_creator = (competition.created_by_id == request.user.id)
+    if membership is None and not is_creator:
+        raise Http404("Competition not found")
+
+    approved_catches = (
+        Catch.objects
+        .filter(competition=competition, status=Catch.Status.APPROVED)
+        .select_related("user")
+    )
+
+    scoreboard = build_scoreboard(approved_catches=approved_catches, rules=competition.scoring_rules)
+
+    return TemplateResponse(
+        request,
+        "competitions/_scoreboard_table.html",
+        {"competition": competition, "scoreboard": scoreboard},
+    )
 
 @require_POST
 @login_required

@@ -70,7 +70,9 @@
         <div class="card-body d-flex flex-column">
           <div class="fw-semibold mb-2">🏆 Scoreboard</div>
           <p class="text-secondary flex-grow-1 mb-3">Priebežné poradie podľa schválených úlovkov.</p>
-          <a class="btn btn-secondary disabled" href="#" tabindex="-1" aria-disabled="true">Čoskoro</a>
+          <a class="btn btn-primary" href="{% url 'competitions:scoreboard' active_competition.pk %}">
+            <span>Pozrieť poradie</span>
+          </a>
         </div>
       </div>
     </div>
@@ -91,8 +93,6 @@
       <div class="card-header fw-semibold">TODO</div>
       <div class="card-body">
         <ul class="mb-0">
-          <li>Scoreboard bude aj pre účastníkov?</li>
-          <li>Dorobiť prelink na Scoreboard</li>
           <li>Pridať oficiálne oznámenia (napr pridanie do súťaže), bude to svietiť pri profile</li>
         </ul>
       </div>

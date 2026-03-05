@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Scoreboard – {{ competition.name }}{% endblock %}
+
+{% block content %}
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <div class="d-flex align-items-center gap-2">
+        <a class="btn btn-outline-light btn-sm" href="{% url 'competitions:detail' competition.pk %}">← Detail súťaže</a>
+        <a class="btn btn-outline-light btn-sm" href="{% url 'competitions:my_competitions' %}">Moje súťaže</a>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <h1 class="h3 fw-bold mb-1">🏆 Scoreboard</h1>
+        <div class="text-secondary">{{ competition.name }}</div>
+    </div>
+
+    <div class="card border-secondary shadow-sm">
+       <div class="card-header border-secondary d-flex align-items-center justify-content-between">
+            <div class="fw-semibold">Poradie</div>
+            <div class="small text-secondary">{{ scoring_description }}</div>
+        </div>
+
+        <div class="card-body p-0">
+            <div
+                id="scoreboard-fragment"
+                hx-get="{% url 'competitions:scoreboard_fragment' competition.pk %}"
+                hx-trigger="scoreboard:refresh"
+                hx-swap="innerHTML">
+                {% include "competitions/_scoreboard_table.html" %}
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+    <div class="card border-secondary">
+      <div class="card-header fw-semibold">TODO</div>
+      <div class="card-body">
+        <ul class="mb-0">
+          <li>Čo sa zobrazuje organizátorom a čo účastníkom</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+    <script>
+        (function () {
+        const competitionId = "{{ competition.pk }}";
+        const scheme = (window.location.protocol === "https:") ? "wss" : "ws";
+        const wsUrl = `${scheme}://${window.location.host}/ws/competitions/${competitionId}/scoreboard/`;
+
+        const socket = new WebSocket(wsUrl);
+
+        socket.addEventListener("message", function (e) {
+            try {
+            const msg = JSON.parse(e.data);
+            if (msg.event === "catch_created" || msg.event === "catch_moderated") {
+                const el = document.getElementById("scoreboard-fragment");
+                if (el && window.htmx) {
+                window.htmx.trigger(el, "scoreboard:refresh");
+                }
+            }
+            } catch (err) {
+            // ignore
+            }
+        });
+        })();
+        </script>
+{% endblock %}
