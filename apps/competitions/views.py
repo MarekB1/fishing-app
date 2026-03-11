@@ -197,6 +197,27 @@ def competition_edit(request, pk: int):
 
     return render(request, "competitions/competition_edit.html", {"competition": competition, "form": form})
 
+def _can_user_compete(user, competition: Competition, membership=None) -> bool:
+    """
+    Súťažiť môže:
+    - bežný CONTESTANT
+    - creator súťaže iba vtedy, keď je súťaž neoficiálna
+    """
+    if membership is None:
+        membership = (
+            CompetitionMembership.objects
+            .filter(competition=competition, user=user)
+            .first()
+        )
+
+    if membership and membership.role == CompetitionMembership.Role.CONTESTANT:
+        return True
+
+    if competition.created_by_id == user.id and not competition.is_official:
+        return True
+
+    return False
+
 @login_required
 def competition_detail(request, pk: int):
     competition = get_object_or_404(Competition, pk=pk)
@@ -214,7 +235,7 @@ def competition_detail(request, pk: int):
 
     # Ak tvorca nemá membership (môže sa stať), berieme ho ako organizer
     is_organizer = is_creator or (membership and membership.role == CompetitionMembership.Role.ORGANIZER)
-    is_contestant = (membership and membership.role == CompetitionMembership.Role.CONTESTANT)
+    is_contestant = _can_user_compete(request.user, competition, membership)
 
     # Úlovky v súťaži (vidí každý člen súťaže)
     catches_qs = (

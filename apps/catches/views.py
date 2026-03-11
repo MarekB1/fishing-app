@@ -40,11 +40,21 @@ def catch_create(request):
 
     # user môže pridávať len do aktívnych súťaží, kde je CONTESTANT
     competition_qs = (
-        Competition.objects.filter(
-            memberships__user=request.user,
-            memberships__role=CompetitionMembership.Role.CONTESTANT,
+        Competition.objects
+        .filter(
             starts_at__lte=now,
             ends_at__gte=now,
+        )
+        .filter(
+            Q(
+                memberships__user=request.user,
+                memberships__role=CompetitionMembership.Role.CONTESTANT,
+            )
+            |
+            Q(
+                created_by=request.user,
+                tier=Competition.Tier.UNOFFICIAL,
+            )
         )
         .distinct()
         .order_by("starts_at")
