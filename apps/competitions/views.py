@@ -25,6 +25,7 @@ from .permissions import user_is_premium
 from django.db.models.deletion import ProtectedError
 from apps.friends.models import Friendship
 from .scoring import build_scoreboard, describe_rules
+from django.db.models import Count
 
 
 def _status_for_competition(c: Competition) -> str:
@@ -66,6 +67,15 @@ def my_competitions(request):
         CompetitionMembership.objects
         .filter(user=request.user)
         .select_related("competition")
+        .annotate(
+            participant_count=Count(
+                "competition__memberships",
+                filter=Q(
+                    competition__memberships__role=CompetitionMembership.Role.CONTESTANT
+                ),
+                distinct=True,
+            )
+        )
         .order_by("-competition__starts_at")
     )
 
@@ -74,6 +84,7 @@ def my_competitions(request):
 
     for m in memberships:
         c = m.competition
+
         is_creator = (c.created_by_id == request.user.id)
         is_organizer = is_creator or (m.role == CompetitionMembership.Role.ORGANIZER)
         is_finished_or_cancelled = bool(getattr(c, "cancelled_at", None) or now > c.ends_at)
@@ -84,7 +95,9 @@ def my_competitions(request):
             "starts": c.starts_at,
             "ends": c.ends_at,
             "status": _status_for_competition(c),
-            "role": m.get_role_display(),  # Organizer / Contestant
+            "role": m.get_role_display(),
+            "participant_count": m.participant_count,
+            "location_name": c.location_name,
             "can_cancel": is_organizer and not getattr(c, "cancelled_at", None),
             "can_delete": bool(is_organizer and is_finished_or_cancelled),
         })
