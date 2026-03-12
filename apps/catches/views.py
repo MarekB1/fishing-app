@@ -48,13 +48,13 @@ def catch_create(request):
         .filter(
             Q(
                 memberships__user=request.user,
-                memberships__role=CompetitionMembership.Role.CONTESTANT,
+                memberships__role__in=[
+                    CompetitionMembership.Role.CONTESTANT,
+                    CompetitionMembership.Role.ORGANIZER,
+                ],
             )
             |
-            Q(
-                created_by=request.user,
-                tier=Competition.Tier.UNOFFICIAL,
-            )
+            Q(created_by=request.user)
         )
         .distinct()
         .order_by("starts_at")

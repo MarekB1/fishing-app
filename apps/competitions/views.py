@@ -199,8 +199,9 @@ def competition_edit(request, pk: int):
 def _can_user_compete(user, competition: Competition, membership=None) -> bool:
     """
     Súťažiť môže:
-    - bežný CONTESTANT
-    - creator súťaže iba vtedy, keď je súťaž neoficiálna
+    - CONTESTANT
+    - ORGANIZER
+    - creator súťaže (aj keby membership náhodou chýbal)
     """
     if membership is None:
         membership = (
@@ -209,10 +210,13 @@ def _can_user_compete(user, competition: Competition, membership=None) -> bool:
             .first()
         )
 
-    if membership and membership.role == CompetitionMembership.Role.CONTESTANT:
+    if membership and membership.role in {
+        CompetitionMembership.Role.CONTESTANT,
+        CompetitionMembership.Role.ORGANIZER,
+    }:
         return True
 
-    if competition.created_by_id == user.id and not competition.is_official:
+    if competition.created_by_id == user.id:
         return True
 
     return False
