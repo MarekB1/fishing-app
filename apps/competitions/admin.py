@@ -41,8 +41,8 @@ class CompetitionAdmin(admin.ModelAdmin):
 
 
 class CompetitionMembershipAdmin(admin.ModelAdmin):
-    list_display = ("competition", "user", "role", "joined_at")
-    list_filter = ("role",)
+    list_display = ("competition", "user", "role", "is_organizer", "joined_at")
+    list_filter = ("role", "is_organizer")
     search_fields = ("competition__name", "user__username", "user__email")
 
 

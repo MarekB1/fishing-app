@@ -50,7 +50,6 @@ def catch_create(request):
                 memberships__user=request.user,
                 memberships__role__in=[
                     CompetitionMembership.Role.CONTESTANT,
-                    CompetitionMembership.Role.ORGANIZER,
                 ],
             )
             |
@@ -75,11 +74,11 @@ def catch_create(request):
                 catch.user = request.user
                 catch.save()
 
-                # organizátori = membership ORGANIZER + creator
+                # organizátori = membership is_organizer + creator
                 organizer_ids = set(
                     CompetitionMembership.objects.filter(
                         competition=catch.competition,
-                        role=CompetitionMembership.Role.ORGANIZER,
+                        is_organizer=True,
                     ).values_list("user_id", flat=True)
                 )
                 organizer_ids.add(catch.competition.created_by_id)
@@ -122,7 +121,7 @@ def _is_organizer(user, competition: Competition) -> bool:
     return CompetitionMembership.objects.filter(
         competition=competition,
         user=user,
-        role=CompetitionMembership.Role.ORGANIZER,
+        is_organizer=True,
     ).exists()
 
 
@@ -152,11 +151,11 @@ def _get_catch_for_viewer(user, pk: int) -> tuple[Catch, bool]:
     if membership is None and not is_creator:
         raise Http404("Catch not found")
 
-    is_organizer = is_creator or (membership and membership.role == CompetitionMembership.Role.ORGANIZER)
+    is_organizer = is_creator or (membership and membership.is_organizer)
     if is_organizer:
         return catch, True
 
-    # člen súťaže bez roly ORGANIZER môže pozerať detail (bez moderovania)
+    # člen súťaže bez organizer práv môže pozerať detail (bez moderovania)
     return catch, False
 
 
@@ -165,7 +164,7 @@ def _broadcast_pending_refresh(competition: Competition):
     organizer_ids = set(
         CompetitionMembership.objects.filter(
             competition=competition,
-            role=CompetitionMembership.Role.ORGANIZER,
+            is_organizer=True,
         ).values_list("user_id", flat=True)
     )
     organizer_ids.add(competition.created_by_id)

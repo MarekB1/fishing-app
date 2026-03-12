@@ -1,7 +1,22 @@
 <tr id="member-row-{{ m.id }}">
   <td>
-    <div class="fw-semibold">{% firstof m.user.get_full_name m.user.username %}</div>
+    <div class="fw-semibold d-flex align-items-center gap-2 flex-wrap">
+      <span>{% firstof m.user.get_full_name m.user.username %}</span>
+
+      {% if competition.created_by_id == m.user_id %}
+        <span class="badge text-bg-warning text-dark">Hlavný organizátor</span>
+      {% elif m.is_organizer %}
+        <span class="badge text-bg-info text-dark">Organizátor</span>
+      {% else %}
+        <span class="badge text-bg-secondary">Súťažiaci</span>
+      {% endif %}
+    </div>
+
     <div class="text-secondary small">@{{ m.user.username }}</div>
+
+    {% if error %}
+      <div class="text-danger small mt-1">{{ error }}</div>
+    {% endif %}
   </td>
 
   <td>
@@ -28,16 +43,50 @@
           {% endfor %}
         </select>
 
-        <button class="btn btn-outline-light btn-sm" type="submit">Uložiť</button>
+        <button class="btn btn-outline-light" type="submit">Uložiť</button>
       </div>
 
-      {% if error %}
-        <div class="invalid-feedback d-block">{{ error }}</div>
-      {% else %}
+      {% if not error %}
         <div class="form-text text-secondary mb-0">
           Max: {{ competition.fishing_spots_count }} miest.
         </div>
       {% endif %}
     </form>
+  </td>
+
+  <td class="text-end">
+    {% if is_main_organizer %}
+      {% if competition.created_by_id == m.user_id %}
+        <button class="btn btn-outline-secondary btn-sm" type="button" disabled>
+          Nedá sa odobrať
+        </button>
+      {% elif m.is_organizer %}
+        <form
+          method="post"
+          action="{% url 'competitions:membership_revoke_organizer' competition.pk m.pk %}"
+          hx-post="{% url 'competitions:membership_revoke_organizer' competition.pk m.pk %}"
+          hx-target="#member-row-{{ m.id }}"
+          hx-swap="outerHTML"
+        >
+          {% csrf_token %}
+          <button class="btn btn-outline-danger btn-sm" type="submit">
+            Odobrať organizátora
+          </button>
+        </form>
+      {% else %}
+        <form
+          method="post"
+          action="{% url 'competitions:membership_grant_organizer' competition.pk m.pk %}"
+          hx-post="{% url 'competitions:membership_grant_organizer' competition.pk m.pk %}"
+          hx-target="#member-row-{{ m.id }}"
+          hx-swap="outerHTML"
+        >
+          {% csrf_token %}
+          <button class="btn btn-outline-primary btn-sm" type="submit">
+            Pridať organizátora
+          </button>
+        </form>
+      {% endif %}
+    {% endif %}
   </td>
 </tr>

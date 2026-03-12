@@ -42,11 +42,33 @@ def _organizer_competitions_qs(user):
         Competition.objects
         .filter(
             Q(created_by=user)
-            | Q(memberships__user=user, memberships__role=CompetitionMembership.Role.ORGANIZER)
+            | Q(memberships__user=user, memberships__is_organizer=True)
         )
         .distinct()
         .order_by("-starts_at")
     )
+
+
+def _is_main_organizer(user, competition: Competition) -> bool:
+    return competition.created_by_id == user.id
+
+
+def _membership_is_organizer(membership: CompetitionMembership | None) -> bool:
+    return bool(membership and membership.is_organizer)
+
+
+def _user_is_organizer(user, competition: Competition, membership: CompetitionMembership | None = None) -> bool:
+    if _is_main_organizer(user, competition):
+        return True
+
+    if membership is None:
+        membership = (
+            CompetitionMembership.objects
+            .filter(competition=competition, user=user)
+            .first()
+        )
+
+    return _membership_is_organizer(membership)
 
 UNOFFICIAL_MAX_CONTESTANTS = 5
 
@@ -85,7 +107,14 @@ def my_competitions(request):
         c = m.competition
 
         is_creator = (c.created_by_id == request.user.id)
-        is_organizer = is_creator or (m.role == CompetitionMembership.Role.ORGANIZER)
+        is_organizer = is_creator or m.is_organizer
+
+        if is_creator:
+            role_label = "Hlavný organizátor"
+        elif m.is_organizer:
+            role_label = "Organizátor"
+        else:
+            role_label = m.get_role_display()
         is_finished_or_cancelled = bool(getattr(c, "cancelled_at", None) or now > c.ends_at)
 
         items.append({
@@ -94,7 +123,7 @@ def my_competitions(request):
             "starts": c.starts_at,
             "ends": c.ends_at,
             "status": _status_for_competition(c),
-            "role": m.get_role_display(),
+            "role": role_label,
             "participant_count": m.participant_count,
             "location_name": c.location_name,
             "can_cancel": is_organizer and not getattr(c, "cancelled_at", None),
@@ -161,7 +190,10 @@ def competition_create(request):
                 CompetitionMembership.objects.get_or_create(
                     competition=competition,
                     user=request.user,
-                    defaults={"role": "ORGANIZER"},
+                    defaults={
+                        "role": CompetitionMembership.Role.CONTESTANT,
+                        "is_organizer": True,
+                    },
                 )
 
             messages.success(request, "Súťaž bola vytvorená.")
@@ -199,8 +231,7 @@ def competition_edit(request, pk: int):
 def _can_user_compete(user, competition: Competition, membership=None) -> bool:
     """
     Súťažiť môže:
-    - CONTESTANT
-    - ORGANIZER
+    - člen so zápisom v CompetitionMembership
     - creator súťaže (aj keby membership náhodou chýbal)
     """
     if membership is None:
@@ -210,10 +241,7 @@ def _can_user_compete(user, competition: Competition, membership=None) -> bool:
             .first()
         )
 
-    if membership and membership.role in {
-        CompetitionMembership.Role.CONTESTANT,
-        CompetitionMembership.Role.ORGANIZER,
-    }:
+    if membership:
         return True
 
     if competition.created_by_id == user.id:
@@ -237,7 +265,7 @@ def competition_detail(request, pk: int):
         raise Http404("Competition not found")
 
     # Ak tvorca nemá membership (môže sa stať), berieme ho ako organizer
-    is_organizer = is_creator or (membership and membership.role == CompetitionMembership.Role.ORGANIZER)
+    is_organizer = _user_is_organizer(request.user, competition, membership)
     is_contestant = _can_user_compete(request.user, competition, membership)
 
     # Úlovky v súťaži (vidí každý člen súťaže)
@@ -281,6 +309,7 @@ def competition_detail(request, pk: int):
         "spots_range": spots_range,
         "scoreboard": scoreboard,
         "scoring_description": scoring_description,
+        "is_main_organizer": _is_main_organizer(request.user, competition),
     }
     return render(request, "competitions/detail.html", context)
 
@@ -369,6 +398,76 @@ def scoreboard_select(request):
 @require_POST
 @login_required
 @transaction.atomic
+def membership_grant_organizer(request, pk: int, membership_id: int):
+    competition = get_object_or_404(Competition, pk=pk)
+    _require_main_organizer_or_404(request.user, competition)
+
+    m = get_object_or_404(
+        CompetitionMembership.objects.select_related("user"),
+        pk=membership_id,
+        competition=competition,
+    )
+
+    if m.user_id == competition.created_by_id:
+        return render(request, "competitions/_member_row.html", {
+            "competition": competition,
+            "m": m,
+            "error": "Hlavný organizátor už organizátor je.",
+            "spots_range": range(1, competition.fishing_spots_count + 1),
+            "is_main_organizer": True,
+        })
+
+    if not m.is_organizer:
+        m.is_organizer = True
+        m.save(update_fields=["is_organizer"])
+
+    return render(request, "competitions/_member_row.html", {
+        "competition": competition,
+        "m": m,
+        "error": None,
+        "spots_range": range(1, competition.fishing_spots_count + 1),
+        "is_main_organizer": True,
+    })
+
+
+@require_POST
+@login_required
+@transaction.atomic
+def membership_revoke_organizer(request, pk: int, membership_id: int):
+    competition = get_object_or_404(Competition, pk=pk)
+    _require_main_organizer_or_404(request.user, competition)
+
+    m = get_object_or_404(
+        CompetitionMembership.objects.select_related("user"),
+        pk=membership_id,
+        competition=competition,
+    )
+
+    if m.user_id == competition.created_by_id:
+        return render(request, "competitions/_member_row.html", {
+            "competition": competition,
+            "m": m,
+            "error": "Hlavnému organizátorovi nie je možné odobrať rolu organizátora.",
+            "spots_range": range(1, competition.fishing_spots_count + 1),
+            "is_main_organizer": True,
+        })
+
+    if m.is_organizer:
+        m.is_organizer = False
+        m.save(update_fields=["is_organizer"])
+
+    return render(request, "competitions/_member_row.html", {
+        "competition": competition,
+        "m": m,
+        "error": None,
+        "spots_range": range(1, competition.fishing_spots_count + 1),
+        "is_main_organizer": True,
+    })
+
+
+@require_POST
+@login_required
+@transaction.atomic
 def membership_set_spot(request, pk: int, membership_id: int):
     competition = get_object_or_404(Competition, pk=pk)
     _require_organizer_or_404(request.user, competition)
@@ -407,12 +506,13 @@ def membership_set_spot(request, pk: int, membership_id: int):
             "m": m,
             "error": error,
             "spots_range": spots_range,
+            "is_main_organizer": _is_main_organizer(request.user, competition),
         })
 
     m.spot_number = spot
 
-    if spot < 1 or spot > competition.fishing_spots_count:
-        error = f"Povolené je 1 až {competition.fishing_spots_count}."
+    # if spot < 1 or spot > competition.fishing_spots_count:
+    #     error = f"Povolené je 1 až {competition.fishing_spots_count}."
 
     try:
         m.save(update_fields=["spot_number"])
@@ -423,6 +523,7 @@ def membership_set_spot(request, pk: int, membership_id: int):
             "m": m,
             "error": "Toto miesto je už obsadené.",
             "spots_range": spots_range,
+            "is_main_organizer": _is_main_organizer(request.user, competition),
         })
 
     return render(request, "competitions/_member_row.html", {
@@ -430,6 +531,7 @@ def membership_set_spot(request, pk: int, membership_id: int):
         "m": m,
         "error": None,
         "spots_range": spots_range,
+        "is_main_organizer": _is_main_organizer(request.user, competition),
     })
 
 @login_required
@@ -447,7 +549,7 @@ def competition_catch_list(request, pk: int):
     if membership is None and not is_creator:
         raise Http404("Competition not found")
 
-    is_organizer = is_creator or (membership and membership.role == CompetitionMembership.Role.ORGANIZER)
+    is_organizer = _user_is_organizer(request.user, competition, membership)
 
     catches_qs = (
         Catch.objects
@@ -1049,9 +1151,12 @@ def _require_organizer_or_404(user, competition: Competition):
         .filter(competition=competition, user=user)
         .first()
     )
-    is_creator = (competition.created_by_id == user.id)
-    is_organizer = is_creator or (membership and membership.role == CompetitionMembership.Role.ORGANIZER)
-    if not is_organizer:
+    if not _user_is_organizer(user, competition, membership):
+        raise Http404("Competition not found")
+
+
+def _require_main_organizer_or_404(user, competition: Competition):
+    if not _is_main_organizer(user, competition):
         raise Http404("Competition not found")
 
 

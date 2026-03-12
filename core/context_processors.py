@@ -1,6 +1,6 @@
-from django.utils import timezone
-from django.db.models import Count, Q
+from django.db.models import Count
 from apps.competitions.permissions import user_is_premium
+
 
 def nav_user_roles(request):
     user = getattr(request, "user", None)
@@ -18,7 +18,7 @@ def nav_user_roles(request):
         organizer_comp_ids |= set(
             CompetitionMembership.objects.filter(
                 user=user,
-                role=CompetitionMembership.Role.ORGANIZER,
+                is_organizer=True,
             ).values_list("competition_id", flat=True)
         )
 

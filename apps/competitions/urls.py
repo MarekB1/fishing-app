@@ -26,4 +26,6 @@ urlpatterns = [
     path("scoreboard/", views.scoreboard_select, name="scoreboard_select"),
     path("<int:pk>/scoreboard/", views.competition_scoreboard, name="scoreboard"),
     path("<int:pk>/scoreboard/fragment/", views.competition_scoreboard_fragment, name="scoreboard_fragment"),
+    path("<int:pk>/members/<int:membership_id>/grant-organizer/", views.membership_grant_organizer, name="membership_grant_organizer"),
+    path("<int:pk>/members/<int:membership_id>/revoke-organizer/", views.membership_revoke_organizer, name="membership_revoke_organizer"),
 ]

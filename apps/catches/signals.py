@@ -20,7 +20,7 @@ def catch_created_notify_organizers(sender, instance: Catch, created: bool, **kw
     organizer_ids = set(
         CompetitionMembership.objects.filter(
             competition=competition,
-            role=CompetitionMembership.Role.ORGANIZER,
+            is_organizer=True,
         ).values_list("user_id", flat=True)
     )
     organizer_ids.add(competition.created_by_id)

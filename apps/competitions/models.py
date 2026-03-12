@@ -84,7 +84,7 @@ class Competition(models.Model):
 
 class CompetitionMembership(models.Model):
     class Role(models.TextChoices):
-        ORGANIZER = "ORGANIZER", "Organizátor" # Nie je zdroj 
+        ORGANIZER = "ORGANIZER", "Organizátor"
         CONTESTANT = "CONTESTANT", "Súťažiaci"
 
     competition = models.ForeignKey(
@@ -94,6 +94,7 @@ class CompetitionMembership(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="competition_memberships"
     )
     role = models.CharField(max_length=20, choices=Role.choices)
+    is_organizer = models.BooleanField(default=False, db_index=True)
 
     spot_number = models.PositiveSmallIntegerField(null=True, blank=True, db_index=True)
 
@@ -111,14 +112,15 @@ class CompetitionMembership(models.Model):
                 name="uniq_membership_competition_spot_number",
             ),
         ]
-        
+
         indexes = [
             models.Index(fields=["competition", "role"]),
+            models.Index(fields=["competition", "is_organizer"]),
             models.Index(fields=["user"]),
         ]
 
     def __str__(self) -> str:
-        return f"{self.user} @ {self.competition} ({self.role})"
+        return f"{self.user} @ {self.competition} ({self.role}, organizer={self.is_organizer})"
 
 
 class Invitation(models.Model):

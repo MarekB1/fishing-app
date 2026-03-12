@@ -8,7 +8,7 @@ from django.http import HttpResponseForbidden
 
 
 from apps.catches.models import Catch
-from apps.competitions.models import Competition, CompetitionMembership
+from apps.competitions.models import Competition
 from .models import Notification
 from .realtime import broadcast_unread_count
 
@@ -16,7 +16,7 @@ def _organizer_competitions(user):
     return (
         Competition.objects.filter(
             Q(created_by=user) |
-            Q(memberships__user=user, memberships__role=CompetitionMembership.Role.ORGANIZER)
+            Q(memberships__user=user, memberships__is_organizer=True)
         )
         .distinct()
     )
@@ -69,4 +69,3 @@ def _require_organizer(request):
 
     messages.error(request, "Táto sekcia je dostupná len pre organizátora súťaže.")
     return redirect("core:dashboard")
-
