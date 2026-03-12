@@ -72,9 +72,15 @@
               <h2 class="h5 fw-semibold mb-2">👥 Pozvať cez priateľov / vyhľadávanie</h2>
               <p class="text-secondary small mb-3">
                 Live vyhľadávanie podľa username / mena / priezviska (max 10 výsledkov).
-              </p>
+              </p>                
 
               {% if active_competition_id %}
+                <div
+                  id="spot-required-alert"
+                  class="mb-3 {% if spot_picker_selected %}d-none{% endif %}">
+                  Nie je vybrané lovné miesto. 
+                </div>
+
                 <form id="invite-user-form" class="mb-2">
                   <input type="hidden" name="competition_id" value="{{ active_competition_id }}">
 
@@ -207,8 +213,7 @@
           <div class="card-header fw-semibold">Poznámky / ďalšie kroky</div>
           <div class="card-body">
             <ul class="mb-0">
-              <li>Schovať pozvanie keď nie je vybrané lovné miesto</li>
-              <li>Pozvánku ide odoslať aj bez vybraného lovného miesta</li>
+              <li>Pozvánku ide odoslať aj bez vybraného lovného miesta, necháme to tak?</li>
             </ul>
           </div>
         </div>
@@ -295,5 +300,23 @@
       }
     }
   })();
+
+  const spotPicker = document.getElementById("spotPicker");
+  const spotRequiredAlert = document.getElementById("spot-required-alert");
+
+  const toggleSpotRequiredAlert = () => {
+    if (!spotPicker || !spotRequiredAlert) return;
+
+    if (spotPicker.value) {
+      spotRequiredAlert.classList.add("d-none");
+    } else {
+      spotRequiredAlert.classList.remove("d-none");
+    }
+  };
+
+  if (spotPicker && spotRequiredAlert) {
+    toggleSpotRequiredAlert();
+    spotPicker.addEventListener("change", toggleSpotRequiredAlert);
+  }
 </script>
 {% endblock %}
