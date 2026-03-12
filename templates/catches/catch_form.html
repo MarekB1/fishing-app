@@ -21,7 +21,7 @@
       <div class="col-12 col-lg-8">
         <div class="card shadow-sm">
           <div class="card-body">
-            <form method="post" enctype="multipart/form-data" novalidate>
+            <form id="catch-create-form" method="post" enctype="multipart/form-data" novalidate>
               {% csrf_token %}
 
               {% if form.non_field_errors %}
@@ -84,13 +84,16 @@
                 <label class="form-label" for="{{ form.photo.id_for_label }}">Fotka</label>
                 {{ form.photo }}
                 {% if form.photo.errors %}
-                  <div class="invalid-feedback d-block">{{ form.photo.errors }}</div>
+                    <div class="invalid-feedback d-block">{{ form.photo.errors }}</div>
                 {% endif %}
-                <div class="form-text text-secondary">Tip: fotka pomôže organizátorovi pri schvaľovaní.</div>
-              </div>
+                <div class="form-text text-secondary">
+                    Podporované formáty: JPG, PNG, WEBP, HEIC, HEIF. Fotka sa po odoslaní automaticky znormalizuje na JPEG.
+                </div>
+                <div id="photo-upload-status" class="small text-secondary mt-2 d-none"></div>
+            </div>
 
               <div class="mt-4 d-flex gap-2">
-                <button type="submit" class="btn btn-primary">Pridať úlovok</button>
+                <button id="catch-submit-button" type="submit" class="btn btn-primary">Pridať úlovok</button>
                 <a class="btn btn-outline-light" href="{% url 'core:dashboard' %}">Zrušiť</a>
               </div>
             </form>
@@ -107,10 +110,46 @@
           <li>Loading screen kým sa nahrá fotka</li>
           <li>Povoliť úpravu úlovku pre organizátora</li> 
           <li>Zmeniť formát fotiek na jpeg a pozrieť aj ostatné formáty</li>
-          <li>Pri neofi. súťaži povoliť aj pridávanie úlovkou (Treba aj pri ofiko?)</li>
+          <li>Pri neofi. súťaži povoliť aj pridávanie úlovkov (Treba aj pri ofiko?)</li>
         </ul>
       </div>
     </div>
   </div>
   {% endif %}
+
+  {% block extra_js %}
+    {{ block.super }}
+      <script>
+          (() => {
+              // Zobrazí názov zvolenej fotky a pri odoslaní zabráni dvojitému submitu.
+              const form = document.getElementById("catch-create-form");
+              const photoInput = document.getElementById("{{ form.photo.id_for_label }}");
+              const status = document.getElementById("photo-upload-status");
+              const submitButton = document.getElementById("catch-submit-button");
+
+              if (!form || !photoInput || !status || !submitButton) {
+                  return;
+              }
+
+              photoInput.addEventListener("change", () => {
+                  const selectedFile = photoInput.files && photoInput.files.length ? photoInput.files[0] : null;
+                  if (!selectedFile) {
+                      status.textContent = "";
+                      status.classList.add("d-none");
+                      return;
+                  }
+
+                  status.textContent = `Vybraná fotka: ${selectedFile.name}`;
+                  status.classList.remove("d-none");
+              });
+
+              form.addEventListener("submit", () => {
+                  submitButton.disabled = true;
+                  submitButton.textContent = "Nahrávam...";
+                  status.textContent = "Fotka sa spracúva a nahráva. Na mobile to môže chvíľu trvať.";
+                  status.classList.remove("d-none");
+              });
+          })();
+      </script>
+  {% endblock %}
 {% endblock %}
