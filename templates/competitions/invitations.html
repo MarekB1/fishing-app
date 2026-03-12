@@ -11,8 +11,8 @@
     <div class="d-flex align-items-center gap-2">
       {% if competitions %}
         <select class="form-select form-select-sm w-auto" id="competitionFilter" style="border: 1px solid #0d6efd;">
-          <option value="{% url 'competitions:invitations' %}" {% if not active_competition_id %}selected{% endif %}>
-            Všetky súťaže
+          <option value="" {% if not active_competition_id %}selected{% endif %} disabled>
+            Vyber súťaž
           </option>
           {% for c in competitions %}
             <option
@@ -24,13 +24,11 @@
           {% endfor %}
         </select>
 
-        {# GLOBAL spot picker (len pre email + friends; nie pre LINK/QR) #}
         {% if active_competition_id %}
           <select
             class="form-select form-select-sm w-auto"
             id="spotPicker"
             name="spot_number"
-            form="emailInviteForm"
             style="border: 1px solid #0d6efd;"
           >
             <option value="" {% if not spot_picker_selected %}selected{% endif %}>Lovné miesto — (nepriradené)</option>
@@ -46,202 +44,162 @@
       {% endif %}
     </div>
 
-  {% if competitions %}
-    <div class="row g-3">
-      <div class="col-12 col-lg-5">
+    {% if competitions %}
+      <div class="row g-3">
+        <div class="col-12 col-lg-5">
 
-        {# 1) SHARE LINK (multi-use) + QR #}
-        <div class="card shadow-sm mb-3">
-          <div class="card-body">
-            <h2 class="h5 fw-semibold mb-2">🔗 Zdieľateľný link (viac ľudí)</h2>
-            <p class="text-secondary small mb-3">
-              Jeden link pre súťaž, ktorý môže použiť viac účastníkov (multi-use). Voliteľne QR kód na stiahnutie.
-            </p>
+          <div class="card shadow-sm mb-3">
+            <div class="card-body">
+              <h2 class="h5 fw-semibold mb-2">🔗 Zdieľateľný link (viac ľudí)</h2>
+              <p class="text-secondary small mb-3">
+                Jeden link pre súťaž, ktorý môže použiť viac účastníkov (multi-use). Voliteľne QR kód na stiahnutie.
+              </p>
 
-            {% if active_competition_id %}
-              <div id="share-link-card">
-                {% include "competitions/_invite_link_card.html" %}
-              </div>
-            {% else %}
-              <div class="alert alert-info mb-0">
-                Najprv vyber súťaž vo filtri nižšie (alebo klikni na súťaž vpravo v zozname).
-              </div>
-            {% endif %}
-          </div>
-        </div>
-
-        {# 2) INVITE USERS (friends/search) #}
-        <div class="card shadow-sm mb-3">
-          <div class="card-body">
-            <h2 class="h5 fw-semibold mb-2">👥 Pozvať cez priateľov / vyhľadávanie</h2>
-            <p class="text-secondary small mb-3">
-              Live vyhľadávanie podľa username / mena / priezviska (max 10 výsledkov).
-            </p>
-
-            {% if active_competition_id %}
-              <form id="invite-user-form" class="mb-2">
-                <input type="hidden" name="competition_id" value="{{ active_competition_id }}">
-
-                <div class="mb-2">
-                  <input
-                    class="form-control"
-                    type="search"
-                    name="q"
-                    placeholder="Hľadaj podľa username / mena / priezviska…"
-                    autocomplete="off"
-                    hx-get="{% url 'competitions:invite_user_search' %}"
-                    hx-trigger="keyup changed delay:250ms"
-                    hx-target="#invite-user-results"
-                    hx-swap="innerHTML"
-                    hx-include="#invite-user-form"
-                  >
+              {% if active_competition_id %}
+                <div id="share-link-card">
+                  {% include "competitions/_invite_link_card.html" %}
                 </div>
-
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" value="1" id="friends_only" name="friends_only">
-                  <label class="form-check-label" for="friends_only">
-                    Len priatelia
-                  </label>
-                </div>
-              </form>
-
-              <div id="invite-user-results"></div>
-            {% else %}
-              <div class="alert alert-info mb-0">
-                Vyber súťaž, aby si vedel pozývať ľudí.
-              </div>
-            {% endif %}
-          </div>
-        </div>
-
-        {# 3) EXISTING: create email invite (single-use) #}
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h2 class="h5 fw-semibold mb-2">➕ Vytvoriť pozvánku (email)</h2>
-            <p class="text-secondary small mb-3">
-              Toto je klasická email pozvánka (typicky jednorazová). Zdieľateľný link rieš vyššie.
-            </p>
-
-            <form id="emailInviteForm" method="post" novalidate>
-              {% csrf_token %}
-
-              {% if form.non_field_errors %}
-                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
-              {% endif %}
-
-              <div class="mb-3">
-                <label class="form-label" for="{{ form.competition.id_for_label }}">Súťaž</label>
-                {{ form.competition }}
-                {% if form.competition.errors %}
-                  <div class="invalid-feedback d-block">{{ form.competition.errors }}</div>
-                {% endif %}
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label" for="{{ form.email.id_for_label }}">Email</label>
-                {{ form.email }}
-                {% if form.email.errors %}
-                  <div class="invalid-feedback d-block">{{ form.email.errors }}</div>
-                {% endif %}
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label" for="{{ form.expires_at.id_for_label }}">Expirácia (voliteľné)</label>
-                {{ form.expires_at }}
-                {% if form.expires_at.errors %}
-                {% endif %}
-                <div class="form-text">Zobrazujú sa len voľné miesta (nezobrazia sa obsadené ani rezervované).</div>
-              </div>
-
-              <button type="submit" class="btn btn-primary">Vytvoriť pozvánku</button>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      {# RIGHT COLUMN #}
-      <div class="col-12 col-lg-7">
-        <div class="card shadow-sm">
-          <div class="card-header border-secondary d-flex align-items-center justify-content-between">
-            <span class="fw-semibold">Zoznam pozvánok</span>
-            <span class="text-secondary small">Klikni do linku – označí sa na kopírovanie.</span>
-          </div>
-
-          <div class="card-body p-0">
-            {% if items %}
-              <div class="table-responsive">
-                <table class="table table-dark table-hover mb-0 align-middle">
-                  <thead>
-                    <tr>
-                      <th>Súťaž</th>
-                      <th>Email</th>
-                      <th>Miesto</th>
-                      <th>Status</th>
-                      <th>Vytvorené</th>
-                      <th>Expirácia</th>
-                      <th>Link</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for it in items %}
-                      <tr>
-                        <td>
-                          <a class="link-light text-decoration-none" href="{% url 'competitions:detail' it.competition.id %}">
-                            {{ it.competition.name }}
-                          </a>
-                        </td>
-
-                        <td>{{ it.email|default:"—" }}</td>
-                        <td style="min-width: 180px;">
-                          {% include "competitions/_invitation_spot_select.html" with
-                              inv=it.inv
-                              competition=it.competition
-                              spots=it.spots
-                              taken_spots=it.taken_spots
-                              reserved_spots=it.reserved_spots
-                              error=None
-                              is_locked=it.is_locked
-                          %}
-                        </td>
-
-                        <td>
-                          {% if it.status == "Použitá" %}
-                            <span class="badge text-bg-secondary">{{ it.status }}</span>
-                          {% elif it.status == "Expirovaná" %}
-                            <span class="badge text-bg-warning">{{ it.status }}</span>
-                          {% else %}
-                            <span class="badge text-bg-success">{{ it.status }}</span>
-                          {% endif %}
-                        </td>
-
-                        <td class="text-secondary">{{ it.created_at|date:"d.m.Y H:i" }}</td>
-
-                        <td class="text-secondary">
-                          {% if it.expires_at %}
-                            {{ it.expires_at|date:"d.m.Y H:i" }}
-                          {% else %}
-                            —
-                          {% endif %}
-                        </td>
-
-                        <td style="min-width: 320px;">
-                          <div class="input-group input-group-sm">
-                            <input class="form-control" type="text" value="{{ it.link }}" readonly onclick="this.select()">
-                            <button class="btn btn-outline-light" type="button" data-copy="{{ it.link }}">Copy</button>
-                          </div>
-                        </td>
-                      </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            {% else %}
-              <div class="p-3">
+              {% else %}
                 <div class="alert alert-info mb-0">
-                  Zatiaľ nemáš žiadne pozvánky.
+                  Najprv vyber súťaž. Bez vybratej súťaže nie je možné vytvoriť ani zobraziť pozývací link.
                 </div>
-              </div>
-            {% endif %}
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="card shadow-sm mb-3">
+            <div class="card-body">
+              <h2 class="h5 fw-semibold mb-2">👥 Pozvať cez priateľov / vyhľadávanie</h2>
+              <p class="text-secondary small mb-3">
+                Live vyhľadávanie podľa username / mena / priezviska (max 10 výsledkov).
+              </p>
+
+              {% if active_competition_id %}
+                <form id="invite-user-form" class="mb-2">
+                  <input type="hidden" name="competition_id" value="{{ active_competition_id }}">
+
+                  <div class="mb-2">
+                    <input
+                      class="form-control"
+                      type="search"
+                      name="q"
+                      placeholder="Hľadaj podľa username / mena / priezviska…"
+                      autocomplete="off"
+                      hx-get="{% url 'competitions:invite_user_search' %}"
+                      hx-trigger="keyup changed delay:250ms"
+                      hx-target="#invite-user-results"
+                      hx-swap="innerHTML"
+                      hx-include="#invite-user-form"
+                    >
+                  </div>
+
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="1" id="friends_only" name="friends_only">
+                    <label class="form-check-label" for="friends_only">
+                      Len priatelia
+                    </label>
+                  </div>
+                </form>
+
+                <div id="invite-user-results"></div>
+              {% else %}
+                <div class="alert alert-info mb-0">
+                  Najprv vyber súťaž. Bez vybratej súťaže sa nedá nikoho pozvať.
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-lg-7">
+          <div class="card shadow-sm">
+            <div class="card-header border-secondary d-flex align-items-center justify-content-between">
+              <span class="fw-semibold">Zoznam pozvánok</span>
+              <span class="text-secondary small">Klikni do linku – označí sa na kopírovanie.</span>
+            </div>
+
+            <div class="card-body p-0">
+              {% if not active_competition_id %}
+                <div class="p-3">
+                  <div class="alert alert-info mb-0">
+                    Najprv vyber súťaž. Zoznam pozvánok sa zobrazí až po jej výbere.
+                  </div>
+                </div>
+              {% elif items %}
+                <div class="table-responsive">
+                  <table class="table table-dark table-hover mb-0 align-middle">
+                    <thead>
+                      <tr>
+                        <th>Súťaž</th>
+                        <th>Email</th>
+                        <th>Miesto</th>
+                        <th>Status</th>
+                        <th>Vytvorené</th>
+                        <th>Expirácia</th>
+                        <th>Link</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for it in items %}
+                        <tr>
+                          <td>
+                            <a class="link-light text-decoration-none" href="{% url 'competitions:detail' it.competition.id %}">
+                              {{ it.competition.name }}
+                            </a>
+                          </td>
+
+                          <td>{{ it.email|default:"—" }}</td>
+                          <td style="min-width: 180px;">
+                            {% include "competitions/_invitation_spot_select.html" with
+                                inv=it.inv
+                                competition=it.competition
+                                spots=it.spots
+                                taken_spots=it.taken_spots
+                                reserved_spots=it.reserved_spots
+                                error=None
+                                is_locked=it.is_locked
+                            %}
+                          </td>
+
+                          <td>
+                            {% if it.status == "Použitá" %}
+                              <span class="badge text-bg-secondary">{{ it.status }}</span>
+                            {% elif it.status == "Expirovaná" %}
+                              <span class="badge text-bg-warning">{{ it.status }}</span>
+                            {% else %}
+                              <span class="badge text-bg-success">{{ it.status }}</span>
+                            {% endif %}
+                          </td>
+
+                          <td class="text-secondary">{{ it.created_at|date:"d.m.Y H:i" }}</td>
+
+                          <td class="text-secondary">
+                            {% if it.expires_at %}
+                              {{ it.expires_at|date:"d.m.Y H:i" }}
+                            {% else %}
+                              —
+                            {% endif %}
+                          </td>
+
+                          <td style="min-width: 320px;">
+                            <div class="input-group input-group-sm">
+                              <input class="form-control" type="text" value="{{ it.link }}" readonly onclick="this.select()">
+                              <button class="btn btn-outline-light" type="button" data-copy="{{ it.link }}">Copy</button>
+                            </div>
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              {% else %}
+                <div class="p-3">
+                  <div class="alert alert-info mb-0">
+                    Pre vybranú súťaž zatiaľ nemáš žiadne pozvánky.
+                  </div>
+                </div>
+              {% endif %}
+            </div>
           </div>
         </div>
 
@@ -254,11 +212,41 @@
             </ul>
           </div>
         </div>
+
       </div>
-    </div>
-  {% else %}
-    <div class="alert alert-warning">
-      Nemáš žiadne súťaže, kde si organizátor – preto tu zatiaľ nie je čo spravovať.
+    {% else %}
+      <div class="alert alert-warning">
+        Nemáš žiadne súťaže, kde si organizátor – preto tu zatiaľ nie je čo spravovať.
+      </div>
+    {% endif %}
+  </div>
+
+  {% if competitions and not active_competition_id %}
+    <div class="modal fade" id="competitionRequiredModal" tabindex="-1" aria-labelledby="competitionRequiredModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header border-secondary">
+            <h2 class="modal-title h5 mb-0" id="competitionRequiredModalLabel">Vyber súťaž</h2>
+          </div>
+          <div class="modal-body">
+            <p class="text-secondary mb-3">Aby si vedel vytvárať a spravovať pozvánky, najprv musíš vybrať konkrétnu súťaž.</p>
+
+            <form id="competitionRequiredForm" method="get" action="{% url 'competitions:invitations' %}">
+              <div class="mb-3">
+                <label class="form-label" for="competitionRequiredSelect">Súťaž</label>
+                <select class="form-select" id="competitionRequiredSelect" name="competition" required>
+                  <option value="" selected disabled>Vyber súťaž</option>
+                  {% for c in competitions %}
+                    <option value="{{ c.id }}">{{ c.name }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <button type="submit" class="btn btn-primary w-100" id="competitionRequiredSubmit" disabled>Pokračovať</button>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
   {% endif %}
 {% endblock %}
@@ -276,17 +264,35 @@
         btn.textContent = "OK";
         setTimeout(() => btn.textContent = prev, 900);
       } catch {
-        // fallback: select nearest input
         const input = btn.parentElement?.querySelector("input");
         if (input) { input.focus(); input.select(); }
       }
     });
 
-    const sel = document.getElementById("competitionFilter");
-    if (sel) {
-      sel.addEventListener("change", (e) => {
-        window.location.href = e.target.value;
+    const toolbarSelect = document.getElementById("competitionFilter");
+    if (toolbarSelect) {
+      toolbarSelect.addEventListener("change", (e) => {
+        if (e.target.value) {
+          window.location.href = e.target.value;
+        }
       });
+    }
+
+    const modalEl = document.getElementById("competitionRequiredModal");
+    if (modalEl && window.bootstrap) {
+      const modal = new bootstrap.Modal(modalEl, {
+        backdrop: "static",
+        keyboard: false,
+      });
+      modal.show();
+
+      const modalSelect = document.getElementById("competitionRequiredSelect");
+      const modalSubmit = document.getElementById("competitionRequiredSubmit");
+      if (modalSelect && modalSubmit) {
+        modalSelect.addEventListener("change", () => {
+          modalSubmit.disabled = !modalSelect.value;
+        });
+      }
     }
   })();
 </script>

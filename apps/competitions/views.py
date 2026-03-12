@@ -17,7 +17,6 @@ from django.db import IntegrityError
 
 from .forms import CompetitionForm
 from .models import Competition, CompetitionMembership, Invitation, InvitationUse
-from .forms import InvitationCreateForm
 from apps.catches.models import Catch
 from django.contrib.auth.views import redirect_to_login
 from django.template.response import TemplateResponse
@@ -506,59 +505,22 @@ def _free_spots_for_competition(competition: Competition, *, exclude_invitation_
 def invitations(request):
     organizer_competitions = _organizer_competitions_qs(request.user)
 
-    # filter ?competition=ID (voliteľné)
     competition_id_raw = request.GET.get("competition")
     active_competition_id = None
-    filtered_competitions = organizer_competitions
+    active_competition = None
+    filtered_competitions = organizer_competitions.none()
 
     if competition_id_raw:
         try:
-            active_competition_id = int(competition_id_raw)
-            filtered_competitions = organizer_competitions.filter(id=active_competition_id)
-        except ValueError:
-            active_competition_id = None
-            filtered_competitions = organizer_competitions
+            candidate_competition_id = int(competition_id_raw)
+        except (TypeError, ValueError):
+            candidate_competition_id = None
 
-    active_competition = (
-        organizer_competitions.filter(id=active_competition_id).first()
-        if active_competition_id else None
-    )
-
-    # POST: vytvorenie klasickej email pozvánky (DIRECT)
-    if request.method == "POST":
-        form = InvitationCreateForm(request.POST, competition_qs=organizer_competitions)
-        if form.is_valid():
-            invite = form.save(commit=False)
-            invite.created_by = request.user
-            invite.kind = Invitation.Kind.DIRECT
-
-            # lovné miesto sa vyberá v hornom toolbar-e (select #spotPicker)
-            spot = _parse_spot_number(request.POST.get("spot_number"))
-            if spot is not None:
-                if spot < 1 or spot > invite.competition.fishing_spots_count:
-                    form.add_error(None, f"Povolené je 1 až {invite.competition.fishing_spots_count}.")
-                else:
-                    free = _free_spots_for_competition(invite.competition)
-                    if spot not in free:
-                        form.add_error(None, f"Miesto {spot} je už obsadené alebo rezervované.")
-                    else:
-                        invite.spot_number = spot
-
-            if form.errors:
-                # spadne to do renderu nižšie
-                pass
-            else:
-                invite.save()
-                link = request.build_absolute_uri(
-                    reverse("competitions:invite_accept", kwargs={"token": str(invite.token)})
-                )
-                messages.success(request, f"Pozvánka vytvorená. Link: {link}")
-                return redirect(f"{reverse('competitions:invitations')}?competition={invite.competition_id}")
-    else:
-        form = InvitationCreateForm(
-            competition_qs=organizer_competitions,
-            initial=({"competition": active_competition_id} if active_competition_id else None),
-        )
+        if candidate_competition_id is not None:
+            active_competition = organizer_competitions.filter(id=candidate_competition_id).first()
+            if active_competition:
+                active_competition_id = active_competition.id
+                filtered_competitions = organizer_competitions.filter(id=active_competition_id)
 
     inv_qs = (
         Invitation.objects
@@ -626,8 +588,6 @@ def invitations(request):
             "used_at": inv.used_at,
             "status": status,
             "link": link,
-
-            # per-pozvánka dropdown (DIRECT)
             "spots": (
                 ([inv.spot_number] if inv.spot_number and inv.spot_number not in free_map.get(inv.competition_id, []) else [])
                 + list(free_map.get(inv.competition_id, []))
@@ -638,11 +598,10 @@ def invitations(request):
         })
 
     spot_picker_spots = free_map.get(active_competition_id, []) if active_competition_id else []
-    spot_picker_value = (request.POST.get("spot_number") or "").strip() if request.method == "POST" else ""
-    spot_picker_selected = int(spot_picker_value) if spot_picker_value.isdigit() else None
+    spot_picker_value = ""
+    spot_picker_selected = None
 
     return render(request, "competitions/invitations.html", {
-        "form": form,
         "items": items,
         "competitions": organizer_competitions,
         "active_competition_id": active_competition_id,
