@@ -2,6 +2,8 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import PasswordChangeForm
 
+from .models import DashboardFeedback
+
 User = get_user_model()
 
 
@@ -42,7 +44,6 @@ class ProfileUpdateForm(BootstrapFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # chceme aby bol email povinný (User.email má defaultne blank=True)
         if "email" in self.fields:
             self.fields["email"].required = True
 
@@ -53,7 +54,6 @@ class ProfileUpdateForm(BootstrapFormMixin, forms.ModelForm):
         if not email:
             return email
 
-        # jedinečnosť pre login cez email (case-insensitive)
         qs = User._default_manager.filter(email__iexact=email).exclude(pk=self.instance.pk)
         if qs.exists():
             raise forms.ValidationError("Tento e-mail je už používaný iným účtom.")
@@ -64,7 +64,6 @@ class BootstrapPasswordChangeForm(BootstrapFormMixin, PasswordChangeForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # UX drobnosti
         if "old_password" in self.fields:
             self.fields["old_password"].label = "Aktuálne heslo"
             self.fields["old_password"].widget.attrs["autocomplete"] = "current-password"
@@ -78,4 +77,42 @@ class BootstrapPasswordChangeForm(BootstrapFormMixin, PasswordChangeForm):
             self.fields["new_password2"].widget.attrs["autocomplete"] = "new-password"
 
         self._bootstrapify()
-        
+
+
+class DashboardFeedbackForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = DashboardFeedback
+        fields = ("section", "feedback_type", "description")
+        labels = {
+            "section": "Sekcia",
+            "feedback_type": "Typ",
+            "description": "Popis",
+        }
+        widgets = {
+            "description": forms.Textarea(
+                attrs={
+                    "rows": 5,
+                    "placeholder": "Popíš bug alebo návrh na zlepšenie...",
+                }
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.fields["section"].choices = [
+            ("", "Vyber sekciu"),
+            *DashboardFeedback.Section.choices,
+        ]
+        self.fields["feedback_type"].choices = [
+            ("", "Vyber typ"),
+            *DashboardFeedback.FeedbackType.choices,
+        ]
+
+        self._bootstrapify()
+
+    def clean_description(self):
+        value = (self.cleaned_data.get("description") or "").strip()
+        if len(value) < 5:
+            raise forms.ValidationError("Popis musí mať aspoň 5 znakov.")
+        return value

@@ -4,8 +4,13 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.db.models import Q
+
 from apps.competitions.models import Competition
-from .forms import ProfileUpdateForm, BootstrapPasswordChangeForm
+from .forms import (
+    ProfileUpdateForm,
+    BootstrapPasswordChangeForm,
+    DashboardFeedbackForm,
+)
 
 
 def home(request):
@@ -19,7 +24,6 @@ def dashboard(request):
     user = request.user
     now = timezone.now()
 
-    # Súťaže, kde je user tvorca alebo člen
     base_qs = (
         Competition.objects
         .filter(Q(created_by=user) | Q(memberships__user=user))
@@ -27,7 +31,6 @@ def dashboard(request):
         .order_by("-starts_at")
     )
 
-    # Preferuj bežiacu súťaž (ak existuje)
     running = (
         base_qs
         .filter(cancelled_at__isnull=True, starts_at__lte=now, ends_at__gte=now)
@@ -36,10 +39,25 @@ def dashboard(request):
     )
 
     active_competition = running or base_qs.first()
+    feedback_form = DashboardFeedbackForm()
+
+    if request.method == "POST" and request.POST.get("action") == "dashboard_feedback":
+        feedback_form = DashboardFeedbackForm(request.POST)
+
+        if feedback_form.is_valid():
+            feedback = feedback_form.save(commit=False)
+            feedback.reporter = user
+            feedback.save()
+
+            messages.success(request, "Poznámka bola uložená. Ďakujeme za feedback.")
+            return redirect("core:dashboard")
+
+        messages.error(request, "Formulár sa nepodarilo uložiť. Skontroluj vyplnené polia.")
 
     return render(request, "core/dashboard.html", {
         "hide_nav_links_desktop": True,
         "active_competition": active_competition,
+        "feedback_form": feedback_form,
     })
 
 
@@ -72,7 +90,7 @@ def profile(request):
 
             if password_form.is_valid():
                 updated_user = password_form.save()
-                update_session_auth_hash(request, updated_user)  # aby ťa to neodhlásilo
+                update_session_auth_hash(request, updated_user)
                 messages.success(request, "Heslo bolo zmenené.")
                 return redirect("core:profile")
             else:
