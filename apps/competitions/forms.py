@@ -4,6 +4,7 @@ from django import forms
 from django.utils import timezone
 from .permissions import user_is_premium
 
+from apps.catches.constants import FISH_SPECIES
 from .models import Invitation, Competition
 from .scoring import (
     SCORING_MODE_CHOICES,
@@ -209,7 +210,7 @@ class CompetitionForm(forms.ModelForm):
         self.fields["combo_length_multiplier"].initial = Decimal(str(params.get("length_multiplier", "0")))
         self.fields["combo_weight_multiplier"].initial = Decimal(str(params.get("weight_multiplier", "0")))
         self.fields["combo_top_n"].initial = params.get("top_n") or None
-
+        self.species_catalog = list(FISH_SPECIES)
 
     def clean(self):
         cleaned = super().clean()

@@ -1,6 +1,8 @@
 from io import BytesIO
 from pathlib import Path
 
+from attrs import field
+from .constants import FISH_SPECIES_CHOICES
 from django import forms
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image, ImageOps, UnidentifiedImageError
@@ -84,6 +86,24 @@ def _normalize_uploaded_photo_to_jpeg(photo) -> SimpleUploadedFile:
         content_type="image/jpeg",
     )
 
+FISH_SPECIES_CHOICES = [
+    ("", "Vyber druh ryby"),
+    ("Kapor", "Kapor"),
+    ("Amur", "Amur"),
+    ("Šťuka", "Šťuka"),
+    ("Zubáč", "Zubáč"),
+    ("Sumec", "Sumec"),
+    ("Ostriež", "Ostriež"),
+    ("Pstruh", "Pstruh"),
+    ("Lipeň", "Lipeň"),
+    ("Jelec", "Jelec"),
+    ("Plotica", "Plotica"),
+    ("Pleskáč", "Pleskáč"),
+    ("Tolstolobik", "Tolstolobik"),
+    ("Karas", "Karas"),
+    ("Lín", "Lín"),
+    ("Úhor", "Úhor"),
+]
 
 class CatchCreateForm(forms.ModelForm):
     photo = forms.FileField(
@@ -99,6 +119,8 @@ class CatchCreateForm(forms.ModelForm):
         model = Catch
         fields = ["competition", "species", "length_cm", "weight_kg", "caught_at", "note", "photo"]
         widgets = {
+            "competition": forms.Select(),
+            "species": forms.Select(choices=FISH_SPECIES_CHOICES),
             "caught_at": forms.DateTimeInput(format=DT_LOCAL_FORMAT, attrs={"type": "datetime-local"}),
             "note": forms.Textarea(attrs={"rows": 3}),
             "length_cm": forms.NumberInput(attrs={"step": "0.01", "min": "0"}),
@@ -116,7 +138,7 @@ class CatchCreateForm(forms.ModelForm):
             existing_class = field.widget.attrs.get("class", "")
             if field_name == "photo":
                 field.widget.attrs["class"] = f"{existing_class} form-control".strip()
-            elif field_name == "competition":
+            elif field_name in {"competition", "species"}:
                 field.widget.attrs["class"] = f"{existing_class} form-select".strip()
             else:
                 field.widget.attrs["class"] = f"{existing_class} form-control".strip()

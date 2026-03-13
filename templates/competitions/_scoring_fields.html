@@ -1,7 +1,5 @@
-{# templates/competitions/_scoring_fields.html #}
-
-<div class="mt-4">
-  <h5 class="fw-semibold mb-3">Bodovanie</h5>
+<div class="mt-4 pt-3 border-top">
+  <h2 class="h5 fw-semibold mb-3">Bodovanie a pravidlá</h2>
 
   <div class="row g-3">
     <div class="col-12 col-md-6">
@@ -36,7 +34,7 @@
     </div>
   </div>
 
-  {# SUM_LENGTH / BEST_LENGTH #}
+  {# SUM_LENGTH #}
   <div class="mt-3" data-scoring-section="SUM_LENGTH">
     <div class="mb-3">
       <label class="form-label" for="{{ form.length_points_per_cm.id_for_label }}">{{ form.length_points_per_cm.label }}</label>
@@ -48,6 +46,7 @@
     </div>
   </div>
 
+  {# BEST_LENGTH #}
   <div class="mt-3" data-scoring-section="BEST_LENGTH">
     <div class="mb-3">
       <label class="form-label" for="{{ form.length_points_per_cm.id_for_label }}">{{ form.length_points_per_cm.label }}</label>
@@ -73,23 +72,75 @@
     </div>
   </div>
 
-  {# SPECIES_TABLE #}
-  <div class="mt-3" data-scoring-section="SPECIES_TABLE">
-    <div class="mb-3">
-      <label class="form-label" for="{{ form.species_points_text.id_for_label }}">{{ form.species_points_text.label }}</label>
-      {{ form.species_points_text }}
-      {% if form.species_points_text.errors %}
-        <div class="invalid-feedback d-block">{{ form.species_points_text.errors }}</div>
-      {% endif %}
-      <div class="form-text text-secondary">{{ form.species_points_text.help_text }}</div>
-    </div>
+  {# SHARED species section for SPECIES_TABLE + COMBO #}
+  <div class="mt-3 d-none" data-scoring-section-multi="SPECIES_TABLE,COMBO" id="species-points-section">
+    {{ form.species_points_text.as_hidden }}
 
-    <div class="mb-3">
-      <label class="form-label" for="{{ form.species_default_points.id_for_label }}">{{ form.species_default_points.label }}</label>
-      {{ form.species_default_points }}
-      {% if form.species_default_points.errors %}
-        <div class="invalid-feedback d-block">{{ form.species_default_points.errors }}</div>
-      {% endif %}
+    <div class="card border-secondary shadow-sm">
+      <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <div>
+          <div class="fw-semibold" id="species-points-title">Tabuľka bodov podľa druhu</div>
+          <div class="small text-secondary" id="species-points-help">
+            Vyplň body len pri druhoch, ktoré chceš hodnotiť. Prázdne pole = druh nemá vlastné body.
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-outline-light btn-sm" id="species-points-clear-btn">
+          Vymazať body
+        </button>
+      </div>
+
+      <div class="card-body">
+        {% if form.species_points_text.errors %}
+          <div class="invalid-feedback d-block mb-3">{{ form.species_points_text.errors }}</div>
+        {% endif %}
+
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-3">
+            <thead>
+              <tr>
+                <th scope="col">Druh ryby</th>
+                <th scope="col" style="width: 180px;">Body</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for species in form.species_catalog %}
+                <tr>
+                  <td class="fw-semibold">{{ species }}</td>
+                  <td>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      class="form-control"
+                      data-species-points-input="{{ species }}"
+                      placeholder="0"
+                    >
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mb-0">
+          <label class="form-label" for="{{ form.species_default_points.id_for_label }}">{{ form.species_default_points.label }}</label>
+          {{ form.species_default_points }}
+          {% if form.species_default_points.errors %}
+            <div class="invalid-feedback d-block">{{ form.species_default_points.errors }}</div>
+          {% endif %}
+          <div class="form-text text-secondary">
+            Ak používateľ zadá druh ryby, ktorý nemá vlastné body v tabuľke, použije sa táto default hodnota.
+          </div>
+        </div>
+
+        <noscript>
+          <div class="mt-3">
+            <label class="form-label" for="{{ form.species_points_text.id_for_label }}">{{ form.species_points_text.label }}</label>
+            {{ form.species_points_text }}
+          </div>
+        </noscript>
+      </div>
     </div>
   </div>
 
@@ -129,42 +180,132 @@
       {% endif %}
       <div class="form-text text-secondary">{{ form.combo_top_n.help_text }}</div>
     </div>
-
-    <div class="mt-3">
-      <label class="form-label" for="{{ form.species_points_text.id_for_label }}">{{ form.species_points_text.label }} (voliteľné)</label>
-      {{ form.species_points_text }}
-      {% if form.species_points_text.errors %}
-        <div class="invalid-feedback d-block">{{ form.species_points_text.errors }}</div>
-      {% endif %}
-      <div class="form-text text-secondary">Použije sa ako bonus podľa druhu v COMBO.</div>
-    </div>
-
-    <div class="mt-3">
-      <label class="form-label" for="{{ form.species_default_points.id_for_label }}">{{ form.species_default_points.label }}</label>
-      {{ form.species_default_points }}
-      {% if form.species_default_points.errors %}
-        <div class="invalid-feedback d-block">{{ form.species_default_points.errors }}</div>
-      {% endif %}
-    </div>
   </div>
 </div>
 
 <script>
 (function () {
   const modeSelect = document.getElementById("id_scoring_mode");
-  const sections = document.querySelectorAll("[data-scoring-section]");
+  const singleSections = document.querySelectorAll("[data-scoring-section]");
+  const multiSections = document.querySelectorAll("[data-scoring-section-multi]");
 
-  function update() {
+  const hiddenSpeciesInput = document.querySelector('input[name="species_points_text"]');
+  const speciesInputs = document.querySelectorAll("[data-species-points-input]");
+  const clearButton = document.getElementById("species-points-clear-btn");
+  const speciesTitle = document.getElementById("species-points-title");
+  const speciesHelp = document.getElementById("species-points-help");
+
+  function normalizeKey(value) {
+    return (value || "").trim().toLocaleLowerCase("sk-SK");
+  }
+
+  function parseSpeciesText(text) {
+    const map = {};
+
+    (text || "").split(/\r?\n/).forEach((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+
+      let separator = null;
+      ["=", ":", ";"].forEach((candidate) => {
+        if (!separator && trimmed.includes(candidate)) {
+          separator = candidate;
+        }
+      });
+
+      if (!separator) return;
+
+      const parts = trimmed.split(separator);
+      if (parts.length < 2) return;
+
+      const species = normalizeKey(parts[0]);
+      const points = (parts.slice(1).join(separator) || "").trim();
+
+      if (!species || points === "" || isNaN(Number(points))) return;
+      map[species] = points;
+    });
+
+    return map;
+  }
+
+  function syncUiFromHidden() {
+    if (!hiddenSpeciesInput) return;
+
+    const parsed = parseSpeciesText(hiddenSpeciesInput.value);
+
+    speciesInputs.forEach((input) => {
+      const species = normalizeKey(input.dataset.speciesPointsInput);
+      input.value = parsed[species] ?? "";
+    });
+  }
+
+  function syncHiddenFromUi() {
+    if (!hiddenSpeciesInput) return;
+
+    const lines = [];
+
+    speciesInputs.forEach((input) => {
+      const rawValue = (input.value || "").trim();
+      if (rawValue === "") return;
+
+      const species = input.dataset.speciesPointsInput;
+      lines.push(`${species}=${rawValue}`);
+    });
+
+    hiddenSpeciesInput.value = lines.join("\n");
+  }
+
+  function updateSpeciesSectionText(mode) {
+    if (!speciesTitle || !speciesHelp) return;
+
+    if (mode === "COMBO") {
+      speciesTitle.textContent = "Bonusové body podľa druhu";
+      speciesHelp.textContent = "Voliteľné. Ak nastavíš body pri druhu ryby, v COMBO sa pripočítajú ako bonus.";
+    } else {
+      speciesTitle.textContent = "Tabuľka bodov podľa druhu";
+      speciesHelp.textContent = "Vyplň body len pri druhoch, ktoré chceš hodnotiť. Prázdne pole = druh nemá vlastné body.";
+    }
+  }
+
+  function updateVisibility() {
     const mode = modeSelect ? modeSelect.value : null;
-    sections.forEach((el) => {
+
+    singleSections.forEach((el) => {
       const target = el.getAttribute("data-scoring-section");
       el.classList.toggle("d-none", target !== mode);
+    });
+
+    multiSections.forEach((el) => {
+      const targets = (el.getAttribute("data-scoring-section-multi") || "")
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean);
+
+      el.classList.toggle("d-none", !targets.includes(mode));
+    });
+
+    updateSpeciesSectionText(mode);
+  }
+
+  speciesInputs.forEach((input) => {
+    input.addEventListener("input", syncHiddenFromUi);
+    input.addEventListener("change", syncHiddenFromUi);
+  });
+
+  if (clearButton) {
+    clearButton.addEventListener("click", function () {
+      speciesInputs.forEach((input) => {
+        input.value = "";
+      });
+      syncHiddenFromUi();
     });
   }
 
   if (modeSelect) {
-    modeSelect.addEventListener("change", update);
-    update();
+    modeSelect.addEventListener("change", updateVisibility);
   }
+
+  syncUiFromHidden();
+  updateVisibility();
 })();
 </script>
