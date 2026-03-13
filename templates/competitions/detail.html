@@ -18,6 +18,10 @@
       {% if is_contestant %}
         <a class="btn btn-primary btn-sm" href="{% url 'catches:catch_create' %}?competition={{ competition.id }}">+ Pridať úlovok</a>
       {% endif %}
+      <a class="btn btn-warning" style="font-size: 0.875rem;"
+        href="{% url 'competitions:scoreboard' competition.pk %}">
+        Otvoriť scoreboard
+      </a>
     </div>
   </div>
 
@@ -28,28 +32,11 @@
     {% endif %}
   </div>
 
-  <div class="card border-secondary shadow-sm mb-4">
-    <div class="card-header border-secondary">
-      <div class="fw-semibold">🏆 Scoreboard</div>
-    </div>
-
-    <div class="card-body d-flex align-items-center justify-content-between">
-      <div class="text-secondary">
-        Priebežné poradie podľa schválených úlovkov.
-      </div>
-
-      <a class="btn btn-warning"
-        href="{% url 'competitions:scoreboard' competition.pk %}">
-        Otvoriť scoreboard
-      </a>
-    </div>
-  </div>
-
   <div class="row g-3">
     {% if is_contestant %}
     <div class="card shadow-sm mb-4">
       <div class="card-body">
-        <div class="text-secondary small">Miesto číslo</div>
+        <div class="text-secondary small">Lovné miesto</div>
         <div class="h4 fw-bold mb-0">
           {% if membership.spot_number %}
             {{ membership.spot_number }}
@@ -64,7 +51,7 @@
   {% if is_organizer %}
     <div class="card shadow-sm mb-4">
       <div class="card-header border-secondary">
-        <div class="fw-semibold">👥 Účastníci – Miesto číslo</div>
+        <div class="fw-semibold">👥 Účastníci – Lovné miesto</div>
         <div class="small text-secondary">
           Priraď miesto účastníkom (1–{{ competition.fishing_spots_count }}). Každé miesto môže byť len raz.
         </div>
@@ -77,7 +64,7 @@
               <thead>
                 <tr>  
                   <th>Účastník</th>
-                  <th style="width: 260px;">Miesto číslo</th>
+                  <th style="width: 260px;">Lovné miesto</th>
                   <th style="width: 220px;" class="text-end">Organizátor</th>
                 </tr>
               </thead>

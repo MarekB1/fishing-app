@@ -7,7 +7,6 @@ from typing import Any, Iterable
 
 from django.utils import timezone
 
-
 SCORING_VERSION = 1
 
 
@@ -29,6 +28,17 @@ SCORING_MODE_CHOICES = [
     (ScoringMode.COMBO, "Kombinované bodovanie"),
 ]
 
+# Zoznam režimov, ktoré je možné skladať do kombinovaného bodovania.
+COMBO_COMPONENT_CHOICES = [
+    (ScoringMode.COUNT, "Počet úlovkov"),
+    (ScoringMode.SUM_LENGTH, "Súčet dĺžok"),
+    (ScoringMode.BEST_LENGTH, "Najväčšia ryba podľa dĺžky"),
+    (ScoringMode.SUM_WEIGHT, "Súčet váhy"),
+    (ScoringMode.SPECIES_TABLE, "Bodovanie podľa druhu"),
+]
+
+# Mapa režim -> názov pre jednoduchší popis bodovania.
+SCORING_MODE_LABELS = dict(SCORING_MODE_CHOICES)
 
 class TieBreakerPreset:
     AUTO = "AUTO"
@@ -137,6 +147,7 @@ def normalize_rules(rules: dict | None) -> dict:
 
 
 def describe_rules(rules: dict | None) -> str:
+    # Vráti textový popis pravidiel bodovania pre detail súťaže a scoreboard.
     r = normalize_rules(rules)
     mode = r["mode"]
     p = r["params"]
@@ -152,12 +163,11 @@ def describe_rules(rules: dict | None) -> str:
     if mode == ScoringMode.SPECIES_TABLE:
         return "SPECIES_TABLE: body podľa druhu (tabuľka)"
     if mode == ScoringMode.COMBO:
-        base = int(p.get("base_points_per_catch", 0))
-        lm = _d(p.get("length_multiplier", "0"))
-        wm = _d(p.get("weight_multiplier", "0"))
-        topn = p.get("top_n")
-        extra = f", top {topn}" if topn else ""
-        return f"COMBO: base {base} + (dĺžka×{lm}) + (váha×{wm}){extra}"
+        selected_modes = p.get("selected_modes") or []
+        labels = [SCORING_MODE_LABELS.get(item, item) for item in selected_modes]
+        if labels:
+            return f"COMBO: {' + '.join(labels)}"
+        return "COMBO: bez zvolených systémov"
     return "Neznáme bodovanie"
 
 
@@ -200,6 +210,7 @@ def build_scoreboard(*, approved_catches: Iterable[Any], rules: dict | None) -> 
 
     points_per_cm = _d(p.get("points_per_cm", "1"))
     points_per_kg = _d(p.get("points_per_kg", "10"))
+    combo_selected_modes = set(p.get("selected_modes") or [])
 
     species_points = p.get("species_points") or {}
     species_points = {normalize_species_key(k): int(v) for k, v in species_points.items()}
@@ -253,19 +264,41 @@ def build_scoreboard(*, approved_catches: Iterable[Any], rules: dict | None) -> 
             points = Decimal(s)
 
         elif mode == ScoringMode.COMBO:
-            per_catch_points: list[Decimal] = []
-            for c in catches:
-                key = normalize_species_key(getattr(c, "species", ""))
-                sp = int(combo_species_points.get(key, combo_species_default))
-                lc = _d(getattr(c, "length_cm", None))
-                wk = _d(getattr(c, "weight_kg", None))
-                per = Decimal(base_points) + (lc * length_mult) + (wk * weight_mult) + Decimal(sp)
-                per_catch_points.append(per)
+            # Spočíta body zo všetkých zvolených bodovacích režimov.
+            if combo_selected_modes:
+                if ScoringMode.COUNT in combo_selected_modes:
+                    points += Decimal(points_per_catch * cnt)
 
-            per_catch_points.sort(reverse=True)
-            if top_n:
-                per_catch_points = per_catch_points[:top_n]
-            points = sum(per_catch_points, Decimal("0"))
+                if ScoringMode.SUM_LENGTH in combo_selected_modes:
+                    points += (sum_len * points_per_cm)
+
+                if ScoringMode.BEST_LENGTH in combo_selected_modes:
+                    points += (best_len * points_per_cm)
+
+                if ScoringMode.SUM_WEIGHT in combo_selected_modes:
+                    points += (sum_w * points_per_kg)
+
+                if ScoringMode.SPECIES_TABLE in combo_selected_modes:
+                    species_sum = 0
+                    for c in catches:
+                        key = normalize_species_key(getattr(c, "species", ""))
+                        species_sum += int(species_points.get(key, species_default))
+                    points += Decimal(species_sum)
+            else:
+                # Fallback pre starý COMBO formát, aby sa nerozbili staré uložené dáta.
+                per_catch_points: list[Decimal] = []
+                for c in catches:
+                    key = normalize_species_key(getattr(c, "species", ""))
+                    sp = int(combo_species_points.get(key, combo_species_default))
+                    lc = _d(getattr(c, "length_cm", None))
+                    wk = _d(getattr(c, "weight_kg", None))
+                    per = Decimal(base_points) + (lc * length_mult) + (wk * weight_mult) + Decimal(sp)
+                    per_catch_points.append(per)
+
+                per_catch_points.sort(reverse=True)
+                if top_n:
+                    per_catch_points = per_catch_points[:top_n]
+                points = sum(per_catch_points, Decimal("0"))
 
         rows.append(
             ScoreRow(
@@ -304,6 +337,16 @@ def build_scoreboard(*, approved_catches: Iterable[Any], rules: dict | None) -> 
             return base + (-row.best_weight, _safe_dt(row.earliest_caught_at))
         if mode in (ScoringMode.BEST_LENGTH,):
             return base + (-row.best_length, _safe_dt(row.earliest_caught_at))
+
+        if mode == ScoringMode.COMBO:
+            if ScoringMode.BEST_LENGTH in combo_selected_modes or ScoringMode.SUM_LENGTH in combo_selected_modes:
+                return base + (-row.best_length, _safe_dt(row.earliest_caught_at))
+            if ScoringMode.SUM_WEIGHT in combo_selected_modes:
+                return base + (-row.best_weight, _safe_dt(row.earliest_caught_at))
+            if ScoringMode.COUNT in combo_selected_modes:
+                return base + (-Decimal(row.catches_count), -row.best_length, _safe_dt(row.earliest_caught_at))
+            return base + (-row.best_length, _safe_dt(row.earliest_caught_at))
+        
         # SPECIES_TABLE / COMBO fallback
         return base + (-row.best_length, _safe_dt(row.earliest_caught_at))
 

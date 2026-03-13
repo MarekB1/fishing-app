@@ -34,7 +34,7 @@
     </div>
   </div>
 
-  {# SUM_LENGTH #}
+  <!-- {# SUM_LENGTH #}
   <div class="mt-3" data-scoring-section="SUM_LENGTH">
     <div class="mb-3">
       <label class="form-label" for="{{ form.length_points_per_cm.id_for_label }}">{{ form.length_points_per_cm.label }}</label>
@@ -58,6 +58,20 @@
         {{ form.length_points_per_cm.help_text }} (berie sa len najväčšia ryba)
       </div>
     </div>
+  </div> -->
+
+    {# LENGTH modes #}
+  <div class="mt-3 d-none" id="length-points-section">
+    <div class="mb-3">
+      <label class="form-label" for="{{ form.length_points_per_cm.id_for_label }}">{{ form.length_points_per_cm.label }}</label>
+      {{ form.length_points_per_cm }}
+      {% if form.length_points_per_cm.errors %}
+        <div class="invalid-feedback d-block">{{ form.length_points_per_cm.errors }}</div>
+      {% endif %}
+      <div class="form-text text-secondary" id="length-points-help">
+        {{ form.length_points_per_cm.help_text }}
+      </div>
+    </div>
   </div>
 
   {# SUM_WEIGHT #}
@@ -73,7 +87,7 @@
   </div>
 
   {# SHARED species section for SPECIES_TABLE + COMBO #}
-  <div class="mt-3 d-none" data-scoring-section-multi="SPECIES_TABLE,COMBO" id="species-points-section">
+  <div class="mt-3 d-none" data-scoring-section-multi="SPECIES_TABLE" id="species-points-section">
     {{ form.species_points_text.as_hidden }}
 
     <div class="card border-secondary shadow-sm">
@@ -144,168 +158,219 @@
     </div>
   </div>
 
-  {# COMBO #}
-  <div class="mt-3" data-scoring-section="COMBO">
-    <div class="row g-3">
-      <div class="col-12 col-md-4">
-        <label class="form-label" for="{{ form.combo_base_points_per_catch.id_for_label }}">{{ form.combo_base_points_per_catch.label }}</label>
-        {{ form.combo_base_points_per_catch }}
-        {% if form.combo_base_points_per_catch.errors %}
-          <div class="invalid-feedback d-block">{{ form.combo_base_points_per_catch.errors }}</div>
+{# COMBO #}
+  <div class="mt-3 d-none" data-scoring-section="COMBO" id="combo-section">
+    <div class="card border-secondary shadow-sm">
+      <div class="card-header fw-semibold">Vyber bodovacie systémy</div>
+      <div class="card-body">
+        {% if form.combo_selected_modes.errors %}
+          <div class="invalid-feedback d-block mb-3">{{ form.combo_selected_modes.errors }}</div>
         {% endif %}
-      </div>
 
-      <div class="col-12 col-md-4">
-        <label class="form-label" for="{{ form.combo_length_multiplier.id_for_label }}">{{ form.combo_length_multiplier.label }}</label>
-        {{ form.combo_length_multiplier }}
-        {% if form.combo_length_multiplier.errors %}
-          <div class="invalid-feedback d-block">{{ form.combo_length_multiplier.errors }}</div>
-        {% endif %}
-      </div>
+        <div class="d-grid gap-2">
+          {% for checkbox in form.combo_selected_modes %}
+            <label class="form-check border rounded p-3">
+              {{ checkbox.tag }}
+              <span class="ms-2">{{ checkbox.choice_label }}</span>
+            </label>
+          {% endfor %}
+        </div>
 
-      <div class="col-12 col-md-4">
-        <label class="form-label" for="{{ form.combo_weight_multiplier.id_for_label }}">{{ form.combo_weight_multiplier.label }}</label>
-        {{ form.combo_weight_multiplier }}
-        {% if form.combo_weight_multiplier.errors %}
-          <div class="invalid-feedback d-block">{{ form.combo_weight_multiplier.errors }}</div>
-        {% endif %}
+        <div class="form-text text-secondary mt-3">
+          Vyber aspoň 2 systémy. Výsledné body budú súčtom vybraných systémov.
+        </div>
       </div>
-    </div>
-
-    <div class="mt-3">
-      <label class="form-label" for="{{ form.combo_top_n.id_for_label }}">{{ form.combo_top_n.label }}</label>
-      {{ form.combo_top_n }}
-      {% if form.combo_top_n.errors %}
-        <div class="invalid-feedback d-block">{{ form.combo_top_n.errors }}</div>
-      {% endif %}
-      <div class="form-text text-secondary">{{ form.combo_top_n.help_text }}</div>
     </div>
   </div>
-</div>
 
 <script>
-(function () {
-  const modeSelect = document.getElementById("id_scoring_mode");
-  const singleSections = document.querySelectorAll("[data-scoring-section]");
-  const multiSections = document.querySelectorAll("[data-scoring-section-multi]");
+  (function () {
+      const modeSelect = document.getElementById("id_scoring_mode");
 
-  const hiddenSpeciesInput = document.querySelector('input[name="species_points_text"]');
-  const speciesInputs = document.querySelectorAll("[data-species-points-input]");
-  const clearButton = document.getElementById("species-points-clear-btn");
-  const speciesTitle = document.getElementById("species-points-title");
-  const speciesHelp = document.getElementById("species-points-help");
+      const countSection = document.querySelector('[data-scoring-section="COUNT"]');
+      const weightSection = document.querySelector('[data-scoring-section="SUM_WEIGHT"]');
+      const comboSection = document.getElementById("combo-section");
+      const speciesSection = document.getElementById("species-points-section");
+      const lengthSection = document.getElementById("length-points-section");
 
-  function normalizeKey(value) {
-    return (value || "").trim().toLocaleLowerCase("sk-SK");
-  }
+      const hiddenSpeciesInput = document.querySelector('textarea[name="species_points_text"]');
+      const speciesInputs = document.querySelectorAll("[data-species-points-input]");
+      const clearButton = document.getElementById("species-points-clear-btn");
+      const speciesTitle = document.getElementById("species-points-title");
+      const speciesHelp = document.getElementById("species-points-help");
+      const lengthPointsHelp = document.getElementById("length-points-help");
 
-  function parseSpeciesText(text) {
-    const map = {};
+      const comboModeInputs = document.querySelectorAll('input[name="combo_selected_modes"]');
 
-    (text || "").split(/\r?\n/).forEach((line) => {
-      const trimmed = line.trim();
-      if (!trimmed) return;
+      function normalizeKey(value) {
+          return (value || "").trim().toLocaleLowerCase("sk-SK");
+      }
 
-      let separator = null;
-      ["=", ":", ";"].forEach((candidate) => {
-        if (!separator && trimmed.includes(candidate)) {
-          separator = candidate;
-        }
-      });
+      function parseSpeciesText(text) {
+          const map = {};
 
-      if (!separator) return;
+          (text || "").split(/\r?\n/).forEach((line) => {
+              const trimmed = line.trim();
+              if (!trimmed) return;
 
-      const parts = trimmed.split(separator);
-      if (parts.length < 2) return;
+              let separator = null;
+              ["=", ":", ";"].forEach((candidate) => {
+                  if (!separator && trimmed.includes(candidate)) {
+                      separator = candidate;
+                  }
+              });
 
-      const species = normalizeKey(parts[0]);
-      const points = (parts.slice(1).join(separator) || "").trim();
+              if (!separator) return;
 
-      if (!species || points === "" || isNaN(Number(points))) return;
-      map[species] = points;
-    });
+              const parts = trimmed.split(separator);
+              if (parts.length < 2) return;
 
-    return map;
-  }
+              const species = normalizeKey(parts[0]);
+              const points = (parts.slice(1).join(separator) || "").trim();
 
-  function syncUiFromHidden() {
-    if (!hiddenSpeciesInput) return;
+              if (!species || points === "" || isNaN(Number(points))) return;
+              map[species] = points;
+          });
 
-    const parsed = parseSpeciesText(hiddenSpeciesInput.value);
+          return map;
+      }
 
-    speciesInputs.forEach((input) => {
-      const species = normalizeKey(input.dataset.speciesPointsInput);
-      input.value = parsed[species] ?? "";
-    });
-  }
+      function syncUiFromHidden() {
+          if (!hiddenSpeciesInput) return;
 
-  function syncHiddenFromUi() {
-    if (!hiddenSpeciesInput) return;
+          const parsed = parseSpeciesText(hiddenSpeciesInput.value);
 
-    const lines = [];
+          speciesInputs.forEach((input) => {
+              const species = normalizeKey(input.dataset.speciesPointsInput);
+              input.value = parsed[species] ?? "";
+          });
+      }
 
-    speciesInputs.forEach((input) => {
-      const rawValue = (input.value || "").trim();
-      if (rawValue === "") return;
+      function syncHiddenFromUi() {
+          if (!hiddenSpeciesInput) return;
 
-      const species = input.dataset.speciesPointsInput;
-      lines.push(`${species}=${rawValue}`);
-    });
+          const lines = [];
 
-    hiddenSpeciesInput.value = lines.join("\n");
-  }
+          speciesInputs.forEach((input) => {
+              const rawValue = (input.value || "").trim();
+              if (rawValue === "") return;
 
-  function updateSpeciesSectionText(mode) {
-    if (!speciesTitle || !speciesHelp) return;
+              const species = input.dataset.speciesPointsInput;
+              lines.push(`${species}=${rawValue}`);
+          });
 
-    if (mode === "COMBO") {
-      speciesTitle.textContent = "Bonusové body podľa druhu";
-      speciesHelp.textContent = "Voliteľné. Ak nastavíš body pri druhu ryby, v COMBO sa pripočítajú ako bonus.";
-    } else {
-      speciesTitle.textContent = "Tabuľka bodov podľa druhu";
-      speciesHelp.textContent = "Vyplň body len pri druhoch, ktoré chceš hodnotiť. Prázdne pole = druh nemá vlastné body.";
-    }
-  }
+          hiddenSpeciesInput.value = lines.join("\n");
+      }
 
-  function updateVisibility() {
-    const mode = modeSelect ? modeSelect.value : null;
+      function getSelectedComboModes() {
+          const selected = new Set();
 
-    singleSections.forEach((el) => {
-      const target = el.getAttribute("data-scoring-section");
-      el.classList.toggle("d-none", target !== mode);
-    });
+          comboModeInputs.forEach((input) => {
+              if (input.checked) {
+                  selected.add(input.value);
+              }
+          });
 
-    multiSections.forEach((el) => {
-      const targets = (el.getAttribute("data-scoring-section-multi") || "")
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean);
+          return selected;
+      }
 
-      el.classList.toggle("d-none", !targets.includes(mode));
-    });
+      function updateSpeciesSectionText(mode) {
+          if (!speciesTitle || !speciesHelp) return;
 
-    updateSpeciesSectionText(mode);
-  }
+          if (mode === "COMBO") {
+              speciesTitle.textContent = "Body podľa druhu v kombinovanom bodovaní";
+              speciesHelp.textContent = "Táto tabuľka sa započíta ako jedna zo zvolených bodovacích zložiek.";
+          } else {
+              speciesTitle.textContent = "Tabuľka bodov podľa druhu";
+              speciesHelp.textContent = "Vyplň body len pri druhoch, ktoré chceš hodnotiť. Prázdne pole = druh nemá vlastné body.";
+          }
+      }
 
-  speciesInputs.forEach((input) => {
-    input.addEventListener("input", syncHiddenFromUi);
-    input.addEventListener("change", syncHiddenFromUi);
-  });
+      function updateLengthSectionText(mode, comboSelectedModes) {
+          if (!lengthPointsHelp) return;
 
-  if (clearButton) {
-    clearButton.addEventListener("click", function () {
+          if (mode === "BEST_LENGTH") {
+              lengthPointsHelp.textContent = "Napr. 1 = 1 bod za 1 cm. Berie sa len najväčšia ryba.";
+              return;
+          }
+
+          if (mode === "COMBO" && comboSelectedModes.has("SUM_LENGTH") && comboSelectedModes.has("BEST_LENGTH")) {
+              lengthPointsHelp.textContent = "Použije sa rovnaký koeficient pre Súčet dĺžok aj Najväčšiu rybu podľa dĺžky.";
+              return;
+          }
+
+          if (mode === "COMBO" && comboSelectedModes.has("BEST_LENGTH")) {
+              lengthPointsHelp.textContent = "Použije sa pre zložku Najväčšia ryba podľa dĺžky.";
+              return;
+          }
+
+          lengthPointsHelp.textContent = "Napr. 1 = 1 bod za 1 cm.";
+      }
+
+      function updateVisibility() {
+          const mode = modeSelect ? modeSelect.value : null;
+          const comboSelectedModes = getSelectedComboModes();
+
+          const showCount = mode === "COUNT" || (mode === "COMBO" && comboSelectedModes.has("COUNT"));
+          const showLength = (
+              mode === "SUM_LENGTH"
+              || mode === "BEST_LENGTH"
+              || (
+                  mode === "COMBO"
+                  && (comboSelectedModes.has("SUM_LENGTH") || comboSelectedModes.has("BEST_LENGTH"))
+              )
+          );
+          const showWeight = mode === "SUM_WEIGHT" || (mode === "COMBO" && comboSelectedModes.has("SUM_WEIGHT"));
+          const showSpecies = mode === "SPECIES_TABLE" || (mode === "COMBO" && comboSelectedModes.has("SPECIES_TABLE"));
+          const showCombo = mode === "COMBO";
+
+          if (countSection) {
+              countSection.classList.toggle("d-none", !showCount);
+          }
+
+          if (lengthSection) {
+              lengthSection.classList.toggle("d-none", !showLength);
+          }
+
+          if (weightSection) {
+              weightSection.classList.toggle("d-none", !showWeight);
+          }
+
+          if (speciesSection) {
+              speciesSection.classList.toggle("d-none", !showSpecies);
+          }
+
+          if (comboSection) {
+              comboSection.classList.toggle("d-none", !showCombo);
+          }
+
+          updateSpeciesSectionText(mode);
+          updateLengthSectionText(mode, comboSelectedModes);
+      }
+
       speciesInputs.forEach((input) => {
-        input.value = "";
+          input.addEventListener("input", syncHiddenFromUi);
+          input.addEventListener("change", syncHiddenFromUi);
       });
-      syncHiddenFromUi();
-    });
-  }
 
-  if (modeSelect) {
-    modeSelect.addEventListener("change", updateVisibility);
-  }
+      comboModeInputs.forEach((input) => {
+          input.addEventListener("change", updateVisibility);
+      });
 
-  syncUiFromHidden();
-  updateVisibility();
-})();
+      if (clearButton) {
+          clearButton.addEventListener("click", function () {
+              speciesInputs.forEach((input) => {
+                  input.value = "";
+              });
+              syncHiddenFromUi();
+          });
+      }
+
+      if (modeSelect) {
+          modeSelect.addEventListener("change", updateVisibility);
+      }
+
+      syncUiFromHidden();
+      updateVisibility();
+  })();
 </script>
