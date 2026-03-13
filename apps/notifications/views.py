@@ -5,7 +5,8 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.http import HttpResponseForbidden
-
+from django.db.models import Q, OuterRef, Subquery
+from apps.competitions.models import Competition, CompetitionMembership
 
 from apps.catches.models import Catch
 from apps.competitions.models import Competition
@@ -36,13 +37,19 @@ def pending_list(request):
         return blocked
 
     comps = _organizer_competitions(request.user)
+
+    spot_subquery = CompetitionMembership.objects.filter(
+        competition_id=OuterRef("competition_id"),
+        user_id=OuterRef("user_id"),
+    ).values("spot_number")[:1]
+
     pending_catches = (
         Catch.objects.filter(competition__in=comps, status=Catch.Status.PENDING)
         .select_related("competition", "user")
+        .annotate(spot_number=Subquery(spot_subquery))
         .order_by("-created_at")
     )
     return render(request, "notifications/_pending_list.html", {"pending_catches": pending_catches})
-
 
 @require_POST
 @login_required

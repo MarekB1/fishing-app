@@ -6,6 +6,7 @@
           <th>Čas</th>
           <th>Súťaž</th>
           <th>Súťažiaci</th>
+          <th>Lovné miesto</th>
           <th>Druh</th>
           <th class="text-end">Detail</th>
           <th class="text-end">Akcie</th>
@@ -21,6 +22,13 @@
               </a>
             </td>
             <td>{{ c.user.username }}</td>
+            <td>
+              {% if c.spot_number %}
+                <span class="badge text-bg-secondary">{{ c.spot_number }}</span>
+              {% else %}
+                <span class="text-secondary">—</span>
+              {% endif %}
+            </td>
             <td class="fw-semibold">{{ c.species }}</td>
             <td class="text-end">
               <a class="btn btn-outline-light btn-sm" href="{% url 'catches:detail' c.id %}">Otvoriť</a>
