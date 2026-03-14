@@ -75,14 +75,16 @@
   </div>
 
   {# SUM_WEIGHT #}
-  <div class="mt-3" data-scoring-section="SUM_WEIGHT">
+    <div class="mt-3" data-scoring-section="SUM_WEIGHT">
     <div class="mb-3">
       <label class="form-label" for="{{ form.weight_points_per_kg.id_for_label }}">{{ form.weight_points_per_kg.label }}</label>
       {{ form.weight_points_per_kg }}
       {% if form.weight_points_per_kg.errors %}
         <div class="invalid-feedback d-block">{{ form.weight_points_per_kg.errors }}</div>
       {% endif %}
-      <div class="form-text text-secondary">{{ form.weight_points_per_kg.help_text }}</div>
+      <div class="form-text text-secondary" id="weight-points-help">
+        {{ form.weight_points_per_kg.help_text }}
+      </div>
     </div>
   </div>
 
@@ -199,6 +201,7 @@
       const speciesTitle = document.getElementById("species-points-title");
       const speciesHelp = document.getElementById("species-points-help");
       const lengthPointsHelp = document.getElementById("length-points-help");
+      const weightPointsHelp = document.getElementById("weight-points-help");
 
       const comboModeInputs = document.querySelectorAll('input[name="combo_selected_modes"]');
 
@@ -307,6 +310,28 @@
           lengthPointsHelp.textContent = "Napr. 1 = 1 bod za 1 cm.";
       }
 
+      function updateWeightSectionText(mode, comboSelectedModes) {
+          // Mení pomocný text pre váhové bodovanie podľa zvoleného režimu.
+          if (!weightPointsHelp) return;
+
+          if (mode === "BEST_WEIGHT") {
+              weightPointsHelp.textContent = "Napr. 10 = 10 bodov za 1 kg. Berie sa len najťažšia ryba.";
+              return;
+          }
+
+          if (mode === "COMBO" && comboSelectedModes.has("SUM_WEIGHT") && comboSelectedModes.has("BEST_WEIGHT")) {
+              weightPointsHelp.textContent = "Použije sa rovnaký koeficient pre Súčet váhy aj Najväčšiu rybu podľa váhy.";
+              return;
+          }
+
+          if (mode === "COMBO" && comboSelectedModes.has("BEST_WEIGHT")) {
+              weightPointsHelp.textContent = "Použije sa pre zložku Najväčšia ryba podľa váhy.";
+              return;
+          }
+
+          weightPointsHelp.textContent = "Napr. 10 = 10 bodov za 1 kg.";
+      }
+
       function updateVisibility() {
           const mode = modeSelect ? modeSelect.value : null;
           const comboSelectedModes = getSelectedComboModes();
@@ -320,7 +345,14 @@
                   && (comboSelectedModes.has("SUM_LENGTH") || comboSelectedModes.has("BEST_LENGTH"))
               )
           );
-          const showWeight = mode === "SUM_WEIGHT" || (mode === "COMBO" && comboSelectedModes.has("SUM_WEIGHT"));
+          const showWeight = (
+              mode === "SUM_WEIGHT"
+              || mode === "BEST_WEIGHT"
+              || (
+                  mode === "COMBO"
+                  && (comboSelectedModes.has("SUM_WEIGHT") || comboSelectedModes.has("BEST_WEIGHT"))
+              )
+          );
           const showSpecies = mode === "SPECIES_TABLE" || (mode === "COMBO" && comboSelectedModes.has("SPECIES_TABLE"));
           const showCombo = mode === "COMBO";
 
@@ -346,6 +378,7 @@
 
           updateSpeciesSectionText(mode);
           updateLengthSectionText(mode, comboSelectedModes);
+          updateWeightSectionText(mode, comboSelectedModes);
       }
 
       speciesInputs.forEach((input) => {

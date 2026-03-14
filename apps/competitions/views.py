@@ -23,7 +23,7 @@ from django.template.response import TemplateResponse
 from .permissions import user_is_premium
 from django.db.models.deletion import ProtectedError
 from apps.friends.models import Friendship
-from .scoring import build_scoreboard, describe_rules
+from .scoring import build_scoreboard, describe_rules, build_rules_detail
 from django.db.models import Count
 
 
@@ -295,7 +295,7 @@ def competition_detail(request, pk: int):
 )
     scoreboard = build_scoreboard(approved_catches=approved_catches, rules=competition.scoring_rules)
     scoring_description = describe_rules(competition.scoring_rules)
-
+    scoring_rules_detail = build_rules_detail(competition.scoring_rules)
 
     context = {
         "competition": competition,
@@ -310,6 +310,7 @@ def competition_detail(request, pk: int):
         "scoreboard": scoreboard,
         "scoring_description": scoring_description,
         "is_main_organizer": _is_main_organizer(request.user, competition),
+        "scoring_rules_detail": scoring_rules_detail,
     }
     return render(request, "competitions/detail.html", context)
 

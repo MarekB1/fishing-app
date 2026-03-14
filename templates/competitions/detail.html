@@ -32,6 +32,167 @@
     {% endif %}
   </div>
 
+  <div class="card border-secondary shadow-sm mb-3">
+    <div class="card-body d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div class="me-2">
+        <div class="text-secondary small">Pravidlá súťaže</div>
+        <div class="fw-semibold">{{ scoring_rules_detail.summary }}</div>
+      </div>
+
+      <button
+        type="button"
+        class="btn btn-outline-light btn-sm"
+        data-bs-toggle="modal"
+        data-bs-target="#competitionRulesModal"
+      >
+        Detail pravidiel
+      </button>
+    </div>
+  </div>
+
+    <div class="modal fade" id="competitionRulesModal" tabindex="-1" aria-labelledby="competitionRulesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title mb-1" id="competitionRulesModalLabel">📋 Pravidlá súťaže</h5>
+            <div class="small text-secondary">{{ competition.name }}</div>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zavrieť"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="row g-3 mb-3">
+            <div class="col-12 col-md-6">
+              <div class="card border-secondary h-100">
+                <div class="card-body">
+                  <div class="text-secondary small mb-1">Hlavné bodovanie</div>
+                  <div class="fw-semibold">{{ scoring_rules_detail.mode_label }}</div>
+                  <div class="small text-secondary mt-2">{{ scoring_rules_detail.summary }}</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="card border-secondary h-100">
+                <div class="card-body">
+                  <div class="text-secondary small mb-1">Riešenie remízy</div>
+                  <div class="fw-semibold">{{ scoring_rules_detail.tie_breaker_label }}</div>
+
+                  <div class="text-secondary small mt-3 mb-2">Požadované údaje pri úlovku</div>
+                  <div class="d-flex flex-wrap gap-2">
+                    {% if scoring_rules_detail.length_required %}
+                      <span class="badge text-bg-secondary">Dĺžka povinná</span>
+                    {% endif %}
+                    {% if scoring_rules_detail.weight_required %}
+                      <span class="badge text-bg-secondary">Váha povinná</span>
+                    {% endif %}
+                    {% if not scoring_rules_detail.length_required and not scoring_rules_detail.weight_required %}
+                      <span class="badge text-bg-dark border">Bez povinných polí navyše</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {% if scoring_rules_detail.combo_mode_labels %}
+            <div class="card border-secondary mb-3">
+              <div class="card-body">
+                <div class="text-secondary small mb-2">Zloženie kombinovaného bodovania</div>
+                <div class="d-flex flex-wrap gap-2">
+                  {% for label in scoring_rules_detail.combo_mode_labels %}
+                    <span class="badge text-bg-secondary">{{ label }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+            </div>
+          {% endif %}
+
+          <div class="row g-3">
+            {% if scoring_rules_detail.uses_count_points %}
+              <div class="col-12 col-md-4">
+                <div class="card border-secondary h-100">
+                  <div class="card-body">
+                    <div class="text-secondary small mb-1">Body za úlovok</div>
+                    <div class="fw-semibold">{{ scoring_rules_detail.count_points_per_catch }} bodov</div>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+
+            {% if scoring_rules_detail.uses_length_points %}
+              <div class="col-12 col-md-4">
+                <div class="card border-secondary h-100">
+                  <div class="card-body">
+                    <div class="text-secondary small mb-1">Koeficient za dĺžku</div>
+                    <div class="fw-semibold">{{ scoring_rules_detail.length_points_per_cm|floatformat:"-3" }} bodov / 1 cm</div>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+
+            {% if scoring_rules_detail.uses_weight_points %}
+              <div class="col-12 col-md-4">
+                <div class="card border-secondary h-100">
+                  <div class="card-body">
+                    <div class="text-secondary small mb-1">Koeficient za váhu</div>
+                    <div class="fw-semibold">{{ scoring_rules_detail.weight_points_per_kg|floatformat:"-3" }} bodov / 1 kg</div>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+
+          {% if scoring_rules_detail.uses_species_points %}
+            <div class="card border-secondary mt-3">
+              <div class="card-body">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                  <div>
+                    <div class="fw-semibold">Body podľa druhu</div>
+                    <div class="small text-secondary">
+                      Default body pre druh, ktorý nie je v tabuľke:
+                      <strong>{{ scoring_rules_detail.default_species_points }}</strong>
+                    </div>
+                  </div>
+                </div>
+
+                {% if scoring_rules_detail.species_rows %}
+                  <div class="table-responsive border rounded">
+                    <table class="table table-dark table-striped table-sm align-middle mb-0">
+                      <thead>
+                        <tr>
+                          <th>Druh ryby</th>
+                          <th class="text-end" style="width: 140px;">Body</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for row in scoring_rules_detail.species_rows %}
+                          <tr>
+                            <td>{{ row.species|title }}</td>
+                            <td class="text-end fw-semibold">{{ row.points }}</td>
+                          </tr>
+                        {% endfor %}
+                      </tbody>
+                    </table>
+                  </div>
+                {% else %}
+                  <div class="text-secondary small">
+                    Nie sú nastavené konkrétne body pre jednotlivé druhy rýb.
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Zavrieť</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="row g-3">
     {% if is_contestant %}
     <div class="card shadow-sm mb-4">
@@ -138,6 +299,7 @@
         <li>Možnosť otvoriť si profil účastníka, kde sa zobrazia jeho úlovky v danej súťaži</li>
         <li>Úprava úlovku organizátorom</li>
         <li>notifikácia ak sa uloží lovné miesto</li>
+        <li>Povoliť úpravu úlovku pre organizátora</li>
       </ul>
     </div>
   </div>

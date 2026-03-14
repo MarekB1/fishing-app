@@ -14,6 +14,7 @@ class ScoringMode:
     COUNT = "COUNT"
     SUM_LENGTH = "SUM_LENGTH"
     BEST_LENGTH = "BEST_LENGTH"
+    BEST_WEIGHT = "BEST_WEIGHT"
     SUM_WEIGHT = "SUM_WEIGHT"
     SPECIES_TABLE = "SPECIES_TABLE"
     COMBO = "COMBO"
@@ -23,6 +24,7 @@ SCORING_MODE_CHOICES = [
     (ScoringMode.COUNT, "Počet úlovkov"),
     (ScoringMode.SUM_LENGTH, "Súčet dĺžok"),
     (ScoringMode.BEST_LENGTH, "Najväčšia ryba podľa dĺžky"),
+    (ScoringMode.BEST_WEIGHT, "Najväčšia ryba podľa váhy"),
     (ScoringMode.SUM_WEIGHT, "Súčet váhy"),
     (ScoringMode.SPECIES_TABLE, "Bodovanie podľa druhu"),
     (ScoringMode.COMBO, "Kombinované bodovanie"),
@@ -33,6 +35,7 @@ COMBO_COMPONENT_CHOICES = [
     (ScoringMode.COUNT, "Počet úlovkov"),
     (ScoringMode.SUM_LENGTH, "Súčet dĺžok"),
     (ScoringMode.BEST_LENGTH, "Najväčšia ryba podľa dĺžky"),
+    (ScoringMode.BEST_WEIGHT, "Najväčšia ryba podľa váhy"),
     (ScoringMode.SUM_WEIGHT, "Súčet váhy"),
     (ScoringMode.SPECIES_TABLE, "Bodovanie podľa druhu"),
 ]
@@ -54,6 +57,8 @@ TIE_BREAKER_CHOICES = [
     (TieBreakerPreset.MOST_CATCHES_THEN_BIGGEST, "Viac úlovkov → potom najväčšia ryba"),
 ]
 
+# Mapa presetov remízy -> text pre zobrazenie v UI.
+TIE_BREAKER_LABELS = dict(TIE_BREAKER_CHOICES)
 
 def _d(val: Any, default: Decimal = Decimal("0")) -> Decimal:
     if val is None or val == "":
@@ -136,7 +141,7 @@ def normalize_rules(rules: dict | None) -> dict:
         if mode in (ScoringMode.SUM_LENGTH, ScoringMode.BEST_LENGTH):
             req.setdefault("length_required", True)
             req.setdefault("weight_required", False)
-        elif mode == ScoringMode.SUM_WEIGHT:
+        elif mode in (ScoringMode.SUM_WEIGHT, ScoringMode.BEST_WEIGHT):
             req.setdefault("length_required", False)
             req.setdefault("weight_required", True)
         else:
@@ -147,29 +152,121 @@ def normalize_rules(rules: dict | None) -> dict:
 
 
 def describe_rules(rules: dict | None) -> str:
-    # Vráti textový popis pravidiel bodovania pre detail súťaže a scoreboard.
+    # Vráti používateľský popis pravidiel bodovania pre detail súťaže a scoreboard.
     r = normalize_rules(rules)
     mode = r["mode"]
     p = r["params"]
 
     if mode == ScoringMode.COUNT:
-        return f"COUNT: {int(p.get('points_per_catch', 10))} bodov za úlovok"
+        return f"Počet úlovkov – {int(p.get('points_per_catch', 10))} bodov za každý úlovok."
+
     if mode == ScoringMode.SUM_LENGTH:
-        return f"SUM_LENGTH: {_d(p.get('points_per_cm', '1'))} bodov / 1 cm"
+        return f"Súčet dĺžok – {_d(p.get('points_per_cm', '1'))} bodov za 1 cm."
+
     if mode == ScoringMode.BEST_LENGTH:
-        return f"BEST_LENGTH: {_d(p.get('points_per_cm', '1'))} bodov / 1 cm (berie sa len najväčšia ryba)"
+        return (
+            f"Najväčšia ryba podľa dĺžky – {_d(p.get('points_per_cm', '1'))} bodov za 1 cm. "
+            f"Počíta sa len najdlhšia ryba."
+        )
+
+    if mode == ScoringMode.BEST_WEIGHT:
+        return (
+            f"Najväčšia ryba podľa váhy – {_d(p.get('points_per_kg', '10'))} bodov za 1 kg. "
+            f"Počíta sa len najťažšia ryba."
+        )
+
     if mode == ScoringMode.SUM_WEIGHT:
-        return f"SUM_WEIGHT: {_d(p.get('points_per_kg', '10'))} bodov / 1 kg"
+        return f"Súčet váhy – {_d(p.get('points_per_kg', '10'))} bodov za 1 kg."
+
     if mode == ScoringMode.SPECIES_TABLE:
-        return "SPECIES_TABLE: body podľa druhu (tabuľka)"
+        return "Bodovanie podľa druhu – každý druh ryby má pridelený vlastný počet bodov."
+
     if mode == ScoringMode.COMBO:
         selected_modes = p.get("selected_modes") or []
         labels = [SCORING_MODE_LABELS.get(item, item) for item in selected_modes]
         if labels:
-            return f"COMBO: {' + '.join(labels)}"
-        return "COMBO: bez zvolených systémov"
-    return "Neznáme bodovanie"
+            return f"Kombinované bodovanie – {' + '.join(labels)}."
+        return "Kombinované bodovanie – bez zvolených pravidiel."
 
+    return "Pravidlá bodovania nie sú nastavené."
+
+def build_rules_detail(rules: dict | None) -> dict:
+    # Poskladá detailné pravidlá bodovania do štruktúry pripravenej pre modal v detaile súťaže.
+    r = normalize_rules(rules)
+    mode = r["mode"]
+    p = r["params"] or {}
+    req = r.get("requirements") or {}
+    tie_preset = (r.get("tie_breaker") or {}).get("preset") or TieBreakerPreset.AUTO
+
+    species_points = p.get("species_points") or {}
+    species_rows = [
+        {
+            "species": species,
+            "points": int(points),
+        }
+        for species, points in sorted(species_points.items(), key=lambda item: item[0])
+    ]
+
+    combo_selected_modes = p.get("selected_modes") or []
+    combo_mode_labels = [SCORING_MODE_LABELS.get(item, item) for item in combo_selected_modes]
+
+    detail = {
+        "mode": mode,
+        "mode_label": SCORING_MODE_LABELS.get(mode, mode),
+        "summary": describe_rules(rules),
+        "tie_breaker_label": TIE_BREAKER_LABELS.get(tie_preset, tie_preset),
+        "length_required": bool(req.get("length_required")),
+        "weight_required": bool(req.get("weight_required")),
+        "uses_count_points": False,
+        "uses_length_points": False,
+        "uses_weight_points": False,
+        "uses_species_points": False,
+        "count_points_per_catch": None,
+        "length_points_per_cm": None,
+        "weight_points_per_kg": None,
+        "default_species_points": int(p.get("default_species_points", 0)),
+        "species_rows": species_rows,
+        "combo_mode_labels": combo_mode_labels,
+    }
+
+    if mode == ScoringMode.COUNT:
+        detail["uses_count_points"] = True
+        detail["count_points_per_catch"] = int(p.get("points_per_catch", 10))
+
+    elif mode in (ScoringMode.SUM_LENGTH, ScoringMode.BEST_LENGTH):
+        detail["uses_length_points"] = True
+        detail["length_points_per_cm"] = _d(p.get("points_per_cm", "1"))
+
+    elif mode in (ScoringMode.SUM_WEIGHT, ScoringMode.BEST_WEIGHT):
+        detail["uses_weight_points"] = True
+        detail["weight_points_per_kg"] = _d(p.get("points_per_kg", "10"))
+
+    elif mode == ScoringMode.SPECIES_TABLE:
+        detail["uses_species_points"] = True
+
+    elif mode == ScoringMode.COMBO:
+        if ScoringMode.COUNT in combo_selected_modes:
+            detail["uses_count_points"] = True
+            detail["count_points_per_catch"] = int(p.get("points_per_catch", 10))
+
+        if (
+            ScoringMode.SUM_LENGTH in combo_selected_modes
+            or ScoringMode.BEST_LENGTH in combo_selected_modes
+        ):
+            detail["uses_length_points"] = True
+            detail["length_points_per_cm"] = _d(p.get("points_per_cm", "1"))
+
+        if (
+            ScoringMode.SUM_WEIGHT in combo_selected_modes
+            or ScoringMode.BEST_WEIGHT in combo_selected_modes
+        ):
+            detail["uses_weight_points"] = True
+            detail["weight_points_per_kg"] = _d(p.get("points_per_kg", "10"))
+
+        if ScoringMode.SPECIES_TABLE in combo_selected_modes:
+            detail["uses_species_points"] = True
+
+    return detail
 
 @dataclass
 class ScoreRow:
@@ -253,6 +350,9 @@ def build_scoreboard(*, approved_catches: Iterable[Any], rules: dict | None) -> 
         elif mode == ScoringMode.BEST_LENGTH:
             points = (best_len * points_per_cm)
 
+        elif mode == ScoringMode.BEST_WEIGHT:
+            points = (best_w * points_per_kg)    
+
         elif mode == ScoringMode.SUM_WEIGHT:
             points = (sum_w * points_per_kg)
 
@@ -274,6 +374,9 @@ def build_scoreboard(*, approved_catches: Iterable[Any], rules: dict | None) -> 
 
                 if ScoringMode.BEST_LENGTH in combo_selected_modes:
                     points += (best_len * points_per_cm)
+
+                if ScoringMode.BEST_WEIGHT in combo_selected_modes:
+                    points += (best_w * points_per_kg)    
 
                 if ScoringMode.SUM_WEIGHT in combo_selected_modes:
                     points += (sum_w * points_per_kg)
@@ -337,11 +440,13 @@ def build_scoreboard(*, approved_catches: Iterable[Any], rules: dict | None) -> 
             return base + (-row.best_weight, _safe_dt(row.earliest_caught_at))
         if mode in (ScoringMode.BEST_LENGTH,):
             return base + (-row.best_length, _safe_dt(row.earliest_caught_at))
+        if mode in (ScoringMode.BEST_WEIGHT,):
+            return base + (-row.best_weight, _safe_dt(row.earliest_caught_at))
 
         if mode == ScoringMode.COMBO:
             if ScoringMode.BEST_LENGTH in combo_selected_modes or ScoringMode.SUM_LENGTH in combo_selected_modes:
                 return base + (-row.best_length, _safe_dt(row.earliest_caught_at))
-            if ScoringMode.SUM_WEIGHT in combo_selected_modes:
+            if ScoringMode.BEST_WEIGHT in combo_selected_modes or ScoringMode.SUM_WEIGHT in combo_selected_modes:
                 return base + (-row.best_weight, _safe_dt(row.earliest_caught_at))
             if ScoringMode.COUNT in combo_selected_modes:
                 return base + (-Decimal(row.catches_count), -row.best_length, _safe_dt(row.earliest_caught_at))

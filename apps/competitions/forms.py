@@ -239,7 +239,7 @@ class CompetitionForm(forms.ModelForm):
             if cleaned.get("length_points_per_cm") is None:
                 self.add_error("length_points_per_cm", "Zadaj body za 1 cm.")
 
-        elif mode == ScoringMode.SUM_WEIGHT:
+        elif mode in (ScoringMode.SUM_WEIGHT, ScoringMode.BEST_WEIGHT):
             if cleaned.get("weight_points_per_kg") is None:
                 self.add_error("weight_points_per_kg", "Zadaj body za 1 kg.")
 
@@ -262,7 +262,10 @@ class CompetitionForm(forms.ModelForm):
             ) and cleaned.get("length_points_per_cm") is None:
                 self.add_error("length_points_per_cm", "Zadaj body za 1 cm.")
 
-            if ScoringMode.SUM_WEIGHT in combo_selected_modes and cleaned.get("weight_points_per_kg") is None:
+            if (
+                ScoringMode.SUM_WEIGHT in combo_selected_modes
+                or ScoringMode.BEST_WEIGHT in combo_selected_modes
+            ) and cleaned.get("weight_points_per_kg") is None:
                 self.add_error("weight_points_per_kg", "Zadaj body za 1 kg.")
 
             if ScoringMode.SPECIES_TABLE in combo_selected_modes and cleaned.get("species_default_points") is None:
@@ -287,7 +290,7 @@ class CompetitionForm(forms.ModelForm):
             params["points_per_cm"] = str(self.cleaned_data.get("length_points_per_cm") or Decimal("0"))
             requirements["length_required"] = True
 
-        elif mode == ScoringMode.SUM_WEIGHT:
+        elif mode in (ScoringMode.SUM_WEIGHT, ScoringMode.BEST_WEIGHT):
             params["points_per_kg"] = str(self.cleaned_data.get("weight_points_per_kg") or Decimal("0"))
             requirements["weight_required"] = True
 
@@ -308,7 +311,10 @@ class CompetitionForm(forms.ModelForm):
             ):
                 params["points_per_cm"] = str(self.cleaned_data.get("length_points_per_cm") or Decimal("0"))
 
-            if ScoringMode.SUM_WEIGHT in combo_selected_modes:
+            if (
+                ScoringMode.SUM_WEIGHT in combo_selected_modes
+                or ScoringMode.BEST_WEIGHT in combo_selected_modes
+            ):
                 params["points_per_kg"] = str(self.cleaned_data.get("weight_points_per_kg") or Decimal("0"))
 
             if ScoringMode.SPECIES_TABLE in combo_selected_modes:
@@ -319,7 +325,10 @@ class CompetitionForm(forms.ModelForm):
                 ScoringMode.SUM_LENGTH in combo_selected_modes
                 or ScoringMode.BEST_LENGTH in combo_selected_modes
             )
-            requirements["weight_required"] = ScoringMode.SUM_WEIGHT in combo_selected_modes
+            requirements["weight_required"] = (
+                ScoringMode.SUM_WEIGHT in combo_selected_modes
+                or ScoringMode.BEST_WEIGHT in combo_selected_modes
+            )
 
         instance.scoring_rules = {
             "version": 1,
