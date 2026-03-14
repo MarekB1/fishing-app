@@ -46,9 +46,9 @@
 
     {% if competitions %}
       <div class="row g-3">
-        <div class="col-12 col-lg-5">
+        <div class="col-12 d-flex flex-column flex-md-row justify-content-md-evenly gap-2">
 
-          <div class="card shadow-sm mb-3">
+          <div class="card shadow-sm mb-3 col-md-6">
             <div class="card-body">
               <h2 class="h5 fw-semibold mb-2">🔗 Zdieľateľný link (viac ľudí)</h2>
               <p class="text-secondary small mb-3">
@@ -67,7 +67,7 @@
             </div>
           </div>
 
-          <div class="card shadow-sm mb-3">
+          <div class="card shadow-sm mb-3 col-md-6">
             <div class="card-body">
               <h2 class="h5 fw-semibold mb-2">👥 Pozvať cez priateľov / vyhľadávanie</h2>
               <p class="text-secondary small mb-3">
@@ -111,98 +111,6 @@
               {% else %}
                 <div class="alert alert-info mb-0">
                   Najprv vyber súťaž. Bez vybratej súťaže sa nedá nikoho pozvať.
-                </div>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-lg-7">
-          <div class="card shadow-sm">
-            <div class="card-header border-secondary d-flex align-items-center justify-content-between">
-              <span class="fw-semibold">Zoznam pozvánok</span>
-              <span class="text-secondary small">Klikni do linku – označí sa na kopírovanie.</span>
-            </div>
-
-            <div class="card-body p-0">
-              {% if not active_competition_id %}
-                <div class="p-3">
-                  <div class="alert alert-info mb-0">
-                    Najprv vyber súťaž. Zoznam pozvánok sa zobrazí až po jej výbere.
-                  </div>
-                </div>
-              {% elif items %}
-                <div class="table-responsive">
-                  <table class="table table-dark table-hover mb-0 align-middle">
-                    <thead>
-                      <tr>
-                        <th>Súťaž</th>
-                        <th>Email</th>
-                        <th>Miesto</th>
-                        <th>Status</th>
-                        <th>Vytvorené</th>
-                        <th>Expirácia</th>
-                        <th>Link</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for it in items %}
-                        <tr>
-                          <td>
-                            <a class="link-light text-decoration-none" href="{% url 'competitions:detail' it.competition.id %}">
-                              {{ it.competition.name }}
-                            </a>
-                          </td>
-
-                          <td>{{ it.email|default:"—" }}</td>
-                          <td style="min-width: 180px;">
-                            {% include "competitions/_invitation_spot_select.html" with
-                                inv=it.inv
-                                competition=it.competition
-                                spots=it.spots
-                                taken_spots=it.taken_spots
-                                reserved_spots=it.reserved_spots
-                                error=None
-                                is_locked=it.is_locked
-                            %}
-                          </td>
-
-                          <td>
-                            {% if it.status == "Použitá" %}
-                              <span class="badge text-bg-secondary">{{ it.status }}</span>
-                            {% elif it.status == "Expirovaná" %}
-                              <span class="badge text-bg-warning">{{ it.status }}</span>
-                            {% else %}
-                              <span class="badge text-bg-success">{{ it.status }}</span>
-                            {% endif %}
-                          </td>
-
-                          <td class="text-secondary">{{ it.created_at|date:"d.m.Y H:i" }}</td>
-
-                          <td class="text-secondary">
-                            {% if it.expires_at %}
-                              {{ it.expires_at|date:"d.m.Y H:i" }}
-                            {% else %}
-                              —
-                            {% endif %}
-                          </td>
-
-                          <td style="min-width: 320px;">
-                            <div class="input-group input-group-sm">
-                              <input class="form-control" type="text" value="{{ it.link }}" readonly onclick="this.select()">
-                              <button class="btn btn-outline-light" type="button" data-copy="{{ it.link }}">Copy</button>
-                            </div>
-                          </td>
-                        </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-              {% else %}
-                <div class="p-3">
-                  <div class="alert alert-info mb-0">
-                    Pre vybranú súťaž zatiaľ nemáš žiadne pozvánky.
-                  </div>
                 </div>
               {% endif %}
             </div>
