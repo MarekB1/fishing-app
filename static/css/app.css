@@ -1,0 +1,131 @@
+/* --- MODERNÝ RYBÁRSKY VIZUÁL (Tmavá Zelená / Príroda) --- */
+:root, [data-bs-theme="dark"] {
+  /* Zmena základného fontu */
+  --bs-body-font-family: 'Inter', sans-serif;
+  
+  /* Paleta */
+  --bs-body-color: #f8fafc;
+  --primary-color: #10b981; /* Trošku jasnejšia smaragdová, aby svietila na tmavom pozadí */
+  --primary-hover: #059669;
+}
+
+/* 1. Hĺbka a Pozadie (Hlboká nočná zelená s gradientom) */
+body {
+  background-color: #022c22; /* Úplne tmavá smaragdová (Emerald 950) */
+  background-image: radial-gradient(circle at top center, #000000 0%, #064e3b 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* 2. Plávajúce Menu (Sklo ladené do zelena) */
+.floating-nav {
+  background: rgba(2, 44, 34, 0.65) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* 3. Moderné Karty (Prispôsobené tmavej zelenej) */
+.card {
+  background: rgba(2, 44, 34, 0.45) !important;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 1.25rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.2);
+}
+
+.card-header {
+  background: rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 1rem 1.25rem;
+}
+
+/* 4. Interaktívne karty (na Dashboard) */
+.card-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-hover:hover {
+  transform: translateY(-5px);
+  background: rgba(2, 44, 34, 0.7) !important;
+  border-color: rgba(16, 185, 129, 0.4); /* Karta sa orámuje primárnou zelenou */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+}
+
+/* 5. Tlačidlá zladené k čierno-zelenému pozadiu */
+.btn {
+  border-radius: 0.75rem;
+  font-weight: 600;
+  padding: 0.65rem 1.25rem;
+  text-transform: uppercase; /* Moderný app-look */
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Primary tlačidlo (Nová súťaž, Moje úlovky...) */
+.btn-primary {
+  /* Polopriehľadný zelený gradient */
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.85), rgba(5, 150, 105, 0.85));
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  /* Jemný svietiaci okraj */
+  border: 1px solid rgba(16, 185, 129, 0.5);
+  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.2);
+  color: #ffffff;
+}
+
+.btn-primary:hover, .btn-primary:focus {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 1), rgba(4, 120, 87, 1));
+  border-color: rgba(16, 185, 129, 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+  color: #ffffff;
+}
+
+/* Warning tlačidlo (Čaká na spracovanie úlovku) */
+.btn-warning {
+  /* Polopriehľadný oranžový/jantárový gradient */
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.85), rgba(217, 119, 6, 0.85));
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
+  color: #ffffff !important; /* Prepíšeme tmavý text z defaultného bootstrap warningu */
+}
+
+.btn-warning:hover, .btn-warning:focus {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 1), rgba(180, 83, 9, 1));
+  border-color: rgba(245, 158, 11, 0.9);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
+  color: #ffffff !important;
+}
+
+/* Badge (odznačik) vo vnútri warning tlačidla */
+.btn-warning .badge {
+  background-color: rgba(0, 0, 0, 0.4) !important;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Vstupné polia (Inputy upravené pre zelený podklad) */
+.form-control, .form-select {
+  background-color: rgba(2, 44, 34, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.75rem;
+  color: #f8fafc;
+  padding: 0.75rem 1rem;
+}
+.form-control:focus, .form-select:focus {
+  background-color: rgba(2, 44, 34, 0.8);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.25);
+  color: white;
+}
+
+.cursor-default {
+  cursor: default;
+}

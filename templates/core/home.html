@@ -1,22 +1,28 @@
 {% extends "base.html" %}
-{% block title %}Máš záber!{% endblock %}
+{% block title %}Máš záber! - Moderná rybárska aplikácia{% endblock %}
 
 {% block content %}
-  <div class="row justify-content-center">
-    <div class="col-12 col-lg-10">
-      <div class="p-4 p-md-5 rounded-4 border bg-body-tertiary">
-        <h1 class="display-6 fw-bold mb-2">Rybárska súťaž – jednoduché pridávanie úlovkov</h1>
-        <p class="lead mb-4">
-          Organizátor vytvorí súťaž, pozve účastníkov a schvaľuje úlovky.
-          Súťažiaci pridávajú úlovky počas trvania súťaže.
+  <div class="row justify-content-center mt-5">
+    <div class="col-11 col-md-8 col-lg-6">
+      <div class="d-flex flex-column justify-content-center align-items-center p-5 rounded-4 shadow-lg hero-gradient text-center">
+        
+        <div class="mb-3 text-primary" style="font-size: 3rem;">
+          <i class="bi bi-water"></i>
+        </div>
+
+        <h1 class="display-5 fw-bold mb-3 text-white">Mám Záber!</h1>
+        <p class="text-secondary mb-4 fs-5">
+          Tvoj digitálny parťák pre rybárske súťaže. Eviduj úlovky, sleduj live poradie a organizuj preteky bez papiera.
         </p>
 
-        <div class="mt-4 d-flex gap-2">
+        <div class="d-flex flex-column flex-sm-row justify-content-center w-100 gap-3">
           {% if user.is_authenticated %}
-            <a class="btn btn-primary" href="{% url 'core:dashboard' %}">Prejsť na dashboard</a>
+            <a class="btn btn-primary btn-lg px-4" href="{% url 'core:dashboard' %}">
+              <i class="bi bi-speedometer2 me-2"></i>Prejsť na dashboard
+            </a>
           {% else %}
-            <a class="btn btn-primary" href="{% url 'login' %}">Prihlásiť sa</a>
-            <a class="btn btn-outline-light" href="{% url 'signup' %}">Registrácia</a>
+            <a class="btn btn-primary btn-lg px-4" href="{% url 'login' %}">Prihlásiť sa</a>
+            <a class="btn btn-outline-secondary btn-lg px-4" href="{% url 'signup' %}">Registrácia</a>
           {% endif %}
         </div>
 
