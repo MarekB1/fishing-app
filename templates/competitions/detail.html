@@ -13,7 +13,7 @@
         href="{% url 'competitions:competition_edit' competition.pk %}">
         Upraviť
       </a>
-      <a class="btn btn-outline-light btn-sm" href="{% url 'competitions:invitations' %}?competition={{ competition.pk }}">Pozvánky</a>
+      <a class="btn btn-outline-light btn-sm" href="{% url 'competitions:invitations' %}?competition={{ competition.pk }}">Pozvať</a>
       {% endif %}
       {% if is_contestant %}
         <a class="btn btn-primary btn-sm" href="{% url 'catches:catch_create' %}?competition={{ competition.id }}">+ Pridať úlovok</a>
@@ -300,6 +300,9 @@
         <li>Úprava úlovku organizátorom</li>
         <li>notifikácia ak sa uloží lovné miesto</li>
         <li>Povoliť úpravu úlovku pre organizátora</li>
+        <li>Button "Uložiť" treba rozšíriť, lebo pri menšom rozlíšení sa delí text</li>
+        <li>Presunút button invitation do účastníkov</li>
+        <li>Tabuľku účastníkov spraviť responzívnu</li>
       </ul>
     </div>
   </div>
