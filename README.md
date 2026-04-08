@@ -155,3 +155,12 @@ python manage.py runserver 127.0.0.1:8000
 ``` Nový PowerShell - zobrazí URL 
 cloudflared tunnel --url http://127.0.0.1:8000 --protocol http2
 ```
+
+## projekt_kontext.txt súbor pre Gemini
+Get-ChildItem -Recurse -Include "models.py","views.py","urls.py","consumers.py","routing.py","settings.py" |
+>> Where-Object { $_.FullName -notmatch "node_modules|venv|\.git" } |
+>> ForEach-Object {
+>>     "--- FILE: $($_.FullName) ---`n" | Out-File -FilePath "projekt_kontext.txt" -Append -Encoding utf8
+>>     Get-Content $_.FullName | Out-File -FilePath "projekt_kontext.txt" -Append -Encoding utf8
+>>     "`n`n" | Out-File -FilePath "projekt_kontext.txt" -Append -Encoding utf8
+>> }

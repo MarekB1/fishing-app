@@ -271,12 +271,19 @@ def competition_detail(request, pk: int):
     # Úlovky v súťaži (vidí každý člen súťaže)
     catches_qs = (
         Catch.objects
-        .filter(competition=competition)
+        .filter(competition=competition, status=Catch.Status.APPROVED)
         .select_related("user")
         .order_by("caught_at", "created_at")
     )
 
-    my_catches_qs = catches_qs.filter(user=request.user)
+    # MOJE ÚLOVKY: Musíme vytvoriť samostatnú query, aby rybár videl aj 
+    # svoje PENDING a REJECTED úlovky (tu nefiltrujeme podľa statusu)
+    my_catches_qs = (
+        Catch.objects
+        .filter(competition=competition, user=request.user)
+        .select_related("user")
+        .order_by("-caught_at", "-created_at")
+    )
 
     contestant_memberships = []
     spots_range = range(1, competition.fishing_spots_count + 1)
@@ -554,20 +561,18 @@ def competition_catch_list(request, pk: int):
 
     catches_qs = (
         Catch.objects
-        .filter(competition=competition)
+        .filter(
+            competition=competition, 
+            status=Catch.Status.APPROVED  # Pridaný filter [cite: 6]
+        )
         .select_related("user")
         .order_by("caught_at", "created_at")
     )
 
-    if competition.is_official and not is_organizer:
-        raise Http404("Competition not found")
-
-
     return render(request, "competitions/_catch_list.html", {
         "competition": competition,
         "catches": catches_qs,
-        "is_organizer": bool(is_organizer),
-        "back_url": reverse("competitions:detail", kwargs={"pk": competition.pk}),
+        "is_organizer": bool(_user_is_organizer(request.user, competition)),
     })
 
 def _parse_spot_number(raw: str | None) -> int | None:

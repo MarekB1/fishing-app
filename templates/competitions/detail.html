@@ -248,19 +248,20 @@
       <div class="card shadow-sm">
         <div class="card-header border-secondary d-flex align-items-center justify-content-between">
           <div>
-            <div class="fw-semibold">🎣 Úlovky v súťaži</div>
-            <div class="small text-secondary">Pribúdajú postupne (autorefresh).</div>
+            <div class="fw-semibold">🎣 Všetky ulovky v súťaži</div>
           </div>
         </div>
 
         <div class="card-body p-0">
-          <div
-            id="competition-catch-list"
-            hx-get="{% url 'competitions:catch_list' competition.pk %}"
-            hx-trigger="load, every 5s"
-            hx-swap="innerHTML"
-          >
-            {% include "competitions/_catch_list.html" with competition=competition catches=catches back_url=request.path %}
+          <div class="catch-scroll-container custom-scrollbar pe-2 p-3">
+            <div
+              id="competition-catch-list"
+              hx-get="{% url 'competitions:catch_list' competition.pk %}"
+              hx-trigger="load, every 5s"
+              hx-swap="innerHTML"
+            >
+              {% include "competitions/_catch_list.html" with competition=competition catches=catches back_url=request.path %}
+            </div>
           </div>
         </div>
       </div>
@@ -303,7 +304,49 @@
         <li>Button "Uložiť" treba rozšíriť, lebo pri menšom rozlíšení sa delí text</li>
         <li>Presunút button invitation do účastníkov</li>
         <li>Tabuľku účastníkov spraviť responzívnu</li>
+        <li>Pokiaľ súťaž už neprebieha, nemôže sa dať pridať úlovok (Teraz je tam stále button na pridanie)!</li>
       </ul>
     </div>
   </div>
+
+<style>
+    .object-fit-cover {
+        object-fit: cover;
+    }
+    
+    /* Nastavenie výšky pre zobrazenie približne 2 riadkov (4 karty) */
+    .catch-scroll-container {
+        max-height: 950px; /* Ak by boli karty príliš zrezané alebo by sa ich zmestilo viac, uprav toto číslo */
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    /* Moderný tmavý scrollbar prispôsobený appke */
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05); /* Jemný priehľadný podklad */
+        border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2); /* Biela polopriehľadná "palička" */
+        border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.4); /* Zvýraznenie po nabehnutí myšou */
+    }
+
+    /* Hover efekty na kartu */
+    .card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3) !important;
+    }
+    .btn:hover {
+        opacity: 0.9;
+    }
+</style>
 {% endblock %}
