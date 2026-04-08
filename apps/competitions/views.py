@@ -287,13 +287,13 @@ def competition_detail(request, pk: int):
 
     contestant_memberships = []
     spots_range = range(1, competition.fishing_spots_count + 1)
-    if is_organizer:
-        contestant_memberships = (
-            CompetitionMembership.objects
-            .filter(competition=competition, role=CompetitionMembership.Role.CONTESTANT)
-            .select_related("user")
-            .order_by("spot_number", "user__username")
-        )
+    
+    contestant_memberships = (
+        CompetitionMembership.objects
+        .filter(competition=competition, role=CompetitionMembership.Role.CONTESTANT)
+        .select_related("user")
+        .order_by("spot_number", "user__username")
+    )
 
     approved_catches = (
     Catch.objects

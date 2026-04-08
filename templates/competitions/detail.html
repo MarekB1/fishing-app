@@ -13,7 +13,6 @@
         href="{% url 'competitions:competition_edit' competition.pk %}">
         Upraviť
       </a>
-      <a class="btn btn-outline-light btn-sm" href="{% url 'competitions:invitations' %}?competition={{ competition.pk }}">Pozvať</a>
       {% endif %}
       {% if is_contestant %}
         <a class="btn btn-primary btn-sm" href="{% url 'catches:catch_create' %}?competition={{ competition.id }}">+ Pridať úlovok</a>
@@ -194,7 +193,7 @@
   </div>
 
   <div class="row g-3">
-    {% if is_contestant %}
+    <!-- {% if is_contestant %}
     <div class="card shadow-sm mb-4">
       <div class="card-body">
         <div class="text-secondary small">Lovné miesto</div>
@@ -207,41 +206,94 @@
         </div>
       </div>
     </div>
-  {% endif %}
+  {% endif %} -->
 
-  {% if is_organizer %}
-    <div class="card shadow-sm mb-4">
-      <div class="card-header border-secondary">
-        <div class="fw-semibold">👥 Účastníci – Lovné miesto</div>
-        <div class="small text-secondary">
-          Priraď miesto účastníkom (1–{{ competition.fishing_spots_count }}). Každé miesto môže byť len raz.
-        </div>
-      </div>
-
-      <div class="card-body p-0">
-        {% if contestant_memberships %}
-          <div class="table-responsive">
-            <table class="table table-dark table-striped table-hover mb-0 align-middle">
-              <thead>
-                <tr>  
-                  <th>Účastník</th>
-                  <th style="width: 260px;">Lovné miesto</th>
-                  <th style="width: 220px;" class="text-end">Organizátor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for m in contestant_memberships %}
-                  {% include "competitions/_member_row.html" with competition=competition m=m %}
-                {% endfor %}
-              </tbody>
-            </table>
+  <div class="card shadow-sm mb-4">
+    <div class="d-flex flex-column flex-sm-row justify-content-sm-between align-items-sm-center card-header border-secondary">
+      <div class="d-flex flex-column ">
+        <div class="fw-semibold">👥 Účastníci v súťaži</div>
+        {% if is_organizer %}
+          <div class="small text-secondary">
+            Priraď miesto účastníkom (1–{{ competition.fishing_spots_count }}).
           </div>
-        {% else %}
-          <div class="p-3 text-secondary">Zatiaľ tu nie sú žiadni účastníci.</div>
+        {% endif %}
+      </div>
+      <div class="d-flex justify-content-center mt-2">
+        {% if is_organizer %}
+          <a class="btn btn-outline-light btn-sm col-6 col-sm-12" href="{% url 'competitions:invitations' %}?competition={{ competition.pk }}">Pozvať</a>
         {% endif %}
       </div>
     </div>
-  {% endif %}
+
+    <div class="card-body p-0">
+      {% if contestant_memberships %}
+        
+        {% if is_organizer %}
+          
+          <div class="list-group list-group-flush rounded-bottom">
+            {% for m in contestant_memberships %}
+              {% include "competitions/_member_row.html" with competition=competition m=m %}
+            {% endfor %}
+          </div>
+        
+        {% else %}
+          
+          <div class="row g-2 p-3">
+            {% for m in contestant_memberships %}
+              <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                <div class="p-2 border border-secondary border-opacity-25 rounded d-flex justify-content-between align-items-center h-100 shadow-sm" style="background-color: rgba(255, 255, 255, 0.03);">
+                  
+                  <div class="text-truncate me-2">
+                    <span class="text-white fw-semibold" style="font-size: 0.95rem;">
+                      {% firstof m.user.get_full_name m.user.username %}
+                    </span>
+                    {% if m.user_id == request.user.id %}
+                      <span class="text-info ms-1 small fw-bold">(Ty)</span>
+                    {% endif %}
+                  </div>
+                  
+                  {% if m.spot_number %}
+                    <div class="d-flex align-items-center justify-content-center bg-primary text-white rounded-circle fw-bold shadow-sm flex-shrink-0" style="width: 28px; height: 28px; font-size: 0.85rem;" title="Lovné miesto">
+                      {{ m.spot_number }}
+                    </div>
+                  {% else %}
+                    <div class="d-flex align-items-center justify-content-center border border-secondary text-secondary rounded-circle flex-shrink-0" style="width: 28px; height: 28px; font-size: 0.85rem;" title="Nepridelené miesto">
+                      -
+                    </div>
+                  {% endif %}
+                  
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+
+        {% endif %}
+
+      {% else %}
+        <div class="p-3 text-secondary">Zatiaľ tu nie sú žiadni účastníci.</div>
+      {% endif %}
+    </div>
+  </div>
+
+    <div class="col-12 col-lg-6">
+      <div class="card shadow-sm">
+        <div class="card-header border-secondary">
+          <div class="fw-semibold">🎣 Moje úlovky v súťaži</div>
+          <div class="small text-secondary">Tvoje úlovky + stav schválenia.</div>
+        </div>
+
+        <div class="card-body p-0">
+          <div
+            id="competition-my-catch-list"
+            hx-get="{% url 'competitions:my_catch_list' competition.pk %}"
+            hx-trigger="load, every 5s"
+            hx-swap="innerHTML"
+          >
+            {% include "competitions/_my_catch_list.html" with competition=competition catches=my_catches back_url=request.path %}
+          </div>
+        </div>
+      </div>
+    </div>
 
     {% if not competition.is_official or is_organizer %}
     <div class="col-12 col-lg-6">
@@ -268,43 +320,23 @@
     </div>
     {% endif %}
 
-
-    <div class="col-12 col-lg-6">
-      <div class="card shadow-sm">
-        <div class="card-header border-secondary">
-          <div class="fw-semibold">🎣 Moje úlovky v súťaži</div>
-          <div class="small text-secondary">Tvoje úlovky + stav schválenia (autorefresh).</div>
-        </div>
-
-        <div class="card-body p-0">
-          <div
-            id="competition-my-catch-list"
-            hx-get="{% url 'competitions:my_catch_list' competition.pk %}"
-            hx-trigger="load, every 5s"
-            hx-swap="innerHTML"
-          >
-            {% include "competitions/_my_catch_list.html" with competition=competition catches=my_catches back_url=request.path %}
-          </div>
-        </div>
-      </div>
-    </div>
   </div>
 
   <div class="mt-4 card border-secondary">
     <div class="card-header fw-semibold">TODO</div>
     <div class="card-body">
       <ul class="mb-0">
-        <li>Zobraziť či je súťaž ofiko alebo nie</li>
+        <li>(Počká)Zobraziť či je súťaž ofiko alebo nie</li>
         <li>Zobraziť členov + info (body, počet rýb...)</li>
         <li>Zvýrazniť to, keď user vstúpy do súťaže (Vstúpil si do súťaže:)</li>
         <li>Možnosť otvoriť si profil účastníka, kde sa zobrazia jeho úlovky v danej súťaži</li>
         <li>Úprava úlovku organizátorom</li>
         <li>notifikácia ak sa uloží lovné miesto</li>
         <li>Povoliť úpravu úlovku pre organizátora</li>
-        <li>Button "Uložiť" treba rozšíriť, lebo pri menšom rozlíšení sa delí text</li>
-        <li>Presunút button invitation do účastníkov</li>
-        <li>Tabuľku účastníkov spraviť responzívnu</li>
         <li>Pokiaľ súťaž už neprebieha, nemôže sa dať pridať úlovok (Teraz je tam stále button na pridanie)!</li>
+        <li>Zobraziť účastníkov v súťaži aj pre ostatných</li>
+        <li>Organizátor si zvolí, či chce súťažiť alebo nie</li>
+        <li>Do všetkých úlovkov pridať aj počet bodov</li>
       </ul>
     </div>
   </div>

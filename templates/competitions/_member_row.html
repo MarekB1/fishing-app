@@ -1,67 +1,69 @@
-<tr id="member-row-{{ m.id }}">
-  <td>
-    <div class="fw-semibold d-flex align-items-center gap-2 flex-wrap">
-      <span>{% firstof m.user.get_full_name m.user.username %}</span>
+<div class="list-group-item bg-transparent border-secondary p-3 p-lg-4" id="member-row-{{ m.id }}">
+  <div class="d-flex flex-column flex-md-row gap-md-4 justify-content-between align-items-md-center">
 
-      {% if competition.created_by_id == m.user_id %}
-        <span class="badge text-bg-warning text-dark">Hlavný organizátor</span>
-      {% elif m.is_organizer %}
-        <span class="badge text-bg-info text-dark">Organizátor</span>
-      {% else %}
-        <span class="badge text-bg-secondary">Súťažiaci</span>
+    <div class="flex-grow-1">
+      <div class="fw-semibold d-flex align-items-center gap-2 flex-wrap mb-1">
+        <span class="fs-5 text-white">
+          {% firstof m.user.get_full_name m.user.username %}
+          {% if m.user_id == request.user.id %}
+            <span class="text-info ms-1" style="font-size: 0.9rem;">(Ty)</span>
+          {% endif %}
+        </span>
+
+        {% if competition.created_by_id == m.user_id %}
+          <span class="badge rounded-pill text-bg-warning text-dark shadow-sm">Hlavný organizátor</span>
+        {% elif m.is_organizer %}
+          <span class="badge rounded-pill text-bg-info text-dark shadow-sm">Organizátor</span>
+        {% else %}
+          <span class="badge rounded-pill bg-secondary text-white shadow-sm">Súťažiaci</span>
+        {% endif %}
+      </div>
+      
+      {% if error %}
+        <div class="text-danger small mt-2 fw-bold"><i class="bi bi-exclamation-triangle-fill me-1"></i>{{ error }}</div>
       {% endif %}
     </div>
 
-    <div class="text-secondary small">@{{ m.user.username }}</div>
-
-    {% if error %}
-      <div class="text-danger small mt-1">{{ error }}</div>
-    {% endif %}
-  </td>
-
-  <td>
-    <form
-      class="w-100"
-      method="post"
-      action="{% url 'competitions:membership_set_spot' competition.pk m.pk %}"
-      hx-post="{% url 'competitions:membership_set_spot' competition.pk m.pk %}"
-      hx-target="#member-row-{{ m.id }}"
-      hx-swap="outerHTML"
-    >
-      {% csrf_token %}
-
-      <div class="d-flex gap-2 align-items-center">
-        <select
-          name="spot_number"
-          class="form-select form-select-sm {% if error %}is-invalid{% endif %}"
-          style="max-width: 180px;"
-        >
-          <option value="" {% if not m.spot_number %}selected{% endif %}>— nepridelené —</option>
-
-          {% for n in spots_range %}
-            <option value="{{ n }}" {% if m.spot_number == n %}selected{% endif %}>{{ n }}</option>
-          {% endfor %}
-        </select>
-
-        <button class="btn btn-outline-light" type="submit">Uložiť</button>
-      </div>
-
-      {% if not error %}
-        <div class="form-text text-secondary mb-0">
-          Max: {{ competition.fishing_spots_count }} miest.
+    <div style="min-width: 250px;">
+      <form
+        class="d-flex flex-row justify-content-between m-0"
+        method="post"
+        action="{% url 'competitions:membership_set_spot' competition.pk m.pk %}"
+        hx-post="{% url 'competitions:membership_set_spot' competition.pk m.pk %}"
+        hx-target="#member-row-{{ m.id }}"
+        hx-swap="outerHTML"
+      >
+        {% csrf_token %}
+        <div class="d-flex justify-content-start align-items-center mb-1 px-1 col-5">
+          <label class="form-label small text-white-50 m-0">Lovné miesto</label>
         </div>
-      {% endif %}
-    </form>
-  </td>
 
-  <td class="text-end">
+        <div class="d-flex justify-content-end col-7 gap-2">
+          <select
+            name="spot_number"
+            class="form-select form-select-sm text-white border-secondary {% if error %}is-invalid border-danger{% endif %}"
+            style="background-color: rgba(255, 255, 255, 0.1); max-width: 95px;"
+          >
+            <option value="" class="text-dark" {% if not m.spot_number %}selected{% endif %}>— nepridelené —</option>
+            {% for n in spots_range %}
+              <option value="{{ n }}" class="text-dark" {% if m.spot_number == n %}selected{% endif %}>{{ n }}</option>
+            {% endfor %}
+          </select>
+          
+          <button class="btn btn-outline-light btn-sm px-3 fw-semibold shadow-sm" type="submit">Uložiť</button>
+        </div>
+      </form>
+    </div>
+
     {% if is_main_organizer %}
+    <div class="mt-2 mt-md-0 text-lg-end" style="min-width: 170px;">
       {% if competition.created_by_id == m.user_id %}
-        <button class="btn btn-outline-secondary btn-sm" type="button" disabled>
+        <button class="btn btn-outline-secondary btn-sm w-100 opacity-50" type="button" disabled>
           Nedá sa odobrať
         </button>
       {% elif m.is_organizer %}
         <form
+          class="m-0"
           method="post"
           action="{% url 'competitions:membership_revoke_organizer' competition.pk m.pk %}"
           hx-post="{% url 'competitions:membership_revoke_organizer' competition.pk m.pk %}"
@@ -69,12 +71,13 @@
           hx-swap="outerHTML"
         >
           {% csrf_token %}
-          <button class="btn btn-outline-danger btn-sm" type="submit">
-            Odobrať organizátora
+          <button class="btn btn-outline-danger btn-sm w-100" type="submit">
+            Odobrať práva
           </button>
         </form>
       {% else %}
         <form
+          class="m-0"
           method="post"
           action="{% url 'competitions:membership_grant_organizer' competition.pk m.pk %}"
           hx-post="{% url 'competitions:membership_grant_organizer' competition.pk m.pk %}"
@@ -82,11 +85,13 @@
           hx-swap="outerHTML"
         >
           {% csrf_token %}
-          <button class="btn btn-outline-primary btn-sm" type="submit">
-            Pridať organizátora
+          <button class="btn btn-outline-info btn-sm w-100" type="submit">
+            Spraviť organizátorom
           </button>
         </form>
       {% endif %}
+    </div>
     {% endif %}
-  </td>
-</tr>
+
+  </div>
+</div>
