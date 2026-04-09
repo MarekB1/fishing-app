@@ -89,67 +89,6 @@
     
   </div>
 
-  <!-- Formulár pre testovanie, ostáva stále zakomentovaný a odkomentuje sa len pre testovanie aplikácie -->
-  <!-- <div class="mt-4">
-    <div class="card shadow-sm border-secondary">
-      <div class="card-header fw-semibold">Nahlásiť bug alebo návrh na zlepšenie</div>
-      <div class="card-body">
-        <p class="text-secondary">
-          Ak pri testovaní narazíš na problém alebo máš nápad na zlepšenie, zapíš ho sem.
-        </p>
-
-        {% if feedback_form.non_field_errors %}
-          <div class="alert alert-danger">
-            {{ feedback_form.non_field_errors }}
-          </div>
-        {% endif %}
-
-        <form method="post" novalidate>
-          {% csrf_token %}
-          <input type="hidden" name="action" value="dashboard_feedback">
-
-          <div class="row g-3">
-            <div class="col-12 col-md-4">
-              <label for="{{ feedback_form.section.id_for_label }}" class="form-label">
-                {{ feedback_form.section.label }}
-              </label>
-              {{ feedback_form.section }}
-              {% for error in feedback_form.section.errors %}
-                <div class="invalid-feedback d-block">{{ error }}</div>
-              {% endfor %}
-            </div>
-
-            <div class="col-12 col-md-4">
-              <label for="{{ feedback_form.feedback_type.id_for_label }}" class="form-label">
-                {{ feedback_form.feedback_type.label }}
-              </label>
-              {{ feedback_form.feedback_type }}
-              {% for error in feedback_form.feedback_type.errors %}
-                <div class="invalid-feedback d-block">{{ error }}</div>
-              {% endfor %}
-            </div>
-
-            <div class="col-12">
-              <label for="{{ feedback_form.description.id_for_label }}" class="form-label">
-                {{ feedback_form.description.label }}
-              </label>
-              {{ feedback_form.description }}
-              {% for error in feedback_form.description.errors %}
-                <div class="invalid-feedback d-block">{{ error }}</div>
-              {% endfor %}
-            </div>
-
-            <div class="col-12">
-              <button type="submit" class="btn btn-success">
-                Uložiť poznámku
-              </button>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div> -->
-
   <div class="mt-4">
     <div class="card border-secondary">
       <div class="card-header fw-semibold">TODO</div>
@@ -162,6 +101,7 @@
           <li>"Čaká na spracovanie" nefunguje, celkovo pending nefunguje</li>
           <li>Burger menu nastaviť viac z-index, je prekvývaný elementami v "Moje súťaže" napr</li>
           <li>Je tam oznámenie na "Priateľstvo bolo potvrdené" treba ho doštilizovať</li>
+          <li>Spraviť progresívnu webovú aplikáciu (PWA) - Inštalovať stránku ako aplikáciu.</li>
         </ul>
       </div>
     </div>

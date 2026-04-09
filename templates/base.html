@@ -30,6 +30,49 @@
 <body class="min-vh-100 bg-body">
   {% load static %}
 
+  <style>
+    .form-control, .form-select {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        color: #ffffff !important;
+        border-radius: 8px;
+        padding: 0.6rem 0.75rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        border-color: #0d6efd !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25) !important;
+        outline: none;
+    }
+
+    .form-select option {
+        background-color: #0c3823 !important;
+        color: #ffffff !important;
+        padding: 10px;
+    }
+
+    .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.4) !important;
+    }
+
+    .form-control::file-selector-button {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.15) !important;
+        padding: 0.6rem 1rem;
+        margin: -0.6rem -0.75rem;
+        margin-right: 1rem;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    .form-control::file-selector-button:hover {
+        background-color: rgba(255, 255, 255, 0.2) !important;
+    }
+  </style>
+
   {% if user.is_authenticated %}
   <script>
   (() => {

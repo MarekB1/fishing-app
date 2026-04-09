@@ -24,6 +24,7 @@
       {% endif %}
     </div>
 
+    {% if is_organizer %}
     <div style="min-width: 250px;">
       <form
         class="d-flex flex-row justify-content-between m-0"
@@ -41,12 +42,12 @@
         <div class="d-flex justify-content-end col-7 gap-2">
           <select
             name="spot_number"
-            class="form-select form-select-sm text-white border-secondary {% if error %}is-invalid border-danger{% endif %}"
-            style="background-color: rgba(255, 255, 255, 0.1); max-width: 95px;"
+            class="form-select form-select-sm {% if error %}is-invalid border-danger{% endif %}"
+            style="max-width: 95px;"
           >
-            <option value="" class="text-dark" {% if not m.spot_number %}selected{% endif %}>— nepridelené —</option>
+            <option value="" {% if not m.spot_number %}selected{% endif %}>— nepridelené —</option>
             {% for n in spots_range %}
-              <option value="{{ n }}" class="text-dark" {% if m.spot_number == n %}selected{% endif %}>{{ n }}</option>
+              <option value="{{ n }}" {% if m.spot_number == n %}selected{% endif %}>{{ n }}</option>
             {% endfor %}
           </select>
           
@@ -54,6 +55,13 @@
         </div>
       </form>
     </div>
+    {% else %}
+      {% if m.spot_number %}
+        <div class="mt-2 mt-md-0 text-white-50 small">
+          Lovné miesto: <span class="text-white fw-bold fs-6">{{ m.spot_number }}</span>
+        </div>
+      {% endif %}
+    {% endif %}
 
     {% if is_main_organizer %}
     <div class="mt-2 mt-md-0 text-lg-end" style="min-width: 170px;">

@@ -2,99 +2,99 @@
 {% block title %}Nový úlovok{% endblock %}
 
 {% block content %}
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <div>
-      <h1 class="h3 fw-bold mb-1">Nový úlovok</h1>
-      <p class="text-secondary mb-0">Pridaj úlovok do aktívnej súťaže.</p>
-    </div>
-    <a class="btn btn-outline-light btn-sm" href="{% url 'core:dashboard' %}">Dashboard</a>
-  </div>
-
   {% if not has_competitions %}
-    <div class="alert alert-info">
+    <div class="alert alert-info border-0 shadow-sm" style="background-color: rgba(13, 202, 240, 0.1); color: #0dcaf0;">
       <div class="fw-semibold mb-1">Nemáš žiadnu aktívnu súťaž, v ktorej môžeš pridať úlovok.</div>
       <div class="mb-2">Skús pozvánku do súťaže alebo počkaj na začiatok.</div>
-      <a class="btn btn-primary btn-sm" href="{% url 'competitions:my_competitions' %}">Moje súťaže</a>
+      <a class="btn btn-info btn-sm text-dark fw-bold" href="{% url 'competitions:my_competitions' %}">Moje súťaže</a>
     </div>
   {% else %}
     <div class="row justify-content-center">
+      <div class="d-flex align-items-center justify-content-between mb-3 col-12 col-lg-8">
+        <div>
+          <h1 class="h3 fw-bold mb-1">Nový úlovok</h1>
+          <p class="text-secondary mb-0">Pridaj úlovok do aktívnej súťaže.</p>
+        </div>
+      </div>
       <div class="col-12 col-lg-8">
-        <div class="card shadow-sm">
-          <div class="card-body">
+        <div class="card shadow-sm border-0" style="background-color: #0c3823; border-radius: 12px;">
+          <div class="card-body p-4">
             <form id="catch-create-form" method="post" enctype="multipart/form-data" novalidate>
               {% csrf_token %}
 
               {% if form.non_field_errors %}
-                <div class="alert alert-danger">
+                <div class="alert alert-danger shadow-sm border-0">
                   {{ form.non_field_errors }}
                 </div>
               {% endif %}
 
               <div class="mb-3">
-                <label class="form-label" for="{{ form.competition.id_for_label }}">Súťaž</label>
+                <label class="form-label text-white-50" for="{{ form.competition.id_for_label }}">Súťaž</label>
                 {{ form.competition }}
                 {% if form.competition.errors %}
-                  <div class="invalid-feedback d-block">{{ form.competition.errors }}</div>
+                  <div class="invalid-feedback d-block fw-bold">{{ form.competition.errors }}</div>
+                {% endif %}
+              </div>
+
+              <div class="d-flex flex-column flex-sm-row-reverse justify-content-between g-3 mb-3">
+                <div class="col-12 col-sm-6 ps-sm-2">
+                  <label class="form-label text-white-50" for="{{ form.caught_at.id_for_label }}">Čas úlovku</label>
+                  {{ form.caught_at }}
+                  {% if form.caught_at.errors %}
+                    <div class="invalid-feedback d-block fw-bold">{{ form.caught_at.errors }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="col-12 col-sm-6 pe-sm-2">
+                  <label class="form-label text-white-50" for="{{ form.species.id_for_label }}">Druh ryby</label>
+                  {{ form.species }}
+                  {% if form.species.errors %}
+                    <div class="invalid-feedback d-block fw-bold">{{ form.species.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>  
+
+              <div class="d-flex flex-column flex-sm-row-reverse mb-3">
+                <div class="col-12 col-sm-6 ps-sm-2">
+                  <label class="form-label text-white-50" for="{{ form.length_cm.id_for_label }}">Dĺžka (cm)</label>
+                  {{ form.length_cm }}
+                  {% if form.length_cm.errors %}
+                    <div class="invalid-feedback d-block fw-bold">{{ form.length_cm.errors }}</div>
+                  {% endif %}
+                </div>
+
+                <div class="col-12 col-sm-6 pe-sm-2">
+                  <label class="form-label text-white-50" for="{{ form.weight_kg.id_for_label }}">Váha (kg)</label>
+                  {{ form.weight_kg }}
+                  {% if form.weight_kg.errors %}
+                    <div class="invalid-feedback d-block fw-bold">{{ form.weight_kg.errors }}</div>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label text-white-50" for="{{ form.note.id_for_label }}">Poznámka</label>
+                {{ form.note }}
+                {% if form.note.errors %}
+                  <div class="invalid-feedback d-block fw-bold">{{ form.note.errors }}</div>
                 {% endif %}
               </div>
 
               <div class="mb-3">
-                <label class="form-label" for="{{ form.species.id_for_label }}">Druh ryby</label>
-                {{ form.species }}
-                {% if form.species.errors %}
-                  <div class="invalid-feedback d-block">{{ form.species.errors }}</div>
-                {% endif %}
-              </div>
-
-              <div class="row g-3">
-                <div class="col-12 col-md-6">
-                  <label class="form-label" for="{{ form.length_cm.id_for_label }}">Dĺžka (cm)</label>
-                  {{ form.length_cm }}
-                  {% if form.length_cm.errors %}
-                    <div class="invalid-feedback d-block">{{ form.length_cm.errors }}</div>
-                  {% endif %}
-                </div>
-
-                <div class="col-12 col-md-6">
-                  <label class="form-label" for="{{ form.weight_kg.id_for_label }}">Váha (kg)</label>
-                  {{ form.weight_kg }}
-                  {% if form.weight_kg.errors %}
-                    <div class="invalid-feedback d-block">{{ form.weight_kg.errors }}</div>
-                  {% endif %}
-                </div>
-              </div>
-
-              <div class="mt-3">
-                <label class="form-label" for="{{ form.caught_at.id_for_label }}">Čas úlovku</label>
-                {{ form.caught_at }}
-                {% if form.caught_at.errors %}
-                  <div class="invalid-feedback d-block">{{ form.caught_at.errors }}</div>
-                {% endif %}
-              </div>
-
-              <div class="mt-3">
-                <label class="form-label" for="{{ form.note.id_for_label }}">Poznámka</label>
-                {{ form.note }}
-                {% if form.note.errors %}
-                  <div class="invalid-feedback d-block">{{ form.note.errors }}</div>
-                {% endif %}
-              </div>
-
-              <div class="mt-3">
-                <label class="form-label" for="{{ form.photo.id_for_label }}">Fotka</label>
+                <label class="form-label text-white-50" for="{{ form.photo.id_for_label }}">Fotka</label>
                 {{ form.photo }}
                 {% if form.photo.errors %}
-                    <div class="invalid-feedback d-block">{{ form.photo.errors }}</div>
+                    <div class="invalid-feedback d-block fw-bold">{{ form.photo.errors }}</div>
                 {% endif %}
-                <div class="form-text text-secondary">
+                <div class="form-text text-white-50 opacity-75 mt-2" style="font-size: 0.8rem;">
                     Podporované formáty: JPG, PNG, WEBP, HEIC, HEIF. Fotka sa po odoslaní automaticky znormalizuje na JPEG.
                 </div>
-                <div id="photo-upload-status" class="small text-secondary mt-2 d-none"></div>
-            </div>
+                <div id="photo-upload-status" class="small text-info mt-2 d-none fw-bold"></div>
+              </div>
 
-              <div class="mt-4 d-flex gap-2">
-                <button id="catch-submit-button" type="submit" class="btn btn-primary">Pridať úlovok</button>
-                <a class="btn btn-outline-light" href="{% url 'core:dashboard' %}">Zrušiť</a>
+              <div class="mt-4 pt-2 border-top border-light border-opacity-10 d-flex gap-2">
+                <button id="catch-submit-button" type="submit" class="btn btn-primary px-4 fw-bold shadow-sm">Pridať úlovok</button>
+                <a class="btn btn-outline-light px-4" href="{% url 'core:dashboard' %}">Zrušiť</a>
               </div>
             </form>
           </div>
@@ -103,9 +103,9 @@
     </div>
 
     <div class="mt-4">
-      <div class="card border-secondary">
-        <div class="card-header fw-semibold">TODO</div>
-          <div class="card-body">
+      <div class="card border-secondary bg-transparent">
+        <div class="card-header fw-semibold text-white-50 border-secondary">TODO</div>
+          <div class="card-body text-secondary">
             <ul class="mb-0">
             <li>Loading screen kým sa nahrá fotka</li>
             <li>Povoliť úpravu úlovku pre organizátora</li> 
@@ -138,14 +138,14 @@
                       return;
                   }
 
-                  status.textContent = `Vybraná fotka: ${selectedFile.name}`;
+                  status.textContent = `📷 Vybraná fotka: ${selectedFile.name}`;
                   status.classList.remove("d-none");
               });
 
               form.addEventListener("submit", () => {
                   submitButton.disabled = true;
-                  submitButton.textContent = "Nahrávam...";
-                  status.textContent = "Fotka sa spracúva a nahráva. Na mobile to môže chvíľu trvať.";
+                  submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Nahrávam...';
+                  status.innerHTML = '<i class="bi bi-info-circle me-1"></i>Fotka sa spracúva a nahráva. Na mobile to môže chvíľu trvať.';
                   status.classList.remove("d-none");
               });
           })();
