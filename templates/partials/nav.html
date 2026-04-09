@@ -2,17 +2,21 @@
   <div class="container">
     <a class="navbar-brand fw-semibold" href="{% url 'core:home' %}">🎣 Mám záber!</a>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
-            aria-controls="mainNavbar" aria-expanded="false" aria-label="Menu">
-      <span class="navbar-toggler-icon"></span>
-    </button>
+    {% if user.is_authenticated %}
+      {% with hide_desktop=hide_nav_links_desktop|default:False %}
+      {% with current_view=request.resolver_match.view_name %}
 
-    <div class="collapse navbar-collapse" id="mainNavbar">
-      <ul class="navbar-nav ms-auto mb-2 mb-lg-0 d-flex flex-column flex-md-row align-items-center">
-        {% if user.is_authenticated %}
-          {% with hide_desktop=hide_nav_links_desktop|default:False %}
-          {% with current_view=request.resolver_match.view_name %}
-            <li class="nav-item {% if hide_desktop %}d-lg-none{% endif %}">
+        {% if not hide_desktop %}
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+                aria-controls="mainNavbar" aria-expanded="false" aria-label="Menu">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        {% endif %}
+
+        <div class="{% if not hide_desktop %}collapse navbar-collapse{% else %}d-flex ms-auto{% endif %}" id="mainNavbar">
+          <ul class="navbar-nav ms-auto mb-lg-0 d-flex {% if hide_desktop %}flex-row mb-0{% else %}flex-column mb-2{% endif %} flex-lg-row align-items-lg-center align-items-center">
+            
+            <li class="nav-item {% if hide_desktop %}d-none{% endif %}">
               <a class="nav-link {% if current_view == 'core:dashboard' %}active{% endif %}"
                 {% if current_view == 'core:dashboard' %}aria-current="page"{% endif %}
                 href="{% url 'core:dashboard' %}">
@@ -20,7 +24,7 @@
               </a>
             </li>
 
-            <li class="nav-item {% if hide_desktop %}d-lg-none{% endif %}">
+            <li class="nav-item {% if hide_desktop %}d-none{% endif %}">
               <a class="nav-link {% if current_view == 'competitions:my_competitions' %}active{% endif %}"
                 {% if current_view == 'competitions:my_competitions' %}aria-current="page"{% endif %}
                 href="{% url 'competitions:my_competitions' %}">
@@ -28,7 +32,7 @@
               </a>
             </li>
 
-            <li class="nav-item {% if hide_desktop %}d-lg-none{% endif %}">
+            <li class="nav-item {% if hide_desktop %}d-none{% endif %}">
               <a class="nav-link {% if current_view == 'catches:catch_create' %}active{% endif %}"
                 {% if current_view == 'catches:catch_create' %}aria-current="page"{% endif %}
                 href="{% url 'catches:catch_create' %}">
@@ -36,7 +40,7 @@
               </a>
             </li>
 
-            <li class="nav-item {% if hide_desktop %}d-lg-none{% endif %}">
+            <li class="nav-item {% if hide_desktop %}d-none{% endif %}">
               <a class="nav-link {% if current_view == 'catches:my_catches' %}active{% endif %}"
                 {% if current_view == 'catches:my_catches' %}aria-current="page"{% endif %}
                 href="{% url 'catches:my_catches' %}">
@@ -44,7 +48,15 @@
               </a>
             </li>
 
-            <li class="nav-item {% if hide_desktop %}d-lg-none{% endif %}">
+            <li class="nav-item {% if hide_desktop %}d-none{% endif %}">
+              <a class="nav-link {% if current_view == 'competitions:scoreboard_select' %}active{% endif %}"
+                {% if current_view == 'competitions:scoreboard_select' %}aria-current="page"{% endif %}
+                href="{% url 'competitions:scoreboard_select' %}">
+                Scoreboard
+              </a>
+            </li>
+
+            <li class="nav-item {% if hide_desktop %}d-none{% endif %}">
               <a class="nav-link {% if current_view == 'competitions:competition_create' %}active{% endif %}"
                 {% if current_view == 'competitions:competition_create' %}aria-current="page"{% endif %}
                 href="{% url 'competitions:competition_create' %}">
@@ -52,7 +64,7 @@
               </a>
             </li>
 
-            <li class="nav-item {% if hide_desktop %}d-lg-none{% endif %}">
+            <li class="nav-item {% if hide_desktop %}d-none{% endif %}">
               <a class="nav-link {% if current_view == 'competitions:invitations' %}active{% endif %}"
                 {% if current_view == 'competitions:invitations' %}aria-current="page"{% endif %}
                 href="{% url 'competitions:invitations' %}">
@@ -61,7 +73,7 @@
             </li>
 
             {% if nav_missing_spots_total %}
-            <li class="nav-item dropdown {% if hide_desktop %}d-lg-none{% endif %}">
+            <li class="nav-item dropdown {% if hide_desktop %}d-none{% endif %}">
               <a
                 class="nav-link dropdown-toggle d-flex align-items-center"
                 href="#"
@@ -88,68 +100,65 @@
             </li>
             {% endif %}
 
-            {% if nav_is_organizer %}
-            <li class="nav-item {% if hide_desktop %}d-lg-none{% endif %}">
+            {% if nav_is_organizer and unread_notifications %}
+            <li class="nav-item {% if hide_desktop %}d-none{% endif %}">
               <a class="nav-link {% if current_view == 'notifications:pending' %}active{% endif %} d-flex align-items-center gap-2"
                 {% if current_view == 'notifications:pending' %}aria-current="page"{% endif %}
                 href="{% url 'notifications:pending' %}">
-                Pending
-                <span id="pending-count-nav" class="badge rounded-pill text-bg-danger"
-                      data-pending-count data-pending-hide-zero="1"
-                      {% if not unread_notifications %}style="display:none"{% endif %}>
-                  {{ unread_notifications|default:0 }}
+                Čaká na schválenie
+                <span id="pending-count-nav" class="badge rounded-pill text-bg-danger" data-pending-count>
+                  {{ unread_notifications }}
                 </span>
               </a>
             </li>
             {% endif %}
 
-          {% endwith %}
-          {% endwith %}
+            <li class="nav-item dropdown ms-lg-3 {% if not hide_desktop %}mt-3 mt-lg-0{% endif %}">
+              <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
+                href="#"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false">
 
-          <!-- ✅ USER DROPDOWN ostáva viditeľný vždy (aj na PC) -->
-          <li class="nav-item dropdown ms-lg-3">
-            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
-              href="#"
-              role="button"
-              data-bs-toggle="dropdown"
-              aria-expanded="false">
+                {% if nav_is_premium %}
+                  <span class="badge text-bg-success">Premium</span>
+                {% else %}
+                  <span class="badge text-bg-secondary">Základ</span>
+                {% endif %}
 
-              {% if nav_is_premium %}
-                <span class="badge text-bg-success">Premium</span>
-              {% else %}
-                <span class="badge text-bg-secondary">Základ</span>
-              {% endif %}
+                👤 {% firstof user.get_full_name user.username user.email %}
+              </a>
 
-              👤 {% firstof user.get_full_name user.username user.email %}
-            </a>
+              <ul class="dropdown-menu dropdown-menu-end shadow-sm">
 
-            <ul class="dropdown-menu dropdown-menu-end">
+                {% if nav_is_organizer %}
+                  <li>
+                    <span class="dropdown-item-text">
+                      <span class="badge text-bg-warning text-dark">Organizátor</span>
+                    </span>
+                  </li>
+                  <li><hr class="dropdown-divider"></li>
+                {% endif %}
 
-              {% if nav_is_organizer %}
                 <li>
-                  <span class="dropdown-item-text">
-                    <span class="badge text-bg-warning text-dark">Organizátor</span>
-                  </span>
+                  <a class="dropdown-item" href="{% url 'core:profile' %}">Profil</a>
+                </li>
+                <li>
+                  <a class="dropdown-item" href="{% url 'friends:home' %}">Priatelia</a>
                 </li>
                 <li><hr class="dropdown-divider"></li>
-              {% endif %}
+                <li>
+                  <a class="dropdown-item text-danger" href="{% url 'logout' %}">Odhlásiť</a>
+                </li>
+              </ul>
 
-              <li>
-                <a class="dropdown-item" href="{% url 'core:profile' %}">Profil</a>
-              </li>
-              <li>
-                <a class="dropdown-item" href="{% url 'friends:home' %}">Priatelia</a>
-              </li>
-              <li><hr class="dropdown-divider"></li>
-              <li>
-                <a class="dropdown-item text-danger" href="{% url 'logout' %}">Odhlásiť</a>
-              </li>
-            </ul>
+            </li>
 
-          </li>
+          </ul>
+        </div>
 
-        {% endif %}
-      </ul>
-    </div>
+      {% endwith %}
+      {% endwith %}
+    {% endif %}
   </div>
 </nav>

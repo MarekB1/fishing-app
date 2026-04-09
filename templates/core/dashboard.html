@@ -58,23 +58,6 @@
       </div>
     </div>
 
-    {% if nav_is_organizer %}
-    <div class="col-12 col-sm-6 col-lg-3">
-      <div class="card h-100 shadow-sm card-hover">
-        <div class="card-body d-flex flex-column">
-          <div class="fw-semibold mb-2 cursor-default">✅ Čaká na schválenie</div>
-          <p class="text-secondary flex-grow-1 mb-3 cursor-default">Úlovky čakajúce na kontrolu.</p>
-          <a class="btn btn-warning d-flex align-items-center justify-content-between" href="{% url 'notifications:pending' %}">
-            <span>Čaká na spracovanie</span>
-            <span class="badge text-bg-dark" id="pending-count-dashboard" data-pending-count>
-              {{ unread_notifications|default:0 }}
-            </span>
-          </a>
-        </div>
-      </div>
-    </div>
-    {% endif %}
-
     <div class="col-12 col-sm-6 col-lg-3">
       <div class="card h-100 shadow-sm card-hover">
         <div class="card-body d-flex flex-column">
@@ -86,6 +69,43 @@
         </div>
       </div>
     </div>
+
+    {% if nav_missing_spots_total %}
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100 shadow-sm card-hover" style="border: 1px solid #dc3545; background-color: rgba(220, 53, 69, 0.05);">
+        <div class="card-body d-flex flex-column">
+          <div class="fw-semibold mb-2 cursor-default text-danger">⚠️ Bez lovného miesta</div>
+          <p class="text-secondary flex-grow-1 mb-3 cursor-default">
+            Máš účastníkov (<strong class="text-white">{{ nav_missing_spots_total }}</strong>), ktorým treba priradiť miesto.
+          </p>
+          <div class="d-grid gap-2 mt-auto">
+            {% for row in nav_missing_spots %}
+              <a class="btn btn-outline-danger btn-sm" href="{% url 'competitions:detail' row.competition_id %}">
+                Vyriešiť: {{ row.competition_name }} ({{ row.count }})
+              </a>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if nav_is_organizer and unread_notifications %}
+    <div class="col-12 col-sm-6 col-lg-3">
+      <div class="card h-100 shadow-sm card-hover border-warning" style="background-color: rgba(255, 193, 7, 0.05);">
+        <div class="card-body d-flex flex-column">
+          <div class="fw-semibold mb-2 cursor-default text-warning">✅ Čaká na schválenie</div>
+          <p class="text-secondary flex-grow-1 mb-3 cursor-default">Úlovky čakajúce na kontrolu.</p>
+          <a class="btn btn-warning d-flex align-items-center justify-content-between text-dark fw-bold" href="{% url 'notifications:pending' %}">
+            <span>Spracovať úlovky</span>
+            <span class="badge text-bg-dark" id="pending-count-dashboard" data-pending-count>
+              {{ unread_notifications }}
+            </span>
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
     
   </div>
 
