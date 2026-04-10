@@ -150,9 +150,9 @@
           setCount(data.unread_count);
         }
 
-        if (data.refresh_pending) {
-          document.body.dispatchEvent(new Event("pendingRefresh", { bubbles: true }));
-        }
+        //if (data.refresh_pending) {
+          //document.body.dispatchEvent(new Event("pendingRefresh", { bubbles: true }));
+        // }
       };
 
       socket.onerror = (e) => console.log("WS error", e);

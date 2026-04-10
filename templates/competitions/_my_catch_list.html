@@ -1,40 +1,81 @@
+{% load static %}
+
 {% if catches %}
-  <div class="table-responsive">
-    <table class="table table-dark table-hover mb-0 align-middle">
-      <thead>
-        <tr>
-          <th>Druh</th>
-          <th>Čas</th>
-          <th>Status</th>
-          <th class="text-end">Detail</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for c in catches %}
-          <tr>
-            <td class="fw-semibold">{{ c.species }}</td>
-            <td class="text-secondary">{{ c.caught_at|date:"d.m.Y H:i" }}</td>
-            <td>
-              {% if c.status == "APPROVED" %}
-                <span class="badge text-bg-success">{{ c.get_status_display }}</span>
-              {% elif c.status == "REJECTED" %}
-                <span class="badge text-bg-danger">{{ c.get_status_display }}</span>
-              {% else %}
-                <span class="badge text-bg-warning">{{ c.get_status_display }}</span>
-              {% endif %}
-            </td>
-            <td class="text-end">
-              <a class="btn btn-outline-light btn-sm" href="{% url 'catches:detail' c.id %}?next={{ back_url|urlencode }}">Otvoriť</a>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-{% else %}
-  <div class="p-3">
-    <div class="alert alert-info mb-0">
-      <span class="fw-semibold">Zatiaľ nemáš v tejto súťaži žiadne úlovky.</span>
+<div class="row g-4">
+    {% for catch in catches %}
+    <div class="col-12 col-md-6">
+        <div class="card h-100 border-0 shadow-sm overflow-hidden" style="border-radius: 12px; background-color: #0c3823;">
+            
+            <div class="ratio ratio-16x9 bg-dark border-bottom border-secondary border-opacity-25">
+                {% if catch.photo %}
+                    <img src="{{ catch.photo.url }}" class="object-fit-cover" alt="{{ catch.species }}">
+                {% else %}
+                    <div class="d-flex flex-column align-items-center justify-content-center text-white opacity-25">
+                        <i class="bi bi-camera shadow-none display-5 mb-1"></i>
+                        <small>Bez fotografie</small>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="card-body d-flex flex-column p-3">
+                
+                <div class="mb-3">
+                    <div class="d-flex flex-row justify-content-between align-items-center mb-1">
+                        <h4 class="fw-bold mb-0 text-white">{{ catch.species }}</h4>
+                        <div class="d-flex gap-2 align-items-center">
+                            {% if catch.status == "APPROVED" %}
+                                <span class="badge text-bg-success shadow-sm">{{ catch.get_status_display }}</span>
+                            {% elif catch.status == "REJECTED" %}
+                                <span class="badge text-bg-danger shadow-sm">{{ catch.get_status_display }}</span>
+                            {% else %}
+                                <span class="badge text-bg-warning shadow-sm">{{ catch.get_status_display }}</span>
+                            {% endif %}
+                            
+                            <span class="badge text-bg-info text-dark fw-bold shadow-sm">{{ catch.points|default:"0" }} b.</span>
+                        </div>
+                    </div>
+                    <div class="small d-flex align-items-center text-white-50">
+                        <i class="bi bi-calendar3 me-2"></i> {{ catch.caught_at|date:"d.m.Y H:i" }}
+                    </div>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <div class="py-2 px-1 rounded text-center" style="background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);">
+                            <div class="text-uppercase fw-bold mb-1" style="font-size: 0.65rem; color: rgba(255, 255, 255, 0.5);">Dĺžka</div>
+                            <div class="fs-5 fw-bold text-nowrap text-white">
+                                {{ catch.length_cm|floatformat:1|default:"-" }} <span class="fs-6 fw-normal" style="color: rgba(255, 255, 255, 0.5);">cm</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="py-2 px-1 rounded text-center" style="background-color: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);">
+                            <div class="text-uppercase fw-bold mb-1" style="font-size: 0.65rem; color: rgba(255, 255, 255, 0.5);">Váha</div>
+                            <div class="fs-5 fw-bold text-nowrap text-white">
+                                {{ catch.weight_kg|floatformat:2|default:"-" }} <span class="fs-6 fw-normal" style="color: rgba(255, 255, 255, 0.5);">kg</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if catch.status == 'REJECTED' and catch.rejection_reason %}
+                    <div class="small text-danger mb-3 border-top border-danger border-opacity-25 pt-2">
+                        <strong>Zamietnuté:</strong> {{ catch.rejection_reason }}
+                    </div>
+                {% endif %}
+
+                <div class="mt-auto pt-2 border-top border-light border-opacity-10">
+                    <a href="{% url 'catches:detail' catch.pk %}?next={{ request.path }}" class="btn w-100 rounded-pill py-2 fw-bold shadow-sm mt-2" style="background-color: #0d6efd; color: white; border: none;">Zobraziť podrobnosti</a>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
+    {% endfor %}
+</div>
+{% else %}
+<div>
+    <div class="alert alert-info mb-0">
+        <span class="fw-semibold">Zatiaľ nemáš v tejto súťaži žiadne úlovky.</span>
+    </div>
+</div>
 {% endif %}
