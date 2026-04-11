@@ -1,30 +1,104 @@
-{% if scoreboard %}
-  <div class="table-responsive">
-    <table class="table table-dark table-striped table-hover mb-0 align-middle">
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Súťažiaci</th>
-          <th class="text-end">Body</th>
-          <th class="text-end">Úlovky</th>
-          <th class="text-end">Naj dĺžka</th>
-          <th class="text-end">Naj váha</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for r in scoreboard %}
-          <tr>
-            <td class="text-secondary">{{ forloop.counter }}</td>
-            <td class="fw-semibold">{{ r.user.username }}</td>
-            <td class="text-end">{{ r.points }}</td>
-            <td class="text-end">{{ r.catches_count }}</td>
-            <td class="text-end">{{ r.best_length }}</td>
-            <td class="text-end">{{ r.best_weight }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-{% else %}
-  <div class="p-3 text-secondary">Zatiaľ nie sú žiadne schválené úlovky.</div>
-{% endif %}
+<div class="scoreboard-container">
+    <div class="d-none d-md-flex align-items-center py-3 px-4 text-secondary small text-uppercase" style="background-color: rgba(0, 0, 0, 0.2); border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+        <div style="width: 60px;" class="ps-2">#</div>
+        <div class="flex-grow-1">Súťažiaci</div>
+        <div style="width: 100px;" class="text-center">Body</div>
+        <div style="width: 100px;" class="text-center">Úlovky</div>
+        <div style="width: 120px;" class="text-center">Naj dĺžka</div>
+        <div style="width: 120px;" class="text-end pe-2">Naj váha</div>
+    </div>
+
+    {% for entry in scoreboard %}
+    <div class="scoreboard-row d-flex flex-column flex-md-row py-3 px-4 border-bottom border-light border-opacity-10 align-items-md-center">
+        
+        <div class="d-flex align-items-center flex-grow-1 mb-3 mb-md-0">
+            <div style="width: 60px;" class="ps-md-2">
+                {% if forloop.counter == 1 %}
+                    <span class="fs-4">🥇</span>
+                {% elif forloop.counter == 2 %}
+                    <span class="fs-4">🥈</span>
+                {% elif forloop.counter == 3 %}
+                    <span class="fs-4" style="color: #cd7f32;">🥉</span>
+                {% else %}
+                    <span class="text-secondary fw-bold fs-5">{{ forloop.counter }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="d-flex align-items-center text-truncate pe-2">
+                <span class="fw-bold text-white fs-5 fs-md-6 text-truncate">{{ entry.user.get_full_name|default:entry.user.username }}</span>
+                {% if entry.user == request.user %}
+                    <span class="badge bg-info text-dark ms-2" style="font-size: 0.65rem;">TY</span>
+                {% endif %}
+            </div>
+            
+            <div class="d-md-none ms-auto ps-2">
+                <span class="badge bg-primary px-3 py-2 shadow-sm fs-6">
+                    {{ entry.points }}
+                </span>
+            </div>
+        </div>
+
+        <div class="d-flex flex-row align-items-center justify-content-between justify-content-md-end stats-container">
+            
+            <div class="d-none d-md-block text-center desktop-w-100">
+                <span class="badge bg-primary px-3 py-2 shadow-sm" style="font-size: 0.9rem;">
+                    {{ entry.points }}
+                </span>
+            </div>
+
+            <div class="text-center desktop-w-100 mobile-stat">
+                <div class="d-md-none text-uppercase text-secondary mb-1" style="font-size: 0.65rem; font-weight: 600;">Úlovky</div>
+                <div class="text-white fw-semibold">{{ entry.catches_count }}</div>
+            </div>
+
+            <div class="text-center desktop-w-120 mobile-stat">
+                <div class="d-md-none text-uppercase text-secondary mb-1" style="font-size: 0.65rem; font-weight: 600;">Dĺžka</div>
+                {% if entry.best_length %}
+                    <div class="text-white fw-semibold">{{ entry.best_length|floatformat:1 }} <small class="text-secondary fw-normal">cm</small></div>
+                {% else %}
+                    <div class="text-muted small">-</div>
+                {% endif %}
+            </div>
+
+            <div class="text-center text-md-end desktop-w-120 pe-md-2 mobile-stat">
+                <div class="d-md-none text-uppercase text-secondary mb-1" style="font-size: 0.65rem; font-weight: 600;">Váha</div>
+                {% if entry.best_weight %}
+                    <div class="text-white fw-semibold">{{ entry.best_weight|floatformat:2 }} <small class="text-secondary fw-normal">kg</small></div>
+                {% else %}
+                    <div class="text-muted small">-</div>
+                {% endif %}
+            </div>
+        </div>
+        
+    </div>
+    {% empty %}
+    <div class="text-center py-5 text-secondary">
+        Zatiaľ neboli schválené žiadne úlovky.
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .scoreboard-row {
+        transition: background-color 0.2s ease;
+    }
+    .scoreboard-row:last-child {
+        border-bottom: none !important;
+    }
+    .scoreboard-row:hover {
+        background-color: rgba(255, 255, 255, 0.03);
+    }
+    
+    /* Mobil: kontajner vyplní 100% šírky a staty sa rovnomerne rozložia (3 x 33%) */
+    .stats-container { width: 100%; flex: 1 1 auto; }
+    .mobile-stat { flex: 1; border-left: 1px solid rgba(255,255,255, 0.05); }
+    .mobile-stat:first-child, .mobile-stat:nth-child(2) { border-left: none; } /* Ošetrenie čiar pre prvý stĺpec na mobile */
+
+    /* Desktop: zrušenie 100% šírky a presné zafixovanie veľkostí podľa hlavičky */
+    @media (min-width: 768px) {
+        .stats-container { width: auto; flex: 0 0 auto; }
+        .mobile-stat { border-left: none; }
+        .desktop-w-100 { flex: 0 0 100px; width: 100px; }
+        .desktop-w-120 { flex: 0 0 120px; width: 120px; }
+    }
+</style>

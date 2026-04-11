@@ -5,7 +5,6 @@
   <div class="d-flex align-items-center justify-content-between mb-3">
     <div>
       <h1 class="h3 fw-bold mb-1">Moje úlovky</h1>
-      <p class="text-secondary mb-0">Prehľad všetkých tvojich úlovkov (naprieč súťažami) + stav schválenia.</p>
     </div>
     <a class="btn btn-outline-light btn-sm" href="{% url 'core:dashboard' %}">Dashboard</a>
   </div>
@@ -35,66 +34,91 @@
   </div>
 
   {% if catches %}
-    <div class="card shadow-sm">
-      <div class="card-body p-0">
-        <div class="table-responsive">
-          <table class="table table-dark table-hover mb-0 align-middle">
-            <thead>
-              <tr>
-                <th>Súťaž</th>
-                <th>Druh</th>
-                <th>Čas</th>
-                <th>Status</th>
-                <th class="text-end">Detail</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for c in catches %}
-                <tr>
-                  <td>
-                    <a class="link-light text-decoration-none" href="{% url 'competitions:detail' c.competition.id %}">
-                      {{ c.competition.name }}
+    <div id="my-catches-container">
+      {% if active_competition_id %}
+        {# Ak filtrujeme podľa súťaže, použijeme existujúci fragment pre konzistenciu #}
+        {% include "competitions/_my_catch_list.html" with catches=catches %}
+      {% else %}
+        {# Globálny prehľad (všetky súťaže) - pridáme názov súťaže do kariet #}
+        <div class="row g-4">
+          {% for catch in catches %}
+            <div class="col-12 col-md-6 col-lg-4">
+              <div class="card h-100 border-0 shadow-sm overflow-hidden card-hover" style="border-radius: 1.5rem; background: var(--surface-card) !important;">
+                
+                <div class="ratio ratio-16x9 bg-dark border-bottom border-secondary border-opacity-25">
+                  {% if catch.photo %}
+                    <img src="{{ catch.photo.url }}" class="object-fit-cover" alt="{{ catch.species }}">
+                  {% else %}
+                    <div class="d-flex flex-column align-items-center justify-content-center text-white opacity-25">
+                      <i class="bi bi-camera display-5 mb-1"></i>
+                      <small>Bez fotografie</small>
+                    </div>
+                  {% endif %}
+                </div>
+
+                <div class="card-body d-flex flex-column p-3">
+                  <div class="mb-2">
+                    <a href="{% url 'competitions:detail' catch.competition.id %}" class="badge text-bg-primary text-decoration-none mb-2">
+                      <i class="bi bi-trophy-fill me-1"></i> {{ catch.competition.name }}
                     </a>
-                  </td>
-                  <td>{{ c.species }}</td>
-                  <td class="text-secondary">{{ c.caught_at|date:"d.m.Y H:i" }}</td>
-                  <td>
-                    {% if c.status == "APPROVED" %}
-                      <span class="badge text-bg-success">{{ c.get_status_display }}</span>
-                    {% elif c.status == "REJECTED" %}
-                      <span class="badge text-bg-danger">{{ c.get_status_display }}</span>
-                    {% else %}
-                      <span class="badge text-bg-warning">{{ c.get_status_display }}</span>
-                    {% endif %}
-                  </td>
-                  <td class="text-end">
-                    <a class="btn btn-outline-light btn-sm" href="{% url 'catches:detail' c.id %}?next={{ request.get_full_path|urlencode }}">
-                      Otvoriť
+                    <div class="d-flex justify-content-between align-items-center">
+                      <h4 class="fw-bold mb-0 text-white">{{ catch.species }}</h4>
+                      {% if catch.status == "APPROVED" %}
+                        <span class="badge text-bg-success">{{ catch.get_status_display }}</span>
+                      {% elif catch.status == "REJECTED" %}
+                        <span class="badge text-bg-danger">{{ catch.get_status_display }}</span>
+                      {% else %}
+                        <span class="badge text-bg-warning">{{ catch.get_status_display }}</span>
+                      {% endif %}
+                    </div>
+                  </div>
+
+                  <div class="row g-2 mb-3">
+                    <div class="col-6">
+                      <div class="py-2 rounded text-center bg-black bg-opacity-25 border border-white border-opacity-10">
+                        <div class="text-uppercase small text-secondary">Dĺžka</div>
+                        <div class="fw-bold">{{ catch.length_cm|floatformat:1|default:"-" }} cm</div>
+                      </div>
+                    </div>
+                    <div class="col-6">
+                      <div class="py-2 rounded text-center bg-black bg-opacity-25 border border-white border-opacity-10">
+                        <div class="text-uppercase small text-secondary">Váha</div>
+                        <div class="fw-bold">{{ catch.weight_kg|floatformat:2|default:"-" }} kg</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="mt-auto pt-3 border-top border-white border-opacity-10 d-flex justify-content-between align-items-center">
+                    <span class="small text-secondary"><i class="bi bi-calendar3 me-1"></i> {{ catch.caught_at|date:"d.m.Y" }}</span>
+                    <a href="{% url 'catches:detail' catch.pk %}?next={{ request.get_full_path|urlencode }}" class="btn btn-primary btn-sm rounded-pill px-3">
+                      Detail
                     </a>
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
         </div>
+      {% endif %}
+    </div>
+  {% else %}
+    <div class="alert alert-info card border-secondary">
+      <div class="card-body text-center py-5">
+        <i class="bi bi-tsunami display-1 text-secondary opacity-25 mb-3"></i>
+        <h3 class="fw-bold">Zatiaľ nemáš žiadne úlovky</h3>
+        <p class="text-secondary">Keď vstúpiš do súťaže, tvoje úlovky sa zobrazia tu.</p>
+        <a class="btn btn-primary px-4 shadow-lg" href="{% url 'catches:catch_create' %}">Pridať prvý úlovok</a>
       </div>
     </div>
+  {% endif %}
 
-    <div class="mt-4">
+  <div class="mt-4">
       <div class="card border-secondary">
         <div class="card-header fw-semibold">TODO</div>
           <div class="card-body">
             <ul class="mb-0">
-            <li>TODO</li> 
+            <li>Úprava úlovku (príde to znova organizátorom na schválenie)</li> 
           </ul>
       </div>
     </div>
-  </div>  
-  {% else %}
-    <div class="alert alert-info">
-      <div class="fw-semibold mb-1">Zatiaľ nemáš žiadne úlovky.</div>
-      <div class="mb-2">Keď si v aktívnej súťaži ako súťažiaci, môžeš pridať úlovok.</div>
-      <a class="btn btn-primary btn-sm" href="{% url 'catches:catch_create' %}">Pridať úlovok</a>
-    </div>
-  {% endif %}
 {% endblock %}

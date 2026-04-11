@@ -2,22 +2,27 @@
 {% block title %}Scoreboard – {{ competition.name }}{% endblock %}
 
 {% block content %}
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
         <div class="d-flex align-items-center gap-2">
-        <a class="btn btn-outline-light btn-sm" href="{% url 'competitions:detail' competition.pk %}">← Detail súťaže</a>
-        <a class="btn btn-outline-light btn-sm" href="{% url 'competitions:my_competitions' %}">Moje súťaže</a>
+            <a class="btn btn-outline-light btn-sm rounded-pill px-3" href="{% url 'competitions:detail' competition.pk %}">
+                <i class="bi bi-arrow-left me-1"></i> Detail súťaže
+            </a>
+            <a class="btn btn-outline-light btn-sm rounded-pill px-3" href="{% url 'competitions:my_competitions' %}">
+                Moje súťaže
+            </a>
         </div>
+        <div class="badge text-bg-warning text-dark fw-bold px-3 py-2">LIVE AKTUALIZÁCIA</div>
     </div>
 
-    <div class="mb-3">
-        <h1 class="h3 fw-bold mb-1">🏆 Scoreboard</h1>
-        <div class="text-secondary">{{ competition.name }}</div>
+    <div class="mb-4">
+        <h1 class="h2 fw-bold mb-1"><i class="bi bi-trophy text-warning me-2"></i>Scoreboard</h1>
+        <div class="text-secondary fw-semibold">{{ competition.name }}</div>
     </div>
 
-    <div class="card border-secondary shadow-sm">
-       <div class="card-header border-secondary d-flex align-items-center justify-content-between">
-            <div class="fw-semibold">Poradie</div>
-            <div class="small text-secondary">{{ scoring_description }}</div>
+    <div class="card border-secondary shadow-lg overflow-hidden" style="background: var(--surface-card) !important; border-radius: 1.5rem;">
+       <div class="card-header border-secondary py-3 d-flex align-items-center justify-content-between bg-black bg-opacity-25">
+            <div class="fw-bold text-white text-uppercase small letter-spacing-1">Priebežné poradie</div>
+            <div class="small text-secondary"><i class="bi bi-info-circle me-1"></i> {{ scoring_description }}</div>
         </div>
 
         <div class="card-body p-0">
@@ -25,46 +30,47 @@
                 id="scoreboard-fragment"
                 hx-get="{% url 'competitions:scoreboard_fragment' competition.pk %}"
                 hx-trigger="scoreboard:refresh"
-                hx-swap="innerHTML">
+                hx-swap="innerHTML"
+                class="table-responsive">
                 {% include "competitions/_scoreboard_table.html" %}
             </div>
         </div>
     </div>
 
-    <div class="mt-4">
-        <div class="card border-secondary">
-            <div class="card-header fw-semibold">   
-                TODO
+    {# --- TODO sekcia upravená do tvojho štýlu --- #}
+    <div class="mt-5">
+        <div class="card border-secondary bg-opacity-10">
+            <div class="card-header bg-transparent border-secondary text-secondary">
+                <i class="bi bi-list-check me-2"></i>Plánované vylepšenia
             </div>
             <div class="card-body">
-                <ul class="mb-0">
-                  <li>Čo sa zobrazuje organizátorom a čo účastníkom</li>
+                <ul class="mb-0 text-secondary small">
+                  <li>Rozlíšenie zobrazenia pre organizátorov (viac detailov) a účastníkov.</li>
+                  <li>Pridať animáciu pri zmene poradia (HTMX swap transition).</li>
                 </ul>
             </div>
         </div>
     </div>
 
+    {# --- WebSocket logika zostáva rovnaká --- #}
     <script>
         (function () {
-        const competitionId = "{{ competition.pk }}";
-        const scheme = (window.location.protocol === "https:") ? "wss" : "ws";
-        const wsUrl = `${scheme}://${window.location.host}/ws/competitions/${competitionId}/scoreboard/`;
+            const competitionId = "{{ competition.pk }}";
+            const scheme = (window.location.protocol === "https:") ? "wss" : "ws";
+            const wsUrl = `${scheme}://${window.location.host}/ws/competitions/${competitionId}/scoreboard/`;
+            const socket = new WebSocket(wsUrl);
 
-        const socket = new WebSocket(wsUrl);
-
-        socket.addEventListener("message", function (e) {
-            try {
-            const msg = JSON.parse(e.data);
-            if (msg.event === "catch_created" || msg.event === "catch_moderated") {
-                const el = document.getElementById("scoreboard-fragment");
-                if (el && window.htmx) {
-                window.htmx.trigger(el, "scoreboard:refresh");
-                }
-            }
-            } catch (err) {
-            // ignore
-            }
-        });
+            socket.onmessage = function (e) {
+                try {
+                    const msg = JSON.parse(e.data);
+                    if (msg.event === "catch_created" || msg.event === "catch_moderated") {
+                        const el = document.getElementById("scoreboard-fragment");
+                        if (el && window.htmx) {
+                            window.htmx.trigger(el, "scoreboard:refresh");
+                        }
+                    }
+                } catch (err) {}
+            };
         })();
-        </script>
+    </script>
 {% endblock %}

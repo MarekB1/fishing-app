@@ -137,25 +137,30 @@
   {% if competitions and not active_competition_id %}
     <div class="modal fade" id="competitionRequiredModal" tabindex="-1" aria-labelledby="competitionRequiredModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
       <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header border-secondary">
-            <h2 class="modal-title h5 mb-0" id="competitionRequiredModalLabel">Vyber súťaž</h2>
+        <div class="modal-content card shadow-lg border-secondary" style="background: var(--surface-card) !important; backdrop-filter: blur(16px);">
+          <div class="modal-header border-secondary bg-black bg-opacity-25 py-3 rounded-top-4">
+            <h2 class="modal-title h5 mb-0 fw-bold" id="competitionRequiredModalLabel" style="color: var(--primary-color);">
+              <i class="bi bi-trophy me-2 text-warning"></i>Vyber súťaž
+            </h2>
           </div>
-          <div class="modal-body">
-            <p class="text-secondary mb-3">Aby si vedel vytvárať a spravovať pozvánky, najprv musíš vybrať konkrétnu súťaž.</p>
+          <div class="modal-body py-4">
+            <p class="text-secondary mb-4">Aby si vedel vytvárať a spravovať pozvánky, najprv musíš vybrať konkrétnu súťaž zo zoznamu tvojich súťaží.</p>
 
             <form id="competitionRequiredForm" method="get" action="{% url 'competitions:invitations' %}">
-              <div class="mb-3">
-                <label class="form-label" for="competitionRequiredSelect">Súťaž</label>
-                <select class="form-select" id="competitionRequiredSelect" name="competition" required>
-                  <option value="" selected disabled>Vyber súťaž</option>
+              <div class="mb-4">
+                <label class="form-label small text-uppercase fw-bold text-secondary mb-2" for="competitionRequiredSelect">Dostupná súťaž</label>
+                <select class="form-select form-select-lg" id="competitionRequiredSelect" name="competition" required 
+                        style="border: 1px solid var(--border-light); font-size: 1rem; border-radius: 12px;">
+                  <option value="" selected disabled>-- Zvoľ súťaž --</option>
                   {% for c in competitions %}
                     <option value="{{ c.id }}">{{ c.name }}</option>
                   {% endfor %}
                 </select>
               </div>
 
-              <button type="submit" class="btn btn-primary w-100" id="competitionRequiredSubmit" disabled>Pokračovať</button>
+              <button type="submit" class="btn btn-primary w-100 py-3 fw-bold rounded-3" id="competitionRequiredSubmit" disabled>
+                Pokračovať na správu pozvánok
+              </button>
             </form>
           </div>
         </div>
