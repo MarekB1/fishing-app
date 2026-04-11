@@ -11,77 +11,117 @@
     <div class="row g-3">
       {% for it in items %}
         <div class="col-12 col-md-6 col-lg-4">
-          <div class="card h-100 shadow-sm card-hover">
-            <div class="card-body">
-              <h2 class="h5 fw-semibold mb-2">{{ it.name }}</h2>
-
-              <div class="d-flex flex-row justify-content-between small">
-                <div>
-                  <div class="fw-semibold"><span class="fw-bold">Status:</span> {{ it.status }}</div>
-                  <div class="fw-semibold"><span class="fw-bold">Rola:</span> {{ it.role }}</div>
-                  <div class="fw-semibold"><span class="fw-bold">Počet účastníkov:</span> {{ it.participant_count }}</div>
-                  <div class="fw-semibold"><span class="fw-bold">Miesto konania:</span> {{ it.location_name }}</div>    
-                </div>
-
-                <div>  
-                  <div class="fw-semibold"><span class="fw-bold">Od:</span> {{ it.starts|date:"d.m.Y H:i" }}</div>
-                  <div class="fw-semibold"><span class="fw-bold">Do:</span> {{ it.ends|date:"d.m.Y H:i" }}</div>
+          <div class="card h-100 shadow-sm card-hover border-secondary" style="background-color: rgba(255, 255, 255, 0.03);">
+            <div class="card-body d-flex flex-column">
+              
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <h2 class="h5 fw-bold mb-0 text-white pe-2">{{ it.name }}</h2>
+                <div class="d-flex flex-column align-items-end gap-1">
+                  {% if it.status == 'Prebieha' %}
+                    <span class="badge bg-success">{{ it.status }}</span>
+                  {% elif it.status == 'Plánovaná' %}
+                    <span class="badge bg-info text-dark">{{ it.status }}</span>
+                  {% elif it.status == 'Ukončená' %}
+                    <span class="badge bg-secondary">{{ it.status }}</span>
+                  {% else %}
+                    <span class="badge bg-danger">{{ it.status }}</span>
+                  {% endif %}
                 </div>
               </div>
 
-              <div class="mt-3 d-flex justify-content-between">
-                <a class="btn btn-outline-light btn-sm" href="{% url 'competitions:detail' it.competition.pk %}">
+              <div class="d-flex flex-wrap gap-2 mb-3">
+                <span class="badge border border-secondary text-light">
+                  <i class="bi bi-person-badge me-1"></i>{{ it.role }}
+                </span>
+                <span class="badge border border-primary text-primary">
+                  {{ it.competition.get_tier_display }}
+                </span>
+                {% if not it.competition.allow_photos %}
+                  <span class="badge border border-warning text-warning" title="Súťaž má zakázané nahrávanie fotiek">
+                    <i class="bi bi-camera-video-off"></i> Bez fotiek
+                  </span>
+                {% endif %}
+              </div>
+
+              {% if it.competition.description %}
+                <p class="small text-muted mb-3 text-truncate" style="max-height: 40px;">
+                  {{ it.competition.description }}
+                </p>
+              {% endif %}
+
+              <div class="row g-2 small text-light mt-auto mb-3">
+                <div class="col-12">
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-geo-alt text-muted"></i>
+                    <span class="text-truncate">{{ it.location_name|default:"Miesto neurčené" }}</span>
+                  </div>
+                </div>
+                <div class="col-12">
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-people text-muted"></i>
+                    <span>Účastníci: <strong class="text-white">{{ it.participant_count }}</strong> / {{ it.competition.fishing_spots_count }}</span>
+                  </div>
+                </div>
+                <div class="col-12 mt-2 pt-2 border-top border-secondary border-opacity-50">
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-play-circle text-muted"></i>
+                    <span>{{ it.starts|date:"d.m.Y H:i" }}</span>
+                  </div>
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-stop-circle text-muted"></i>
+                    <span>{{ it.ends|date:"d.m.Y H:i" }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-auto pt-3 border-top border-secondary d-flex justify-content-between align-items-center">
+                <a class="btn btn-primary btn-sm px-3" href="{% url 'competitions:detail' it.competition.pk %}">
                   Detail
                 </a>
 
-                {% if it.can_cancel %}
-                  <div class="d-flex justify-content-center gap-2">
+                <div class="d-flex gap-2">
+                  {% if it.can_cancel %}
                     <a class="btn btn-outline-light btn-sm"
-                      href="{% url 'competitions:competition_edit' it.competition.pk %}">
-                      Upraviť
+                       href="{% url 'competitions:competition_edit' it.competition.pk %}" title="Upraviť">
+                      <i class="bi bi-pencil"></i>
                     </a>
-
                     <form method="post" action="{% url 'competitions:competition_cancel' it.competition.pk %}"
                           onsubmit="return confirm('Naozaj chceš zrušiť túto súťaž?');">
                       {% csrf_token %}
-                      <button class="btn btn-outline-danger btn-sm" type="submit">
-                        Zrušiť
+                      <button class="btn btn-outline-warning btn-sm" type="submit" title="Zrušiť">
+                        <i class="bi bi-x-circle"></i>
                       </button>
                     </form>
-                  </div>
-                {% endif %}
+                  {% endif %}
 
-                {% if it.can_delete %}
-                  <button type="button"
-                          class="btn btn-outline-danger btn-sm"
-                          data-bs-toggle="modal"
-                          data-bs-target="#deleteCompetitionModal-{{ it.competition.pk }}">
-                    Vymazať
-                  </button>
-                {% endif %}
-
+                  {% if it.can_delete %}
+                    <button type="button"
+                            class="btn btn-outline-danger btn-sm"
+                            data-bs-toggle="modal"
+                            data-bs-target="#deleteCompetitionModal-{{ it.competition.pk }}"
+                            title="Vymazať">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  {% endif %}
+                </div>
               </div>
 
               {% if it.can_delete %}
-                <!-- Delete modal -->
                 <div class="modal fade" id="deleteCompetitionModal-{{ it.competition.pk }}" tabindex="-1"
                     aria-labelledby="deleteCompetitionModalLabel-{{ it.competition.pk }}" aria-hidden="true">
                   <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                      <div class="modal-header">
+                    <div class="modal-content bg-dark border-secondary">
+                      <div class="modal-header border-secondary">
                         <h5 class="modal-title" id="deleteCompetitionModalLabel-{{ it.competition.pk }}">
                           Vymazať súťaž
                         </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zavrieť"></button>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Zavrieť"></button>
                       </div>
-
-                      <div class="modal-body">
-                        Prajete si zmazať súťaž <strong>{{ it.name }}</strong>?
+                      <div class="modal-body text-light">
+                        Prajete si zmazať súťaž <strong class="text-white">{{ it.name }}</strong>?
                       </div>
-
-                      <div class="modal-footer">
+                      <div class="modal-footer border-secondary">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nie</button>
-
                         <form method="post" action="{% url 'competitions:competition_delete' it.competition.pk %}">
                           {% csrf_token %}
                           <button type="submit" class="btn btn-danger">Áno, vymazať</button>
@@ -91,6 +131,7 @@
                   </div>
                 </div>
               {% endif %}
+
             </div>
           </div>
         </div>

@@ -49,45 +49,60 @@
     </div>
   </div>
 
-    <div class="modal fade" id="competitionRulesModal" tabindex="-1" aria-labelledby="competitionRulesModalLabel" aria-hidden="true">
+  <div class="modal fade" id="competitionRulesModal" tabindex="-1" aria-labelledby="competitionRulesModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
+      
+      <div class="modal-content shadow-lg" style="background-color: #0a1711; border: 1px solid rgba(255, 255, 255, 0.1);">
+        
+        <div class="modal-header" style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
           <div>
-            <h5 class="modal-title mb-1" id="competitionRulesModalLabel">📋 Pravidlá súťaže</h5>
+            <h5 class="modal-title mb-1 text-white" id="competitionRulesModalLabel">
+              <i class="bi bi-card-checklist me-2 text-primary"></i>Pravidlá súťaže
+            </h5>
             <div class="small text-secondary">{{ competition.name }}</div>
           </div>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zavrieť"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Zavrieť"></button>
         </div>
 
         <div class="modal-body">
           <div class="row g-3 mb-3">
+            
             <div class="col-12 col-md-6">
-              <div class="card border-secondary h-100">
+              <div class="card h-100 shadow-sm" style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
                 <div class="card-body">
-                  <div class="text-secondary small mb-1">Hlavné bodovanie</div>
-                  <div class="fw-semibold">{{ scoring_rules_detail.mode_label }}</div>
+                  <div class="text-secondary small mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-trophy text-muted"></i> Hlavné bodovanie
+                  </div>
+                  <div class="fw-bold text-white fs-5">{{ scoring_rules_detail.mode_label }}</div>
                   <div class="small text-secondary mt-2">{{ scoring_rules_detail.summary }}</div>
                 </div>
               </div>
             </div>
 
             <div class="col-12 col-md-6">
-              <div class="card border-secondary h-100">
+              <div class="card h-100 shadow-sm" style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
                 <div class="card-body">
-                  <div class="text-secondary small mb-1">Riešenie remízy</div>
-                  <div class="fw-semibold">{{ scoring_rules_detail.tie_breaker_label }}</div>
+                  <div class="text-secondary small mb-1 d-flex align-items-center gap-2">
+                    <i class="bi bi-arrow-left-right text-muted"></i> Riešenie remízy
+                  </div>
+                  <div class="fw-bold text-white fs-5">{{ scoring_rules_detail.tie_breaker_label }}</div>
 
                   <div class="text-secondary small mt-3 mb-2">Požadované údaje pri úlovku</div>
                   <div class="d-flex flex-wrap gap-2">
                     {% if scoring_rules_detail.length_required %}
-                      <span class="badge text-bg-secondary">Dĺžka povinná</span>
+                      <span class="badge text-light" style="background-color: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);">
+                        <i class="bi bi-arrows-expand me-1"></i>Dĺžka povinná
+                      </span>
                     {% endif %}
                     {% if scoring_rules_detail.weight_required %}
-                      <span class="badge text-bg-secondary">Váha povinná</span>
+                      <span class="badge text-light" style="background-color: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);">
+                        <i class="bi bi-speedometer2 me-1"></i>Váha povinná
+                      </span>
                     {% endif %}
                     {% if not scoring_rules_detail.length_required and not scoring_rules_detail.weight_required %}
-                      <span class="badge text-bg-dark border">Bez povinných polí navyše</span>
+                      <span class="badge text-secondary" style="background-color: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05);">
+                        Bez povinných polí navyše
+                      </span>
                     {% endif %}
                   </div>
                 </div>
@@ -96,12 +111,14 @@
           </div>
 
           {% if scoring_rules_detail.combo_mode_labels %}
-            <div class="card border-secondary mb-3">
+            <div class="card mb-3 shadow-sm" style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
               <div class="card-body">
-                <div class="text-secondary small mb-2">Zloženie kombinovaného bodovania</div>
+                <div class="text-secondary small mb-2 d-flex align-items-center gap-2">
+                  <i class="bi bi-intersect text-muted"></i> Zloženie kombinovaného bodovania
+                </div>
                 <div class="d-flex flex-wrap gap-2">
                   {% for label in scoring_rules_detail.combo_mode_labels %}
-                    <span class="badge text-bg-secondary">{{ label }}</span>
+                    <span class="badge bg-primary text-light">{{ label }}</span>
                   {% endfor %}
                 </div>
               </div>
@@ -111,10 +128,10 @@
           <div class="row g-3">
             {% if scoring_rules_detail.uses_count_points %}
               <div class="col-12 col-md-4">
-                <div class="card border-secondary h-100">
+                <div class="card h-100 shadow-sm" style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
                   <div class="card-body">
-                    <div class="text-secondary small mb-1">Body za úlovok</div>
-                    <div class="fw-semibold">{{ scoring_rules_detail.count_points_per_catch }} bodov</div>
+                    <div class="text-secondary small mb-1"><i class="bi bi-star me-1 text-muted"></i> Body za úlovok</div>
+                    <div class="fw-bold text-white fs-6">{{ scoring_rules_detail.count_points_per_catch }} bodov</div>
                   </div>
                 </div>
               </div>
@@ -122,10 +139,10 @@
 
             {% if scoring_rules_detail.uses_length_points %}
               <div class="col-12 col-md-4">
-                <div class="card border-secondary h-100">
+                <div class="card h-100 shadow-sm" style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
                   <div class="card-body">
-                    <div class="text-secondary small mb-1">Koeficient za dĺžku</div>
-                    <div class="fw-semibold">{{ scoring_rules_detail.length_points_per_cm|floatformat:"-3" }} bodov / 1 cm</div>
+                    <div class="text-secondary small mb-1"><i class="bi bi-rulers me-1 text-muted"></i> Koeficient za dĺžku</div>
+                    <div class="fw-bold text-white fs-6">{{ scoring_rules_detail.length_points_per_cm|floatformat:"-3" }} bodov / 1 cm</div>
                   </div>
                 </div>
               </div>
@@ -133,10 +150,10 @@
 
             {% if scoring_rules_detail.uses_weight_points %}
               <div class="col-12 col-md-4">
-                <div class="card border-secondary h-100">
+                <div class="card h-100 shadow-sm" style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
                   <div class="card-body">
-                    <div class="text-secondary small mb-1">Koeficient za váhu</div>
-                    <div class="fw-semibold">{{ scoring_rules_detail.weight_points_per_kg|floatformat:"-3" }} bodov / 1 kg</div>
+                    <div class="text-secondary small mb-1"><i class="bi bi-speedometer2 me-1 text-muted"></i> Koeficient za váhu</div>
+                    <div class="fw-bold text-white fs-6">{{ scoring_rules_detail.weight_points_per_kg|floatformat:"-3" }} bodov / 1 kg</div>
                   </div>
                 </div>
               </div>
@@ -144,39 +161,41 @@
           </div>
 
           {% if scoring_rules_detail.uses_species_points %}
-            <div class="card border-secondary mt-3">
+            <div class="card mt-3 shadow-sm" style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);">
               <div class="card-body">
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
                   <div>
-                    <div class="fw-semibold">Body podľa druhu</div>
-                    <div class="small text-secondary">
+                    <div class="fw-bold text-white d-flex align-items-center gap-2">
+                      <i class="bi bi-droplet text-muted"></i> Body podľa druhu
+                    </div>
+                    <div class="small text-secondary mt-1">
                       Default body pre druh, ktorý nie je v tabuľke:
-                      <strong>{{ scoring_rules_detail.default_species_points }}</strong>
+                      <strong class="text-white">{{ scoring_rules_detail.default_species_points }}</strong>
                     </div>
                   </div>
                 </div>
 
                 {% if scoring_rules_detail.species_rows %}
-                  <div class="table-responsive border rounded">
-                    <table class="table table-dark table-striped table-sm align-middle mb-0">
+                  <div class="table-responsive rounded" style="border: 1px solid rgba(255, 255, 255, 0.08);">
+                    <table class="table table-dark table-striped table-sm align-middle mb-0" style="--bs-table-bg: transparent;">
                       <thead>
                         <tr>
-                          <th>Druh ryby</th>
-                          <th class="text-end" style="width: 140px;">Body</th>
+                          <th class="text-secondary fw-normal border-0" style="border-bottom: 1px solid rgba(255,255,255,0.05) !important;">Druh ryby</th>
+                          <th class="text-end text-secondary fw-normal border-0" style="width: 140px; border-bottom: 1px solid rgba(255,255,255,0.05) !important;">Body</th>
                         </tr>
                       </thead>
                       <tbody>
                         {% for row in scoring_rules_detail.species_rows %}
                           <tr>
-                            <td>{{ row.species|title }}</td>
-                            <td class="text-end fw-semibold">{{ row.points }}</td>
+                            <td class="text-light border-0" style="border-bottom: 1px solid rgba(255,255,255,0.02) !important;">{{ row.species|title }}</td>
+                            <td class="text-end fw-bold text-white border-0" style="border-bottom: 1px solid rgba(255,255,255,0.02) !important;">{{ row.points }}</td>
                           </tr>
                         {% endfor %}
                       </tbody>
                     </table>
                   </div>
                 {% else %}
-                  <div class="text-secondary small">
+                  <div class="text-secondary small rounded p-2 text-center" style="background-color: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.05);">
                     Nie sú nastavené konkrétne body pre jednotlivé druhy rýb.
                   </div>
                 {% endif %}
@@ -185,9 +204,10 @@
           {% endif %}
         </div>
 
-        <div class="modal-footer">
+        <div class="modal-footer" style="border-top: 1px solid rgba(255, 255, 255, 0.05);">
           <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Zavrieť</button>
         </div>
+        
       </div>
     </div>
   </div>
