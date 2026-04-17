@@ -974,8 +974,18 @@ def invite_user_search(request):
     competition = get_object_or_404(Competition, pk=int(competition_id))
     _require_organizer_or_404(request.user, competition)
 
+    # Základný queryset aktívnych používateľov okrem mňa
+    qs = User.objects.filter(is_active=True).exclude(id=request.user.id)
+
+    # 1. Filtrovanie podľa textového vyhľadávania
     tokens = _tokenize(q)
-    if not tokens:
+    if tokens:
+        qs = qs.filter(_build_search_q(tokens))
+    elif friends_only:
+        # Ak nie je text, ale chceme priateľov, pokračujeme (zobrazia sa všetci priatelia)
+        pass
+    else:
+        # Ak nie je text ani filter priateľov, vrátime prázdne výsledky
         limit_reached = _unofficial_limit_reached(competition)
         return render(request, "competitions/_invite_user_search_results.html", {
             "results": [],
@@ -984,41 +994,41 @@ def invite_user_search(request):
             "limit_reached": limit_reached,
         })
 
-    qs = (
-        User.objects
-        .filter(is_active=True)
-        .exclude(id=request.user.id)
-        .filter(_build_search_q(tokens))
-        .order_by("first_name", "last_name", "username")
-    )
+    # 2. Efektívny filter priateľov priamo v DB (ak je zaškrtnutý checkbox)
+    if friends_only:
+        friend_ids_query = Friendship.objects.filter(
+            status=Friendship.Status.ACCEPTED
+        ).filter(
+            Q(user_a_id=request.user.id) | Q(user_b_id=request.user.id)
+        )
+        # Získame ID všetkých priateľov pomocou Unionu alebo Q objektov
+        qs = qs.filter(
+            Q(friendships_as_a__user_b_id=request.user.id, friendships_as_a__status=Friendship.Status.ACCEPTED) |
+            Q(friendships_as_b__user_a_id=request.user.id, friendships_as_b__status=Friendship.Status.ACCEPTED)
+        ).distinct()
 
-    users = list(qs[:10])
+    # 3. Vykonanie query s limitom
+    users = list(qs.order_by("first_name", "last_name", "username")[:10])
     user_ids = [u.id for u in users]
 
-    # kto je už člen súťaže
+    # Pomocné sety pre badge v UI
     member_ids = set(
         CompetitionMembership.objects
         .filter(competition=competition, user_id__in=user_ids)
         .values_list("user_id", flat=True)
     )
 
-    # kto je priateľ
+    # Zistíme, kto z výsledkov je reálne priateľ (pre zobrazenie ikonky/badge)
     friend_ids = set()
-    fr_qs = (
-        Friendship.objects
-        .filter(status=Friendship.Status.ACCEPTED)
-        .filter(
-            Q(user_a_id=request.user.id, user_b_id__in=user_ids)
-            | Q(user_b_id=request.user.id, user_a_id__in=user_ids)
-        )
-        .select_related("user_a", "user_b")
+    fr_qs = Friendship.objects.filter(
+        status=Friendship.Status.ACCEPTED
+    ).filter(
+        Q(user_a_id=request.user.id, user_b_id__in=user_ids)
+        | Q(user_b_id=request.user.id, user_a_id__in=user_ids)
     )
     for fr in fr_qs:
         other = fr.other_user(request.user)
         friend_ids.add(other.id)
-
-    if friends_only:
-        users = [u for u in users if u.id in friend_ids]
 
     results = []
     for u in users:

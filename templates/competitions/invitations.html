@@ -49,7 +49,7 @@
 
           <div class="card shadow-sm mb-3 col-md-6">
             <div class="card-body">
-              <h2 class="h5 fw-semibold mb-2">🔗 Zdieľateľný link (viac ľudí)</h2>
+              <h2 class="h5 fw-semibold mb-2">🔗 Zdieľateľný link (Bude len pre platené verziu)</h2>
               <p class="text-secondary small mb-3">
                 Jeden link pre súťaž, ktorý môže použiť viac účastníkov (multi-use). Voliteľne QR kód na stiahnutie.
               </p>
@@ -76,7 +76,7 @@
               {% if active_competition_id %}
                 <div
                   id="spot-required-alert"
-                  class="mb-3 {% if spot_picker_selected %}d-none{% endif %}">
+                  class="mb-3 {% if spot_picker_selected %}d-none{% endif %}" style="color: rgb(255, 0, 0)">
                   Nie je vybrané lovné miesto. 
                 </div>
 
@@ -85,9 +85,11 @@
 
                   <div class="mb-2">
                     <input
+                      id="invite-search-input"
                       class="form-control"
                       type="search"
                       name="q"
+                      style="cursor: not-allowed;"
                       placeholder="Hľadaj podľa username / mena / priezviska…"
                       autocomplete="off"
                       hx-get="{% url 'competitions:invite_user_search' %}"
@@ -95,11 +97,22 @@
                       hx-target="#invite-user-results"
                       hx-swap="innerHTML"
                       hx-include="#invite-user-form"
+                      {% if not spot_picker_selected %}disabled{% endif %}
                     >
                   </div>
 
                   <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="1" id="friends_only" name="friends_only" disabled="True">
+                    <input 
+                        class="form-check-input" 
+                        type="checkbox" 
+                        value="1" 
+                        id="friends_only" 
+                        name="friends_only"
+                        hx-get="{% url 'competitions:invite_user_search' %}"
+                        hx-trigger="change"
+                        hx-target="#invite-user-results"
+                        hx-include="#invite-user-form"
+                    >
                     <label class="form-check-label" for="friends_only">
                       Len priatelia (Čoskoro)
                     </label>
@@ -120,7 +133,6 @@
           <div class="card-header fw-semibold">Poznámky / ďalšie kroky</div>
           <div class="card-body">
             <ul class="mb-0">
-              <li>Pozvánku ide odoslať aj bez vybraného lovného miesta, necháme to tak?</li>
               <li>Pridať priateľov</li>
             </ul>
           </div>
@@ -216,20 +228,31 @@
 
   const spotPicker = document.getElementById("spotPicker");
   const spotRequiredAlert = document.getElementById("spot-required-alert");
+  const inviteInput = document.getElementById("invite-search-input"); // Nový riadok
 
-  const toggleSpotRequiredAlert = () => {
-    if (!spotPicker || !spotRequiredAlert) return;
+  const toggleSpotRequiredState = () => {
+    if (!spotPicker) return;
 
-    if (spotPicker.value) {
-      spotRequiredAlert.classList.add("d-none");
-    } else {
-      spotRequiredAlert.classList.remove("d-none");
+    const hasValue = !!spotPicker.value;
+
+    if (spotRequiredAlert) {
+      spotRequiredAlert.classList.toggle("d-none", hasValue);
+    }
+
+    if (inviteInput) {
+      inviteInput.disabled = !hasValue;
+      inviteInput.style.cursor = "text";
+      if (!hasValue) {
+        inviteInput.value = "";
+        document.getElementById("invite-user-results").innerHTML = "";
+        inviteInput.style.cursor = "not-allowed";
+      }
     }
   };
 
-  if (spotPicker && spotRequiredAlert) {
-    toggleSpotRequiredAlert();
-    spotPicker.addEventListener("change", toggleSpotRequiredAlert);
+  if (spotPicker) {
+    toggleSpotRequiredState();
+    spotPicker.addEventListener("change", toggleSpotRequiredState);
   }
 </script>
 {% endblock %}
