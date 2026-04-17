@@ -14,6 +14,7 @@ from apps.notifications.models import Notification
 from .models import Catch
 from .forms import CatchCreateForm
 from django.db.models import Q
+from apps.competitions.scoring import build_scoreboard
 
 
 def _ws_notify_user(user_id: int, *, unread_count: int, refresh_pending: bool = False):
@@ -82,22 +83,21 @@ def catch_create(request):
                     ).values_list("user_id", flat=True)
                 )
                 organizer_ids.add(catch.competition.created_by_id)
-                organizer_ids.discard(request.user.id)  # neposielať sám sebe
 
                 # uložiť notifikácie
-                # Notification.objects.bulk_create([
-                #     Notification(
-                #         competition=catch.competition,
-                #         recipient_id=uid,
-                #         type=Notification.Type.CATCH_CREATED,
-                #         payload={
-                #             "catch_id": catch.id,
-                #             "species": catch.species,
-                #             "contestant_id": request.user.id,
-                #         },
-                #     )
-                #     for uid in organizer_ids
-                # ])
+                Notification.objects.bulk_create([
+                    Notification(
+                        competition=catch.competition,
+                        recipient_id=uid,
+                        type=Notification.Type.CATCH_CREATED,
+                        payload={
+                            "catch_id": catch.id,
+                            "species": catch.species,
+                            "contestant_id": request.user.id,
+                        },
+                    )
+                    for uid in organizer_ids
+                ])
 
                 # WS až po commite (aby pending list videl catch v DB)
                 def _after_commit():
@@ -192,23 +192,37 @@ def catch_approve(request, pk: int):
 
     if catch.status != Catch.Status.PENDING:
         if request.headers.get("HX-Request") == "true":
-            # už je vyriešené -> len odober riadok a nech sa pending list zosúladí
             resp = HttpResponse("")
             resp["HX-Trigger"] = "pendingRefresh"
             return resp
-
         messages.info(request, "Úlovok už bol skontrolovaný.")
         return redirect(request.POST.get("next") or "notifications:pending")
 
     when = timezone.now()
     with transaction.atomic():
+        # --- NOVÁ LOGIKA VÝPOČTU BODOV ---
+        # Použijeme existujúcu build_scoreboard funkciu pre tento jeden úlovok
+        # Musíme ho poslať v zozname (Iterable)
+        temp_scores = build_scoreboard(
+            approved_catches=[catch], 
+            rules=catch.competition.scoring_rules
+        )
+        
+        assigned_points = 0
+        if temp_scores:
+            assigned_points = temp_scores[0].points
+        # ---------------------------------
+
         catch.status = Catch.Status.APPROVED
         catch.reviewed_by = request.user
         catch.reviewed_at = when
         catch.rejection_reason = ""
-        catch.save(update_fields=["status", "reviewed_by", "reviewed_at", "rejection_reason"])
+        catch.points = assigned_points  # Uložíme vypočítané body 
+        
+        # Pridaj "points" do update_fields
+        catch.save(update_fields=["status", "reviewed_by", "reviewed_at", "rejection_reason", "points"])
 
-        # ak existujú notifikácie k tomuto úlovku, označ ich ako prečítané (už nie je pending)
+        # Notifikácie a broadcast ostávajú nezmenené
         Notification.objects.filter(
             type=Notification.Type.CATCH_CREATED,
             payload__catch_id=catch.id,
@@ -220,7 +234,7 @@ def catch_approve(request, pk: int):
     if request.headers.get("HX-Request") == "true":
         return HttpResponse("")
 
-    messages.success(request, "Úlovok bol schválený.")
+    messages.success(request, f"Úlovok bol schválený (získané body: {assigned_points}).")
     return redirect(request.POST.get("next") or "notifications:pending")
 
 

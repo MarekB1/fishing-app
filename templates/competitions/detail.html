@@ -306,9 +306,9 @@
             <div
               id="competition-my-catch-list"
               hx-get="{% url 'competitions:my_catch_list' competition.pk %}"
+              hx-trigger="load, every 5s"
               hx-swap="innerHTML"
             >
-            <!-- hx-trigger="load, every 5s" -->
               {% include "competitions/_my_catch_list.html" with competition=competition catches=my_catches back_url=request.path %}
             </div>
           </div>
@@ -330,10 +330,9 @@
             <div
               id="competition-catch-list"
               hx-get="{% url 'competitions:catch_list' competition.pk %}"
-              
+              hx-trigger="load, every 5s"
               hx-swap="innerHTML"
             >
-            <!-- hx-trigger="load, every 5s" -->
               {% include "competitions/_catch_list.html" with competition=competition catches=catches back_url=request.path %}
             </div>
           </div>

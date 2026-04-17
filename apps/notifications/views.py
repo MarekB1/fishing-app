@@ -30,6 +30,8 @@ def pending(request):
     return render(request, "notifications/pending.html")
 
 
+# apps/notifications/views.py
+
 @login_required
 def pending_list(request):
     blocked = _require_organizer(request)
@@ -46,7 +48,7 @@ def pending_list(request):
     pending_catches = (
         Catch.objects.filter(competition__in=comps, status=Catch.Status.PENDING)
         .select_related("competition", "user")
-        .annotate(spot_number=Subquery(spot_subquery))
+        .annotate(spot_number_annotated=Subquery(spot_subquery))
         .order_by("-created_at")
     )
     return render(request, "notifications/_pending_list.html", {"pending_catches": pending_catches})

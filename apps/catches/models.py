@@ -38,6 +38,8 @@ class Catch(models.Model):
 
     photo = models.ImageField(upload_to=catch_photo_upload_to, blank=True, null=True)
 
+    points = models.DecimalField(max_digits=8, decimal_places=2, default=0, help_text="Body získané za úlovok")
+
     status = models.CharField(
         max_length=20, choices=Status.choices, default=Status.PENDING, db_index=True
     )
