@@ -185,6 +185,9 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",  # fallback (napr. admin / username)
 ]
 
+# Keď to treba vypísať do logu namiesto posielania emailu (napr. pri vývoji), odkomentuj tento riadok:
+# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+
 # --- Email / Password reset (DEV default) ---
 # --- Email (DEV via MailHog) ---
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

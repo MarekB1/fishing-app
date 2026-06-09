@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-lg navbar-dark floating-nav container mt-3 mb-4 rounded-4 shadow position-relative" style="z-index: 1040;">
-  <div class="container">
-    <a class="navbar-brand fw-semibold" href="{% url 'core:home' %}">🎣 Mám záber!</a>
+  <div class="container-fluid">
+    <a class="navbar-brand fw-semibold text-nowrap" href="{% url 'core:home' %}">🎣 Mám záber!</a>
 
     {% if user.is_authenticated %}
       {% with hide_desktop=hide_nav_links_desktop|default:False %}
@@ -14,111 +14,122 @@
         {% endif %}
 
         <div class="{% if not hide_desktop %}collapse navbar-collapse{% else %}d-flex ms-auto{% endif %}" id="mainNavbar">
-          <ul class="navbar-nav ms-auto mb-lg-0 d-flex {% if hide_desktop %}flex-row mb-0{% else %}flex-column mb-2{% endif %} flex-lg-row align-items-lg-center align-items-center">
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0 d-flex {% if hide_desktop %}flex-row mb-0{% else %}flex-column{% endif %} flex-lg-row align-items-lg-center align-items-start gap-2">
             
             <li class="nav-item {% if hide_desktop %}d-none{% endif %}">
-              <a class="nav-link {% if current_view == 'core:dashboard' %}active{% endif %}"
+              <a class="nav-link text-nowrap {% if current_view == 'core:dashboard' %}active{% endif %}"
                 {% if current_view == 'core:dashboard' %}aria-current="page"{% endif %}
                 href="{% url 'core:dashboard' %}">
-                Domov
+                <i class="bi bi-house-door me-1"></i> Domov
               </a>
             </li>
 
-            <li class="nav-item {% if hide_desktop %}d-none{% endif %}">
-              <a class="nav-link {% if current_view == 'competitions:my_competitions' %}active{% endif %}"
-                {% if current_view == 'competitions:my_competitions' %}aria-current="page"{% endif %}
-                href="{% url 'competitions:my_competitions' %}">
-                Moje súťaže
-              </a>
-            </li>
-
-            <li class="nav-item {% if hide_desktop %}d-none{% endif %}">
-              <a class="nav-link {% if current_view == 'catches:catch_create' %}active{% endif %}"
-                {% if current_view == 'catches:catch_create' %}aria-current="page"{% endif %}
-                href="{% url 'catches:catch_create' %}">
-                Nový úlovok
-              </a>
-            </li>
-
-            <li class="nav-item {% if hide_desktop %}d-none{% endif %}">
-              <a class="nav-link {% if current_view == 'catches:my_catches' %}active{% endif %}"
-                {% if current_view == 'catches:my_catches' %}aria-current="page"{% endif %}
-                href="{% url 'catches:my_catches' %}">
-                Moje úlovky
-              </a>
-            </li>
-
-            <li class="nav-item {% if hide_desktop %}d-none{% endif %}">
-              <a class="nav-link {% if current_view == 'competitions:scoreboard_select' %}active{% endif %}"
-                {% if current_view == 'competitions:scoreboard_select' %}aria-current="page"{% endif %}
-                href="{% url 'competitions:scoreboard_select' %}">
-                Scoreboard
-              </a>
-            </li>
-
-            <li class="nav-item {% if hide_desktop %}d-none{% endif %}">
-              <a class="nav-link {% if current_view == 'competitions:competition_create' %}active{% endif %}"
-                {% if current_view == 'competitions:competition_create' %}aria-current="page"{% endif %}
-                href="{% url 'competitions:competition_create' %}">
-                Vytvoriť súťaž
-              </a>
-            </li>
-
-            <li class="nav-item {% if hide_desktop %}d-none{% endif %}">
-              <a class="nav-link {% if current_view == 'competitions:invitations' %}active{% endif %}"
-                {% if current_view == 'competitions:invitations' %}aria-current="page"{% endif %}
-                href="{% url 'competitions:invitations' %}">
-                Pozvánky
-              </a>
-            </li>
-
-            {% if nav_missing_spots_total %}
             <li class="nav-item dropdown {% if hide_desktop %}d-none{% endif %}">
-              <a
-                class="nav-link dropdown-toggle d-flex align-items-center"
-                href="#"
-                role="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false"
-              >
-                Bez miesta
-                <span class="badge text-bg-danger ms-1">{{ nav_missing_spots_total }}</span>
+              <a class="nav-link dropdown-toggle text-nowrap {% if 'competitions:' in current_view and current_view != 'competitions:competition_create' %}active{% endif %}" 
+                 href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                🏆 Súťaže
               </a>
-
-              <ul class="dropdown-menu dropdown-menu-end">
-                <li class="dropdown-header">Účastníci bez lovného miesta</li>
-                {% for row in nav_missing_spots %}
-                  <li>
-                    <a class="dropdown-item d-flex justify-content-between align-items-center"
-                      href="{% url 'competitions:detail' row.competition_id %}">
-                      <span>{{ row.competition_name }}</span>
-                      <span class="badge text-bg-secondary">{{ row.count }}</span>
-                    </a>
-                  </li>
-                {% endfor %}
+              <ul class="dropdown-menu shadow-sm">
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'competitions:my_competitions' %}active{% endif %}" href="{% url 'competitions:my_competitions' %}">
+                    <i class="bi bi-trophy"></i> Moje súťaže
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'competitions:scoreboard_select' %}active{% endif %}" href="{% url 'competitions:scoreboard_select' %}">
+                    <i class="bi bi-list-ol"></i> Scoreboard
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'competitions:invitations' %}active{% endif %}" href="{% url 'competitions:invitations' %}">
+                    <i class="bi bi-envelope-open"></i> Pozvánky
+                  </a>
+                </li>
               </ul>
             </li>
-            {% endif %}
 
-            {% if nav_is_organizer and unread_notifications %}
-            <li class="nav-item {% if hide_desktop %}d-none{% endif %}">
-              <a class="nav-link {% if current_view == 'notifications:pending' %}active{% endif %} d-flex align-items-center gap-2"
-                {% if current_view == 'notifications:pending' %}aria-current="page"{% endif %}
-                href="{% url 'notifications:pending' %}">
-                Čaká na schválenie
-                <span id="pending-count-nav" class="badge rounded-pill text-bg-danger" data-pending-count>
-                  {{ unread_notifications }}
+            <li class="nav-item dropdown {% if hide_desktop %}d-none{% endif %}">
+              <a class="nav-link dropdown-toggle text-nowrap {% if 'catches:' in current_view and current_view != 'catches:catch_create' %}active{% endif %}" 
+                 href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                🐟 Úlovky
+              </a>
+              <ul class="dropdown-menu shadow-sm">
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'catches:my_catches' %}active{% endif %}" href="{% url 'catches:my_catches' %}">
+                    <i class="bi bi-journal-text"></i> Moje úlovky
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            <li class="nav-item dropdown {% if hide_desktop %}d-none{% endif %} ms-lg-2">
+              <a class="btn btn-success btn-sm dropdown-toggle text-nowrap d-flex align-items-center gap-1" 
+                 href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 6px; padding: 0.4rem 0.8rem;">
+                <i class="bi bi-plus-circle"></i> Pridať
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'catches:catch_create' %}active{% endif %}" href="{% url 'catches:catch_create' %}">
+                    <i class="bi bi-fish"></i> Nový úlovok
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'competitions:competition_create' %}active{% endif %}" href="{% url 'competitions:competition_create' %}">
+                    <i class="bi bi-calendar-plus"></i> Vytvoriť súťaž
+                  </a>
+                </li>
+              </ul>
+            </li>
+
+            {% if unread_notifications or nav_missing_spots_total %}
+            <li class="nav-item dropdown {% if hide_desktop %}d-none{% endif %} ms-lg-2">
+              <a class="nav-link dropdown-toggle text-nowrap d-flex align-items-center gap-1" 
+                 href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                🔔 Upozornenia
+                <span class="badge rounded-pill bg-danger" style="font-size: 0.7rem;">
+                  {{ unread_notifications|add:nav_missing_spots_total }}
                 </span>
               </a>
+              <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="min-width: 260px;">
+                
+                {% if unread_notifications %}
+                <li>
+                  <a class="dropdown-item d-flex justify-content-between align-items-center gap-3 {% if current_view == 'notifications:pending' %}active{% endif %}" href="{% url 'notifications:pending' %}">
+                    <span class="d-flex align-items-center gap-2">
+                      <i class="bi bi-clock-history text-warning"></i> Čaká na schválenie
+                    </span>
+                    <span id="pending-count-nav" class="badge bg-danger rounded-pill" data-pending-count>{{ unread_notifications }}</span>
+                  </a>
+                </li>
+                {% endif %}
+
+                {% if unread_notifications and nav_missing_spots_total %}
+                <li><hr class="dropdown-divider"></li>
+                {% endif %}
+
+                {% if nav_missing_spots_total %}
+                <li class="dropdown-header d-flex align-items-center gap-1 text-uppercase fw-bold pb-1" style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">
+                  <i class="bi bi-exclamation-triangle text-danger"></i> Bez lovného miesta
+                </li>
+                {% if nav_missing_spots %}
+                  {% for row in nav_missing_spots %}
+                    <li>
+                      <a class="dropdown-item d-flex justify-content-between align-items-center gap-3" href="{% url 'competitions:detail' row.competition_id %}">
+                        <span class="text-truncate" style="max-width: 170px;">{{ row.competition_name }}</span>
+                        <span class="badge text-bg-secondary rounded-pill">{{ row.count }}</span>
+                      </a>
+                    </li>
+                  {% endfor %}
+                {% endif %}
+                {% endif %}
+
+              </ul>
             </li>
             {% endif %}
 
             <li class="nav-item dropdown ms-lg-3 {% if not hide_desktop %}mt-3 mt-lg-0{% endif %}">
               <a class="nav-link dropdown-toggle d-flex align-items-center gap-2"
-                href="#"
-                role="button"
-                data-bs-toggle="dropdown"
-                aria-expanded="false">
+                href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
 
                 {% if nav_is_premium %}
                   <span class="badge text-bg-success">Premium</span>
@@ -130,7 +141,6 @@
               </a>
 
               <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-
                 {% if nav_is_organizer %}
                   <li>
                     <span class="dropdown-item-text">
@@ -141,17 +151,22 @@
                 {% endif %}
 
                 <li>
-                  <a class="dropdown-item" href="{% url 'core:profile' %}">Profil</a>
+                  <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'core:profile' %}">
+                    <i class="bi bi-person"></i> Profil
+                  </a>
                 </li>
                 <li>
-                  <a class="dropdown-item" href="{% url 'friends:home' %}">Priatelia</a>
+                  <a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'friends:home' %}">
+                    <i class="bi bi-people"></i> Priatelia
+                  </a>
                 </li>
                 <li><hr class="dropdown-divider"></li>
                 <li>
-                  <a class="dropdown-item text-danger" href="{% url 'logout' %}">Odhlásiť</a>
+                  <a class="dropdown-item text-danger d-flex align-items-center gap-2" href="{% url 'logout' %}">
+                    <i class="bi bi-box-arrow-right"></i> Odhlásiť
+                  </a>
                 </li>
               </ul>
-
             </li>
 
           </ul>
