@@ -112,9 +112,10 @@
                         hx-trigger="change"
                         hx-target="#invite-user-results"
                         hx-include="#invite-user-form"
+                        {% if not spot_picker_selected %}disabled{% endif %}
                     >
                     <label class="form-check-label" for="friends_only">
-                      Len priatelia (Čoskoro)
+                      Len priatelia
                     </label>
                   </div>
                 </form>
@@ -228,7 +229,8 @@
 
   const spotPicker = document.getElementById("spotPicker");
   const spotRequiredAlert = document.getElementById("spot-required-alert");
-  const inviteInput = document.getElementById("invite-search-input"); // Nový riadok
+  const inviteInput = document.getElementById("invite-search-input");
+  const friendsOnlyCheckbox = document.getElementById("friends_only"); // Pridaný checkbox
 
   const toggleSpotRequiredState = () => {
     if (!spotPicker) return;
@@ -246,6 +248,13 @@
         inviteInput.value = "";
         document.getElementById("invite-user-results").innerHTML = "";
         inviteInput.style.cursor = "not-allowed";
+      }
+    }
+
+    if (friendsOnlyCheckbox) {
+      friendsOnlyCheckbox.disabled = !hasValue;
+      if (!hasValue) {
+        friendsOnlyCheckbox.checked = false;
       }
     }
   };

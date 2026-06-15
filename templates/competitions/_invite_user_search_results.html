@@ -1,11 +1,13 @@
 {% if results %}
-  <div class="list-group">
-    {% for r in results %}
-      {% include "competitions/_invite_user_row.html" with u=r.user is_member=r.is_member is_friend=r.is_friend competition=competition limit_reached=limit_reached %}
+  <div class="list-group list-group-flush rounded-3 border border-secondary mt-3 shadow-sm" style="background: rgba(0,0,0,0.2);">
+    {% for item in results %}
+      {% include "competitions/_invite_user_row.html" with u=item.user is_member=item.is_member is_friend=item.is_friend limit_reached=False assigned_spot=None spot_error=None %}
     {% endfor %}
   </div>
 {% else %}
-  {% if q %}
-    <div class="text-secondary small">Nič som nenašiel.</div>
+  {% if q or request.GET.friends_only %}
+    <div class="text-muted small mt-3 px-2">
+      <i class="bi bi-search me-1"></i> Žiadni používatelia neboli nájdení.
+    </div>
   {% endif %}
 {% endif %}

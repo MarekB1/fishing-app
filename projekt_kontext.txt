@@ -1,4 +1,4 @@
-﻿--- FILE: C:\Users\MA602569\Documents\fishing app\apps\accounts\models.py ---
+﻿--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\apps\accounts\models.py ---
 
 from django.db import models
 
@@ -6,7 +6,7 @@ from django.db import models
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\apps\accounts\urls.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\apps\accounts\urls.py ---
 
 from django.contrib.auth import views as auth_views
 from django.urls import path
@@ -21,7 +21,7 @@ urlpatterns = [
     # Registration
     path("signup/", SignUpView.as_view(), name="signup"),
 
-    # Password reset flow (pouĹľĂ­vaĹˇ templates/registration/*)
+    # Password reset flow (pouÅ¾Ã­vaÅ¡ templates/registration/*)
     path("password_reset/", auth_views.PasswordResetView.as_view(), name="password_reset"),
     path("password_reset/done/", auth_views.PasswordResetDoneView.as_view(), name="password_reset_done"),
     path("reset/<uidb64>/<token>/", auth_views.PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
@@ -30,7 +30,7 @@ urlpatterns = [
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\apps\accounts\views.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\apps\accounts\views.py ---
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login as auth_login
@@ -66,15 +66,15 @@ class SignUpView(FormView):
         if authed is not None:
             auth_login(self.request, authed)
         else:
-            # fallback: ak by authenticate zlyhalo, tak aspoĹ nech to nespadne
+            # fallback: ak by authenticate zlyhalo, tak aspoÅˆ nech to nespadne
             auth_login(self.request, user, backend="django.contrib.auth.backends.ModelBackend")
 
-        messages.success(self.request, "ĂšÄŤet bol vytvorenĂ˝. Si prihlĂˇsenĂ˝.")
+        messages.success(self.request, "ÃšÄet bol vytvorenÃ½. Si prihlÃ¡senÃ½.")
         return super().form_valid(form)
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\apps\catches\models.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\apps\catches\models.py ---
 
 # apps/catches/models.py
 import os
@@ -116,7 +116,7 @@ class Catch(models.Model):
 
     photo = models.ImageField(upload_to=catch_photo_upload_to, blank=True, null=True)
 
-    points = models.DecimalField(max_digits=8, decimal_places=2, default=0, help_text="Body zĂ­skanĂ© za Ăşlovok")
+    points = models.DecimalField(max_digits=8, decimal_places=2, default=0, help_text="Body zÃ­skanÃ© za Ãºlovok")
 
     status = models.CharField(
         max_length=20, choices=Status.choices, default=Status.PENDING, db_index=True
@@ -155,7 +155,7 @@ class Catch(models.Model):
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\apps\catches\urls.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\apps\catches\urls.py ---
 
 from django.urls import path
 from . import views
@@ -172,7 +172,7 @@ urlpatterns = [
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\apps\catches\views.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\apps\catches\views.py ---
 
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -195,8 +195,8 @@ from apps.competitions.scoring import build_scoreboard
 
 def _ws_notify_user(user_id: int, *, unread_count: int, refresh_pending: bool = False):
     """
-    PoĹˇle WS event do group 'user_{id}'.
-    Funguje aĹľ keÄŹ mĂˇĹˇ NotificationsConsumer napojenĂ˝ na tĂşto group.
+    PoÅ¡le WS event do group 'user_{id}'.
+    Funguje aÅ¾ keÄ mÃ¡Å¡ NotificationsConsumer napojenÃ½ na tÃºto group.
     """
     channel_layer = get_channel_layer()
     async_to_sync(channel_layer.group_send)(
@@ -215,7 +215,7 @@ def _ws_notify_user(user_id: int, *, unread_count: int, refresh_pending: bool = 
 def catch_create(request):
     now = timezone.now()
 
-    # user mĂ´Ĺľe pridĂˇvaĹĄ len do aktĂ­vnych sĂşĹĄaĹľĂ­, kde je CONTESTANT
+    # user mÃ´Å¾e pridÃ¡vaÅ¥ len do aktÃ­vnych sÃºÅ¥aÅ¾Ã­, kde je CONTESTANT
     competition_qs = (
         Competition.objects
         .filter(
@@ -246,23 +246,33 @@ def catch_create(request):
     if request.method == "POST":
         form = CatchCreateForm(request.POST, request.FILES, competition_qs=competition_qs)
         if form.is_valid():
+
+            from datetime import timedelta
+            recent_duplicate = Catch.objects.filter(
+                user=request.user,
+                competition=form.cleaned_data["competition"],
+                created_at__gte=timezone.now() - timedelta(seconds=10)
+            ).exists()
+
+            if recent_duplicate:
+                messages.info(request, "Ãšlovok sa uÅ¾ spracÃºva, prosÃ­m poÄkajte (ochrana proti viacnÃ¡sobnÃ©mu odoslaniu).")
+                return redirect("competitions:detail", pk=form.cleaned_data["competition"].id)
+
             with transaction.atomic():
                 catch = form.save(commit=False)
                 catch.user = request.user
                 catch.save()
 
-                # organizĂˇtori = membership is_organizer + creator
                 organizer_ids = set(
-                    CompetitionMembership.objects.filter(
+                    int(uid) for uid in CompetitionMembership.objects.filter(
                         competition=catch.competition,
                         is_organizer=True,
                     ).values_list("user_id", flat=True)
                 )
-                organizer_ids.add(catch.competition.created_by_id)
+                organizer_ids.add(int(catch.competition.created_by_id))
 
-                # uloĹľiĹĄ notifikĂˇcie
-                Notification.objects.bulk_create([
-                    Notification(
+                for uid in organizer_ids:
+                    Notification.objects.create(
                         competition=catch.competition,
                         recipient_id=uid,
                         type=Notification.Type.CATCH_CREATED,
@@ -272,18 +282,8 @@ def catch_create(request):
                             "contestant_id": request.user.id,
                         },
                     )
-                    for uid in organizer_ids
-                ])
 
-                # WS aĹľ po commite (aby pending list videl catch v DB)
-                def _after_commit():
-                    for uid in organizer_ids:
-                        unread = Notification.objects.filter(recipient_id=uid, read_at__isnull=True).count()
-                        _ws_notify_user(uid, unread_count=unread, refresh_pending=True)
-
-                transaction.on_commit(_after_commit)
-
-            messages.success(request, "Ăšlovok bol pridanĂ˝ a ÄŤakĂˇ na schvĂˇlenie.")
+            # messages.success(request, "Ãšlovok bol pridanÃ½ a ÄakÃ¡ na schvÃ¡lenie.")
             return redirect("competitions:detail", pk=catch.competition_id)
     else:
         form = CatchCreateForm(initial=initial, competition_qs=competition_qs)
@@ -307,13 +307,12 @@ def _get_catch_for_organizer(user, pk: int) -> Catch:
         pk=pk,
     )
     if not _is_organizer(user, catch.competition):
-        # bezpeÄŤnosĹĄ: tvĂˇrime sa, Ĺľe neexistuje
         raise Http404("Catch not found")
     return catch
 
 
 def _get_catch_for_viewer(user, pk: int) -> tuple[Catch, bool]:
-    """VrĂˇti Ăşlovok + info, ÄŤi ho mĂ´Ĺľe user moderovaĹĄ (organizer/creator)."""
+    """VrÃ¡ti Ãºlovok + info, Äi ho mÃ´Å¾e user moderovaÅ¥ (organizer/creator)."""
     catch = get_object_or_404(
         Catch.objects.select_related("competition", "user"),
         pk=pk,
@@ -323,7 +322,7 @@ def _get_catch_for_viewer(user, pk: int) -> tuple[Catch, bool]:
     is_creator = (competition.created_by_id == user.id)
     membership = CompetitionMembership.objects.filter(competition=competition, user=user).first()
 
-    # do detailu pustĂ­me len ÄŤlena sĂşĹĄaĹľe alebo tvorcu
+    # do detailu pustÃ­me len Älena sÃºÅ¥aÅ¾e alebo tvorcu
     if membership is None and not is_creator:
         raise Http404("Catch not found")
 
@@ -331,12 +330,12 @@ def _get_catch_for_viewer(user, pk: int) -> tuple[Catch, bool]:
     if is_organizer:
         return catch, True
 
-    # ÄŤlen sĂşĹĄaĹľe bez organizer prĂˇv mĂ´Ĺľe pozeraĹĄ detail (bez moderovania)
+    # Älen sÃºÅ¥aÅ¾e bez organizer prÃ¡v mÃ´Å¾e pozeraÅ¥ detail (bez moderovania)
     return catch, False
 
 
 def _broadcast_pending_refresh(competition: Competition):
-    """Refresh pending list + badge pre vĹˇetkĂ˝ch organizĂˇtorov danej sĂşĹĄaĹľe."""
+    """Refresh pending list + badge pre vÅ¡etkÃ½ch organizÃ¡torov danej sÃºÅ¥aÅ¾e."""
     organizer_ids = set(
         CompetitionMembership.objects.filter(
             competition=competition,
@@ -371,7 +370,7 @@ def catch_approve(request, pk: int):
             resp = HttpResponse("")
             resp["HX-Trigger"] = "pendingRefresh"
             return resp
-        messages.info(request, "Ăšlovok uĹľ bol skontrolovanĂ˝.")
+        messages.info(request, "Ãšlovok uÅ¾ bol skontrolovanÃ½.")
         return redirect(request.POST.get("next") or "notifications:pending")
 
     when = timezone.now()
@@ -411,7 +410,7 @@ def catch_approve(request, pk: int):
     if request.headers.get("HX-Request") == "true":
         return HttpResponse("")
 
-    messages.success(request, f"Ăšlovok bol schvĂˇlenĂ˝ (zĂ­skanĂ© body: {assigned_points}).")
+    messages.success(request, f"Ãšlovok bol schvÃ¡lenÃ½ (zÃ­skanÃ© body: {assigned_points}).")
     return redirect(request.POST.get("next") or "notifications:pending")
 
 
@@ -425,7 +424,7 @@ def catch_reject(request, pk: int):
             resp = HttpResponse("")
             resp["HX-Trigger"] = "pendingRefresh"
             return resp
-        messages.info(request, "Ăšlovok uĹľ bol skontrolovanĂ˝.")
+        messages.info(request, "Ãšlovok uÅ¾ bol skontrolovanÃ½.")
         return redirect(request.POST.get("next") or "notifications:pending")
 
     reason = (request.POST.get("rejection_reason") or "").strip()
@@ -458,12 +457,12 @@ def catch_reject(request, pk: int):
     if request.headers.get("HX-Request") == "true":
         return HttpResponse("")
 
-    messages.success(request, "Ăšlovok bol odmietnutĂ˝.")
+    messages.success(request, "Ãšlovok bol odmietnutÃ½.")
     return redirect(request.POST.get("next") or "notifications:pending")
 
 @login_required
 def my_catches(request):
-    """Zoznam vĹˇetkĂ˝ch Ăşlovkov prihlĂˇsenĂ©ho usera (voliteÄľne filtrovanĂ© podÄľa sĂşĹĄaĹľe)."""
+    """Zoznam vÅ¡etkÃ½ch Ãºlovkov prihlÃ¡senÃ©ho usera (voliteÄ¾ne filtrovanÃ© podÄ¾a sÃºÅ¥aÅ¾e)."""
     catches_qs = (
         Catch.objects
         .filter(user=request.user)
@@ -492,7 +491,7 @@ def my_catches(request):
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\apps\competitions\consumers.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\apps\competitions\consumers.py ---
 
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -502,8 +501,8 @@ class ScoreboardConsumer(AsyncWebsocketConsumer):
         self.competition_id = self.scope["url_route"]["kwargs"]["competition_id"]
         self.group_name = f"competition_{self.competition_id}"
 
-        # Pozn.: autentifikĂˇciu/prĂˇva rieĹˇime jednoducho tĂ˝m,
-        # Ĺľe WS je dostupnĂ˝ len logged-in userom (AuthMiddlewareStack).
+        # Pozn.: autentifikÃ¡ciu/prÃ¡va rieÅ¡ime jednoducho tÃ½m,
+        # Å¾e WS je dostupnÃ½ len logged-in userom (AuthMiddlewareStack).
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
 
@@ -511,16 +510,16 @@ class ScoreboardConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def catch_created(self, event):
-        # PoĹˇli jednoduchĂ˝ event do browsera
+        # PoÅ¡li jednoduchÃ½ event do browsera
         await self.send(text_data=json.dumps({"event": "catch_created"}))
 
-    # (voliteÄľnĂ© neskĂ´r) approve/reject
+    # (voliteÄ¾nÃ© neskÃ´r) approve/reject
     async def catch_moderated(self, event):
         await self.send(text_data=json.dumps({"event": "catch_moderated"}))
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\apps\competitions\models.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\apps\competitions\models.py ---
 
 # apps/competitions/models.py
 import uuid
@@ -532,8 +531,8 @@ from django.core.validators import MinValueValidator
 
 class Competition(models.Model):
     class Tier(models.TextChoices):
-        UNOFFICIAL = "UNOFFICIAL", "NeoficiĂˇlna"
-        OFFICIAL = "OFFICIAL", "OficiĂˇlna"
+        UNOFFICIAL = "UNOFFICIAL", "NeoficiÃ¡lna"
+        OFFICIAL = "OFFICIAL", "OficiÃ¡lna"
 
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
@@ -547,12 +546,12 @@ class Competition(models.Model):
 
     cancelled_at = models.DateTimeField(null=True, blank=True, db_index=True)
 
-    location_name = models.CharField(max_length=255, default="")  # nĂˇzov miesta
+    location_name = models.CharField(max_length=255, default="")  # nÃ¡zov miesta
     fishing_spots_count = models.PositiveSmallIntegerField(
         default=1,
         validators=[MinValueValidator(1)],
-    )  # poÄŤet miest
-    allow_photos = models.BooleanField(default=True)  # povoliĹĄ fotky Ăşlovkov
+    )  # poÄet miest
+    allow_photos = models.BooleanField(default=True)  # povoliÅ¥ fotky Ãºlovkov
 
     starts_at = models.DateTimeField()
     ends_at = models.DateTimeField()
@@ -608,8 +607,8 @@ class Competition(models.Model):
 
 class CompetitionMembership(models.Model):
     class Role(models.TextChoices):
-        ORGANIZER = "ORGANIZER", "OrganizĂˇtor"
-        CONTESTANT = "CONTESTANT", "SĂşĹĄaĹľiaci"
+        ORGANIZER = "ORGANIZER", "OrganizÃ¡tor"
+        CONTESTANT = "CONTESTANT", "SÃºÅ¥aÅ¾iaci"
 
     competition = models.ForeignKey(
         Competition, on_delete=models.CASCADE, related_name="memberships"
@@ -649,8 +648,8 @@ class CompetitionMembership(models.Model):
 
 class Invitation(models.Model):
     class Kind(models.TextChoices):
-        DIRECT = "DIRECT", "Direct (single-use)"   # email / jednorazovĂˇ
-        LINK = "LINK", "Share link (multi-use)"    # zdieÄľateÄľnĂˇ
+        DIRECT = "DIRECT", "Direct (single-use)"   # email / jednorazovÃ¡
+        LINK = "LINK", "Share link (multi-use)"    # zdieÄ¾ateÄ¾nÃ¡
 
     competition = models.ForeignKey(
         "Competition", on_delete=models.CASCADE, related_name="invitations"
@@ -671,7 +670,7 @@ class Invitation(models.Model):
         db_index=True,
     )
 
-    # DIRECT: pozĂ˝vanie buÄŹ emailom, alebo priamo userom (staÄŤĂ­ jedno)
+    # DIRECT: pozÃ½vanie buÄ emailom, alebo priamo userom (staÄÃ­ jedno)
     email = models.EmailField(blank=True, null=True)
     invited_user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -685,13 +684,13 @@ class Invitation(models.Model):
 
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 
-    # LINK: limity pouĹľitia (null = neobmedzenĂ©)
+    # LINK: limity pouÅ¾itia (null = neobmedzenÃ©)
     max_uses = models.PositiveIntegerField(null=True, blank=True)
     uses_count = models.PositiveIntegerField(default=0)
 
     expires_at = models.DateTimeField(null=True, blank=True)
 
-    # DIRECT: jednorazovĂ© pouĹľitie
+    # DIRECT: jednorazovÃ© pouÅ¾itie
     used_at = models.DateTimeField(null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -703,7 +702,7 @@ class Invitation(models.Model):
             models.Index(fields=["competition", "used_at"]),
         ]
         constraints = [
-            # 1 share-link (LINK) na sĂşĹĄaĹľ (PostgreSQL partial unique)
+            # 1 share-link (LINK) na sÃºÅ¥aÅ¾ (PostgreSQL partial unique)
             models.UniqueConstraint(
                 fields=["competition"],
                 condition=Q(kind="LINK"),
@@ -730,7 +729,7 @@ class Invitation(models.Model):
 
 
 class InvitationUse(models.Model):
-    """Log pouĹľitia multi-use linku (1x per user)."""
+    """Log pouÅ¾itia multi-use linku (1x per user)."""
     invitation = models.ForeignKey(
         Invitation, on_delete=models.CASCADE, related_name="uses"
     )
@@ -758,7 +757,7 @@ class InvitationUse(models.Model):
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\apps\competitions\urls.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\apps\competitions\urls.py ---
 
 from django.urls import path
 from . import views
@@ -785,6 +784,7 @@ urlpatterns = [
     path("<int:pk>/cancel/", views.competition_cancel, name="competition_cancel"),
     path("<int:pk>/edit/", views.competition_edit, name="competition_edit"),
     path("<int:pk>/delete/", views.competition_delete, name="competition_delete"),
+    path("<int:pk>/leave/", views.competition_leave, name="competition_leave"),
     path("scoreboard/", views.scoreboard_select, name="scoreboard_select"),
     path("<int:pk>/scoreboard/", views.competition_scoreboard, name="scoreboard"),
     path("<int:pk>/scoreboard/fragment/", views.competition_scoreboard_fragment, name="scoreboard_fragment"),
@@ -794,7 +794,7 @@ urlpatterns = [
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\apps\competitions\views.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\apps\competitions\views.py ---
 
 import io
 import re
@@ -828,12 +828,12 @@ from django.db.models import Count
 
 def _status_for_competition(c: Competition) -> str:
     if getattr(c, "cancelled_at", None):
-        return "ZruĹˇenĂˇ"
+        return "ZruÅ¡enÃ¡"
     now = timezone.now()
     if now < c.starts_at:
-        return "PlĂˇnovanĂˇ"
+        return "PlÃ¡novanÃ¡"
     if now > c.ends_at:
-        return "UkonÄŤenĂˇ"
+        return "UkonÄenÃ¡"
     return "Prebieha"
 
 def _organizer_competitions_qs(user):
@@ -909,9 +909,9 @@ def my_competitions(request):
         is_organizer = is_creator or m.is_organizer
 
         if is_creator:
-            role_label = "HlavnĂ˝ organizĂˇtor"
+            role_label = "HlavnÃ½ organizÃ¡tor"
         elif m.is_organizer:
-            role_label = "OrganizĂˇtor"
+            role_label = "OrganizÃ¡tor"
         else:
             role_label = m.get_role_display()
         is_finished_or_cancelled = bool(getattr(c, "cancelled_at", None) or now > c.ends_at)
@@ -927,6 +927,7 @@ def my_competitions(request):
             "location_name": c.location_name,
             "can_cancel": is_organizer and not getattr(c, "cancelled_at", None),
             "can_delete": bool(is_organizer and is_finished_or_cancelled),
+            "can_leave": not is_organizer,
         })
 
     return render(request, "competitions/my_competitions.html", {
@@ -941,13 +942,17 @@ def competition_cancel(request, pk: int):
     _require_organizer_or_404(request.user, competition)
 
     if competition.cancelled_at:
-        messages.info(request, "SĂşĹĄaĹľ uĹľ je zruĹˇenĂˇ.")
+        messages.info(request, "SÃºÅ¥aÅ¾ uÅ¾ je zruÅ¡enÃ¡.")
+        return redirect("competitions:my_competitions")
+
+    if timezone.now() > competition.ends_at:
+        messages.warning(request, "UkonÄenÃº sÃºÅ¥aÅ¾ nie je moÅ¾nÃ© zruÅ¡iÅ¥.")
         return redirect("competitions:my_competitions")
 
     competition.cancelled_at = timezone.now()
     competition.save(update_fields=["cancelled_at"])
 
-    messages.success(request, "SĂşĹĄaĹľ bola zruĹˇenĂˇ.")
+    messages.success(request, "SÃºÅ¥aÅ¾ bola zruÅ¡enÃ¡.")
 
     members = CompetitionMembership.objects.filter(competition=competition).exclude(user=request.user)
     Notification.objects.bulk_create([
@@ -970,17 +975,37 @@ def competition_delete(request, pk: int):
     now = timezone.now()
     can_delete = bool(competition.cancelled_at or now > competition.ends_at)
     if not can_delete:
-        messages.warning(request, "SĂşĹĄaĹľ je moĹľnĂ© vymazaĹĄ aĹľ po ukonÄŤenĂ­ alebo zruĹˇenĂ­.")
+        messages.warning(request, "SÃºÅ¥aÅ¾ je moÅ¾nÃ© vymazaÅ¥ aÅ¾ po ukonÄenÃ­ alebo zruÅ¡enÃ­.")
         return redirect("competitions:my_competitions")
 
     name = competition.name
     try:
         competition.delete()
     except ProtectedError:
-        messages.error(request, "SĂşĹĄaĹľ nie je moĹľnĂ© vymazaĹĄ (niektorĂ© objekty sĂş chrĂˇnenĂ©).")
+        messages.error(request, "SÃºÅ¥aÅ¾ nie je moÅ¾nÃ© vymazaÅ¥ (niektorÃ© objekty sÃº chrÃ¡nenÃ©).")
         return redirect("competitions:my_competitions")
 
-    messages.success(request, f'SĂşĹĄaĹľ "{name}" bola vymazanĂˇ.')
+    messages.success(request, f'SÃºÅ¥aÅ¾ "{name}" bola vymazanÃ¡.')
+    return redirect("competitions:my_competitions")
+
+@require_POST
+@login_required
+@transaction.atomic
+def competition_leave(request, pk: int):
+    competition = get_object_or_404(Competition, pk=pk)
+    
+    if competition.created_by_id == request.user.id:
+        messages.error(request, "HlavnÃ½ organizÃ¡tor nemÃ´Å¾e opustiÅ¥ sÃºÅ¥aÅ¾.")
+        return redirect("competitions:my_competitions")
+
+    membership = CompetitionMembership.objects.filter(competition=competition, user=request.user).first()
+    if not membership:
+        messages.warning(request, "Nie ste Älenom tejto sÃºÅ¥aÅ¾e.")
+        return redirect("competitions:my_competitions")
+
+    membership.delete()
+
+    # messages.success(request, f'ÃšspeÅ¡ne ste opustili sÃºÅ¥aÅ¾ "{competition.name}".')
     return redirect("competitions:my_competitions")
 
 @login_required
@@ -1005,7 +1030,7 @@ def competition_create(request):
                     },
                 )
 
-            messages.success(request, "SĂşĹĄaĹľ bola vytvorenĂˇ.")
+            messages.success(request, "SÃºÅ¥aÅ¾ bola vytvorenÃ¡.")
             return redirect("competitions:my_competitions")
     else:
         form = CompetitionForm(user=request.user)
@@ -1023,14 +1048,18 @@ def competition_edit(request, pk: int):
     _require_organizer_or_404(request.user, competition)
 
     if competition.cancelled_at:
-        messages.warning(request, "ZruĹˇenĂş sĂşĹĄaĹľ nie je moĹľnĂ© upravovaĹĄ.")
+        messages.warning(request, "ZruÅ¡enÃº sÃºÅ¥aÅ¾ nie je moÅ¾nÃ© upravovaÅ¥.")
+        return redirect("competitions:detail", pk=competition.pk)
+
+    if timezone.now() > competition.ends_at:
+        messages.warning(request, "UkonÄenÃº sÃºÅ¥aÅ¾ nie je moÅ¾nÃ© upravovaÅ¥.")
         return redirect("competitions:detail", pk=competition.pk)
 
     if request.method == "POST":
         form = CompetitionForm(request.POST, instance=competition, user=request.user)
         if form.is_valid():
             form.save()
-            messages.success(request, "SĂşĹĄaĹľ bola upravenĂˇ.")
+            messages.success(request, "SÃºÅ¥aÅ¾ bola upravenÃ¡.")
             return redirect("competitions:detail", pk=competition.pk)
     else:
         form = CompetitionForm(instance=competition, user=request.user)
@@ -1039,9 +1068,9 @@ def competition_edit(request, pk: int):
 
 def _can_user_compete(user, competition: Competition, membership=None) -> bool:
     """
-    SĂşĹĄaĹľiĹĄ mĂ´Ĺľe:
-    - ÄŤlen so zĂˇpisom v CompetitionMembership
-    - creator sĂşĹĄaĹľe (aj keby membership nĂˇhodou chĂ˝bal)
+    SÃºÅ¥aÅ¾iÅ¥ mÃ´Å¾e:
+    - Älen so zÃ¡pisom v CompetitionMembership
+    - creator sÃºÅ¥aÅ¾e (aj keby membership nÃ¡hodou chÃ½bal)
     """
     if membership is None:
         membership = (
@@ -1068,16 +1097,16 @@ def competition_detail(request, pk: int):
         .first()
     )
 
-    # BezpeÄŤnosĹĄ: do detailu pustĂ­me len ÄŤlena sĂşĹĄaĹľe alebo tvorcu
+    # BezpeÄnosÅ¥: do detailu pustÃ­me len Älena sÃºÅ¥aÅ¾e alebo tvorcu
     is_creator = (competition.created_by_id == request.user.id)
     if membership is None and not is_creator:
         raise Http404("Competition not found")
 
-    # Ak tvorca nemĂˇ membership (mĂ´Ĺľe sa staĹĄ), berieme ho ako organizer
+    # Ak tvorca nemÃ¡ membership (mÃ´Å¾e sa staÅ¥), berieme ho ako organizer
     is_organizer = _user_is_organizer(request.user, competition, membership)
     is_contestant = _can_user_compete(request.user, competition, membership)
 
-    # Ăšlovky v sĂşĹĄaĹľi (vidĂ­ kaĹľdĂ˝ ÄŤlen sĂşĹĄaĹľe)
+    # Ãšlovky v sÃºÅ¥aÅ¾i (vidÃ­ kaÅ¾dÃ½ Älen sÃºÅ¥aÅ¾e)
     catches_qs = (
         Catch.objects
         .filter(competition=competition, status=Catch.Status.APPROVED)
@@ -1085,8 +1114,8 @@ def competition_detail(request, pk: int):
         .order_by("caught_at", "created_at")
     )
 
-    # MOJE ĂšLOVKY: MusĂ­me vytvoriĹĄ samostatnĂş query, aby rybĂˇr videl aj 
-    # svoje PENDING a REJECTED Ăşlovky (tu nefiltrujeme podÄľa statusu)
+    # MOJE ÃšLOVKY: MusÃ­me vytvoriÅ¥ samostatnÃº query, aby rybÃ¡r videl aj 
+    # svoje PENDING a REJECTED Ãºlovky (tu nefiltrujeme podÄ¾a statusu)
     my_catches_qs = (
         Catch.objects
         .filter(competition=competition, user=request.user)
@@ -1140,7 +1169,7 @@ def competition_scoreboard(request, pk: int):
         .first()
     )
 
-    # âś… prĂ­stup: ÄŤlen sĂşĹĄaĹľe alebo tvorca (pre obe roly)
+    # âœ… prÃ­stup: Älen sÃºÅ¥aÅ¾e alebo tvorca (pre obe roly)
     is_creator = (competition.created_by_id == request.user.id)
     if membership is None and not is_creator:
         raise Http404("Competition not found")
@@ -1201,7 +1230,7 @@ def scoreboard_select(request):
     )
 
     if not competitions.exists():
-        messages.warning(request, "NemĂˇte Ĺľiadnu sĂşĹĄaĹľ.")
+        messages.warning(request, "NemÃ¡te Å¾iadnu sÃºÅ¥aÅ¾.")
         return redirect("competitions:my_competitions")
 
     if competitions.count() == 1:
@@ -1229,7 +1258,7 @@ def membership_grant_organizer(request, pk: int, membership_id: int):
         return render(request, "competitions/_member_row.html", {
             "competition": competition,
             "m": m,
-            "error": "HlavnĂ˝ organizĂˇtor uĹľ organizĂˇtor je.",
+            "error": "HlavnÃ½ organizÃ¡tor uÅ¾ organizÃ¡tor je.",
             "spots_range": range(1, competition.fishing_spots_count + 1),
             "is_main_organizer": True,
         })
@@ -1271,7 +1300,7 @@ def membership_revoke_organizer(request, pk: int, membership_id: int):
         return render(request, "competitions/_member_row.html", {
             "competition": competition,
             "m": m,
-            "error": "HlavnĂ©mu organizĂˇtorovi nie je moĹľnĂ© odobraĹĄ rolu organizĂˇtora.",
+            "error": "HlavnÃ©mu organizÃ¡torovi nie je moÅ¾nÃ© odobraÅ¥ rolu organizÃ¡tora.",
             "spots_range": range(1, competition.fishing_spots_count + 1),
             "is_main_organizer": True,
         })
@@ -1311,18 +1340,18 @@ def membership_set_spot(request, pk: int, membership_id: int):
         spot = None 
     else:
         if not raw.isdigit():
-            error = "Zadaj ÄŤĂ­slo."
+            error = "Zadaj ÄÃ­slo."
             spot = m.spot_number
         else:
             spot = int(raw)
 
             if spot < 1 or spot > competition.fishing_spots_count:
-                error = f"PovolenĂ© je 1 aĹľ {competition.fishing_spots_count}."
+                error = f"PovolenÃ© je 1 aÅ¾ {competition.fishing_spots_count}."
             elif CompetitionMembership.objects.filter(
                 competition=competition,
                 spot_number=spot,
             ).exclude(pk=m.pk).exists():
-                error = f"Miesto {spot} je uĹľ obsadenĂ©."
+                error = f"Miesto {spot} je uÅ¾ obsadenÃ©."
 
     if error:
         return render(request, "competitions/_member_row.html", {
@@ -1341,7 +1370,7 @@ def membership_set_spot(request, pk: int, membership_id: int):
         return render(request, "competitions/_member_row.html", {
             "competition": competition,
             "m": m,
-            "error": "Toto miesto je uĹľ obsadenĂ©.",
+            "error": "Toto miesto je uÅ¾ obsadenÃ©.",
             "spots_range": spots_range,
             "is_main_organizer": _is_main_organizer(request.user, competition),
         })
@@ -1356,7 +1385,7 @@ def membership_set_spot(request, pk: int, membership_id: int):
 
 @login_required
 def competition_catch_list(request, pk: int):
-    """HTMX partial: zoznam Ăşlovkov v sĂşĹĄaĹľi."""
+    """HTMX partial: zoznam Ãºlovkov v sÃºÅ¥aÅ¾i."""
     competition = get_object_or_404(Competition, pk=pk)
 
     membership = (
@@ -1375,7 +1404,7 @@ def competition_catch_list(request, pk: int):
         Catch.objects
         .filter(
             competition=competition, 
-            status=Catch.Status.APPROVED  # PridanĂ˝ filter [cite: 6]
+            status=Catch.Status.APPROVED  # PridanÃ½ filter [cite: 6]
         )
         .select_related("user")
         .order_by("caught_at", "created_at")
@@ -1396,7 +1425,7 @@ def _parse_spot_number(raw: str | None) -> int | None:
     return int(raw)
 
 def _free_spots_for_competition(competition: Competition, *, exclude_invitation_id: int | None = None) -> list[int]:
-    """VoÄľnĂ© miesta = nie sĂş obsadenĂ© membershipom a nie sĂş rezervovanĂ© aktĂ­vnou DIRECT pozvĂˇnkou."""
+    """VoÄ¾nÃ© miesta = nie sÃº obsadenÃ© membershipom a nie sÃº rezervovanÃ© aktÃ­vnou DIRECT pozvÃ¡nkou."""
     now = timezone.now()
 
     taken = set(
@@ -1492,11 +1521,11 @@ def invitations(request):
     items = []
     for inv in inv_qs:
         if inv.used_at:
-            status = "PouĹľitĂˇ"
+            status = "PouÅ¾itÃ¡"
         elif inv.expires_at and inv.expires_at < now:
-            status = "ExpirovanĂˇ"
+            status = "ExpirovanÃ¡"
         else:
-            status = "AktĂ­vna"
+            status = "AktÃ­vna"
 
         link = request.build_absolute_uri(
             reverse("competitions:invite_accept", kwargs={"token": str(inv.token)})
@@ -1558,7 +1587,7 @@ def invitation_set_spot(request, invitation_id: int):
             "spots": ([inv.spot_number] if getattr(inv, "spot_number", None) else []),
             "taken_spots": [],
             "reserved_spots": [],
-            "error": "PozvĂˇnka uĹľ nie je aktĂ­vna.",
+            "error": "PozvÃ¡nka uÅ¾ nie je aktÃ­vna.",
             "is_locked": True,
         })
 
@@ -1569,18 +1598,18 @@ def invitation_set_spot(request, invitation_id: int):
         spot = None
     else:
         if not raw.isdigit():
-            error = "Zadaj ÄŤĂ­slo."
+            error = "Zadaj ÄÃ­slo."
             spot = inv.spot_number
         else:
             spot = int(raw)
 
             if spot < 1 or spot > competition.fishing_spots_count:
-                error = f"PovolenĂ© je 1 aĹľ {competition.fishing_spots_count}."
+                error = f"PovolenÃ© je 1 aÅ¾ {competition.fishing_spots_count}."
             elif CompetitionMembership.objects.filter(
                 competition=competition,
                 spot_number=spot,
             ).exists():
-                error = f"Miesto {spot} je uĹľ obsadenĂ©."
+                error = f"Miesto {spot} je uÅ¾ obsadenÃ©."
             else:
                 reserved = Invitation.objects.filter(
                     competition=competition,
@@ -1592,7 +1621,7 @@ def invitation_set_spot(request, invitation_id: int):
                 ).exclude(pk=inv.pk).exists()
 
                 if reserved:
-                    error = f"Miesto {spot} je uĹľ rezervovanĂ© inou pozvĂˇnkou."
+                    error = f"Miesto {spot} je uÅ¾ rezervovanÃ© inou pozvÃ¡nkou."
 
     if not error:
         inv.spot_number = spot
@@ -1637,27 +1666,27 @@ def invitation_set_spot(request, invitation_id: int):
 def invite_accept(request, token):
     invite = get_object_or_404(Invitation, token=token)
 
-    # nech sa dĂˇ pouĹľiĹĄ aj keÄŹ user nie je prihlĂˇsenĂ˝
+    # nech sa dÃ¡ pouÅ¾iÅ¥ aj keÄ user nie je prihlÃ¡senÃ½
     if not request.user.is_authenticated:
         return redirect_to_login(request.get_full_path())
 
-    # rĂ˝chla kontrola
+    # rÃ½chla kontrola
     if not invite.is_valid():
-        messages.error(request, "TĂˇto pozvĂˇnka je neplatnĂˇ alebo uĹľ nie je pouĹľiteÄľnĂˇ.")
+        messages.error(request, "TÃ¡to pozvÃ¡nka je neplatnÃ¡ alebo uÅ¾ nie je pouÅ¾iteÄ¾nÃ¡.")
         return redirect("core:dashboard")
 
-    # DIRECT email bezpeÄŤnosĹĄ
+    # DIRECT email bezpeÄnosÅ¥
     if invite.kind == Invitation.Kind.DIRECT:
         if invite.email and (request.user.email or "").lower() != invite.email.lower():
-            messages.error(request, "TĂˇto pozvĂˇnka je urÄŤenĂˇ pre inĂ˝ email.")
+            messages.error(request, "TÃ¡to pozvÃ¡nka je urÄenÃ¡ pre inÃ½ email.")
             return redirect("core:dashboard")
 
     with transaction.atomic():
-        # zamkneme invite pri LINK aby sme korektne rieĹˇili max_uses
+        # zamkneme invite pri LINK aby sme korektne rieÅ¡ili max_uses
         invite = Invitation.objects.select_for_update().select_related("competition").get(pk=invite.pk)
 
         if not invite.is_valid():
-            messages.error(request, "TĂˇto pozvĂˇnka uĹľ nie je pouĹľiteÄľnĂˇ.")
+            messages.error(request, "TÃ¡to pozvÃ¡nka uÅ¾ nie je pouÅ¾iteÄ¾nÃ¡.")
             return redirect("core:dashboard")
 
         competition = invite.competition
@@ -1668,7 +1697,7 @@ def invite_accept(request, token):
         ).exists()
 
         if (not already_member) and _unofficial_limit_reached(competition):
-            messages.error(request, "TĂˇto neoficiĂˇlna sĂşĹĄaĹľ uĹľ mĂˇ maximum 5 ĂşÄŤastnĂ­kov.")
+            messages.error(request, "TÃ¡to neoficiÃ¡lna sÃºÅ¥aÅ¾ uÅ¾ mÃ¡ maximum 5 ÃºÄastnÃ­kov.")
             return redirect("core:dashboard")
 
         membership, _created = CompetitionMembership.objects.get_or_create(
@@ -1677,10 +1706,10 @@ def invite_accept(request, token):
             defaults={"role": CompetitionMembership.Role.CONTESTANT},
         )
 
-        # zamkneme membership riadok (ak existuje), aby sme bezpeÄŤne priraÄŹovali spot
+        # zamkneme membership riadok (ak existuje), aby sme bezpeÄne priraÄovali spot
         membership = CompetitionMembership.objects.select_for_update().get(pk=membership.pk)
 
-        # âś… Prenos lovnĂ©ho miesta z DIRECT pozvĂˇnky na membership
+        # âœ… Prenos lovnÃ©ho miesta z DIRECT pozvÃ¡nky na membership
         if invite.kind == Invitation.Kind.DIRECT:
             spot_from_invite = getattr(invite, "spot_number", None)
 
@@ -1701,8 +1730,8 @@ def invite_accept(request, token):
                         try:
                             membership.save(update_fields=["spot_number"])
                         except IntegrityError:
-                            # ak mĂˇĹˇ unique constraint na (competition, spot_number),
-                            # tak pri race condition to sem spadne a spot sa nepriradĂ­
+                            # ak mÃ¡Å¡ unique constraint na (competition, spot_number),
+                            # tak pri race condition to sem spadne a spot sa nepriradÃ­
                             pass
 
             invite.invited_user = request.user
@@ -1710,7 +1739,7 @@ def invite_accept(request, token):
             invite.save(update_fields=["invited_user", "used_at"])
 
         else:
-            # LINK: 1x per user + increment uses_count iba pri prvom pouĹľitĂ­
+            # LINK: 1x per user + increment uses_count iba pri prvom pouÅ¾itÃ­
             use, created = InvitationUse.objects.get_or_create(
                 invitation=invite,
                 user=request.user,
@@ -1719,9 +1748,9 @@ def invite_accept(request, token):
                 invite.uses_count += 1
                 invite.save(update_fields=["uses_count"])
             else:
-                messages.info(request, "TĂşto pozvĂˇnku si uĹľ pouĹľil. Si uĹľ v sĂşĹĄaĹľi.")
+                messages.info(request, "TÃºto pozvÃ¡nku si uÅ¾ pouÅ¾il. Si uÅ¾ v sÃºÅ¥aÅ¾i.")
 
-    messages.success(request, f"VstĂşpil si do sĂşĹĄaĹľe: {invite.competition.name}")
+    messages.success(request, f"VstÃºpil si do sÃºÅ¥aÅ¾e: {invite.competition.name}")
     return redirect("competitions:detail", pk=invite.competition_id)
 
 
@@ -1786,18 +1815,18 @@ def invite_user_search(request):
     competition = get_object_or_404(Competition, pk=int(competition_id))
     _require_organizer_or_404(request.user, competition)
 
-    # ZĂˇkladnĂ˝ queryset aktĂ­vnych pouĹľĂ­vateÄľov okrem mĹa
+    # ZÃ¡kladnÃ½ queryset aktÃ­vnych pouÅ¾Ã­vateÄ¾ov okrem mÅˆa
     qs = User.objects.filter(is_active=True).exclude(id=request.user.id)
 
-    # 1. Filtrovanie podÄľa textovĂ©ho vyhÄľadĂˇvania
+    # 1. Filtrovanie podÄ¾a textovÃ©ho vyhÄ¾adÃ¡vania
     tokens = _tokenize(q)
     if tokens:
         qs = qs.filter(_build_search_q(tokens))
     elif friends_only:
-        # Ak nie je text, ale chceme priateÄľov, pokraÄŤujeme (zobrazia sa vĹˇetci priatelia)
+        # Ak nie je text, ale chceme priateÄ¾ov, pokraÄujeme (zobrazia sa vÅ¡etci priatelia)
         pass
     else:
-        # Ak nie je text ani filter priateÄľov, vrĂˇtime prĂˇzdne vĂ˝sledky
+        # Ak nie je text ani filter priateÄ¾ov, vrÃ¡time prÃ¡zdne vÃ½sledky
         limit_reached = _unofficial_limit_reached(competition)
         return render(request, "competitions/_invite_user_search_results.html", {
             "results": [],
@@ -1807,15 +1836,14 @@ def invite_user_search(request):
         })
 
     if friends_only:
-        friend_ids_query = Friendship.objects.filter(
-            status=Friendship.Status.ACCEPTED
-        ).filter(
+        fr_qs = Friendship.objects.filter(status=Friendship.Status.ACCEPTED).filter(
             Q(user_a_id=request.user.id) | Q(user_b_id=request.user.id)
         )
-        qs = qs.filter(
-            Q(friendships_as_a__user_b_id=request.user.id, friendships_as_a__status=Friendship.Status.ACCEPTED) |
-            Q(friendships_as_b__user_a_id=request.user.id, friendships_as_b__status=Friendship.Status.ACCEPTED)
-        ).distinct()
+        friend_ids = []
+        for fr in fr_qs:
+            friend_ids.append(fr.user_b_id if fr.user_a_id == request.user.id else fr.user_a_id)
+            
+        qs = qs.filter(id__in=friend_ids)
 
     users = list(qs.order_by("first_name", "last_name", "username")[:10])
     user_ids = [u.id for u in users]
@@ -1906,12 +1934,12 @@ def invite_user_add(request, user_id: int):
 
     if spot is not None:
         if spot < 1 or spot > competition.fishing_spots_count:
-            spot_error = f"PovolenĂ© je 1 aĹľ {competition.fishing_spots_count}."
+            spot_error = f"PovolenÃ© je 1 aÅ¾ {competition.fishing_spots_count}."
             spot = None
         else:
             free = _free_spots_for_competition(competition)
             if spot not in free:
-                spot_error = f"Miesto {spot} je uĹľ obsadenĂ© alebo rezervovanĂ©."
+                spot_error = f"Miesto {spot} je uÅ¾ obsadenÃ© alebo rezervovanÃ©."
                 spot = None
 
     membership, _created = CompetitionMembership.objects.get_or_create(
@@ -1925,7 +1953,7 @@ def invite_user_add(request, user_id: int):
         try:
             membership.save(update_fields=["spot_number"])
         except IntegrityError:
-            spot_error = f"Miesto {spot} uĹľ niekto medziÄŤasom obsadil."
+            spot_error = f"Miesto {spot} uÅ¾ niekto medziÄasom obsadil."
             membership.refresh_from_db(fields=["spot_number"])
 
     return render(request, "competitions/_invite_user_row.html", {
@@ -1940,7 +1968,7 @@ def invite_user_add(request, user_id: int):
 
 @login_required
 def competition_my_catch_list(request, pk: int):
-    """HTMX partial: Ăşlovky prihlĂˇsenĂ©ho usera v konkrĂ©tnej sĂşĹĄaĹľi."""
+    """HTMX partial: Ãºlovky prihlÃ¡senÃ©ho usera v konkrÃ©tnej sÃºÅ¥aÅ¾i."""
     competition = get_object_or_404(Competition, pk=pk)
 
     membership = (
@@ -2003,7 +2031,7 @@ def _build_search_q(tokens: list[str]):
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\apps\friends\models.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\apps\friends\models.py ---
 
 from __future__ import annotations
 
@@ -2014,11 +2042,11 @@ from django.utils import timezone
 
 
 class Friendship(models.Model):
-    """Jeden zĂˇznam na dvojicu userov (poradie sa kanonizuje: user_a_id < user_b_id).
+    """Jeden zÃ¡znam na dvojicu userov (poradie sa kanonizuje: user_a_id < user_b_id).
 
-    - status=PENDING: ÄŤakĂˇ na potvrdenie druhĂ˝m userom
+    - status=PENDING: ÄakÃ¡ na potvrdenie druhÃ½m userom
     - status=ACCEPTED: priatelia
-    - status=DECLINED: zamietnutĂ© / zruĹˇenĂ©
+    - status=DECLINED: zamietnutÃ© / zruÅ¡enÃ©
     """
 
     class Status(models.TextChoices):
@@ -2041,7 +2069,7 @@ class Friendship(models.Model):
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="friendships_requested",
-        help_text="Kto poslal ĹľiadosĹĄ",
+        help_text="Kto poslal Å¾iadosÅ¥",
     )
 
     status = models.CharField(
@@ -2067,7 +2095,7 @@ class Friendship(models.Model):
         ]
 
     def save(self, *args, **kwargs):
-        # kanonickĂ© poradie dvojice
+        # kanonickÃ© poradie dvojice
         if self.user_a_id and self.user_b_id and self.user_a_id > self.user_b_id:
             self.user_a_id, self.user_b_id = self.user_b_id, self.user_a_id
         super().save(*args, **kwargs)
@@ -2079,7 +2107,7 @@ class Friendship(models.Model):
 
     @classmethod
     def pair_q(cls, user1_id: int, user2_id: int) -> Q:
-        """Filter na dvojicu bez ohÄľadu na poradie."""
+        """Filter na dvojicu bez ohÄ¾adu na poradie."""
         a, b = sorted([user1_id, user2_id])
         return Q(user_a_id=a, user_b_id=b)
 
@@ -2098,7 +2126,7 @@ class Friendship(models.Model):
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\apps\friends\urls.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\apps\friends\urls.py ---
 
 from django.urls import path
 from . import views
@@ -2117,7 +2145,7 @@ urlpatterns = [
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\apps\friends\views.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\apps\friends\views.py ---
 
 from __future__ import annotations
 
@@ -2144,7 +2172,7 @@ def _tokenize(q: str) -> list[str]:
     q = (q or "").strip()
     if not q:
         return []
-    # rozdeÄľ podÄľa whitespace; "Janko Mr" -> ["Janko", "Mr"]
+    # rozdeÄ¾ podÄ¾a whitespace; "Janko Mr" -> ["Janko", "Mr"]
     parts = re.split(r"\s+", q)
     return [p for p in parts if p]
 
@@ -2224,7 +2252,7 @@ def user_search(request):
     users = list(qs)
     user_ids = [u.id for u in users]
 
-    # vzĹĄahy medzi me a users (len relevantnĂ© stavy)
+    # vzÅ¥ahy medzi me a users (len relevantnÃ© stavy)
     rels = Friendship.objects.filter(
         Q(user_a_id=me.id, user_b_id__in=user_ids) | Q(user_b_id=me.id, user_a_id__in=user_ids)
     ).select_related("requested_by")
@@ -2258,7 +2286,7 @@ def send_request(request, user_id: int):
     other = get_object_or_404(User, pk=user_id, is_active=True)
 
     if other.id == me.id:
-        return HttpResponseBadRequest("NemĂ´ĹľeĹˇ pridaĹĄ sĂˇm seba.")
+        return HttpResponseBadRequest("NemÃ´Å¾eÅ¡ pridaÅ¥ sÃ¡m seba.")
 
     a_id, b_id = sorted([me.id, other.id])
 
@@ -2270,21 +2298,21 @@ def send_request(request, user_id: int):
 
     if not created:
         if fr.status == Friendship.Status.ACCEPTED:
-            messages.info(request, "UĹľ ste priatelia.")
+            messages.info(request, "UÅ¾ ste priatelia.")
         elif fr.status == Friendship.Status.PENDING:
             if fr.requested_by_id == me.id:
-                messages.info(request, "Ĺ˝iadosĹĄ uĹľ bola odoslanĂˇ.")
+                messages.info(request, "Å½iadosÅ¥ uÅ¾ bola odoslanÃ¡.")
             else:
                 fr.mark_accepted()
-                # messages.success(request, "Ĺ˝iadosĹĄ bola prijatĂˇ. Ste priatelia.")
+                # messages.success(request, "Å½iadosÅ¥ bola prijatÃ¡. Ste priatelia.")
         else:
             fr.requested_by = me
             fr.status = Friendship.Status.PENDING
             fr.responded_at = None
             fr.save(update_fields=["requested_by", "status", "responded_at", "updated_at"])
-            # messages.success(request, "Ĺ˝iadosĹĄ bola odoslanĂˇ.")
+            # messages.success(request, "Å½iadosÅ¥ bola odoslanÃ¡.")
     # else:
-    #     messages.success(request, "Ĺ˝iadosĹĄ bola odoslanĂˇ.")
+    #     messages.success(request, "Å½iadosÅ¥ bola odoslanÃ¡.")
 
     Notification.objects.create(
         recipient=other,
@@ -2327,13 +2355,13 @@ def accept_request(request, friendship_id: int):
         return HttpResponseBadRequest("Nie je pending.")
 
     if me.id not in (fr.user_a_id, fr.user_b_id):
-        return HttpResponseBadRequest("NemĂˇĹˇ prĂ­stup.")
+        return HttpResponseBadRequest("NemÃ¡Å¡ prÃ­stup.")
 
     if fr.requested_by_id == me.id:
-        return HttpResponseBadRequest("Toto je tvoja odoslanĂˇ ĹľiadosĹĄ.")
+        return HttpResponseBadRequest("Toto je tvoja odoslanÃ¡ Å¾iadosÅ¥.")
 
     fr.mark_accepted()
-    # messages.success(request, "PriateÄľstvo bolo potvrdenĂ©.")
+    # messages.success(request, "PriateÄ¾stvo bolo potvrdenÃ©.")
 
     Notification.objects.create(
         recipient=fr.requested_by,
@@ -2360,14 +2388,13 @@ def decline_request(request, friendship_id: int):
         return HttpResponseBadRequest("Nie je pending.")
 
     if me.id not in (fr.user_a_id, fr.user_b_id):
-        return HttpResponseBadRequest("NemĂˇĹˇ prĂ­stup.")
+        return HttpResponseBadRequest("NemÃ¡Å¡ prÃ­stup.")
 
-    # mĂ´Ĺľe zamietnuĹĄ iba ten, kto neĹľiada
     if fr.requested_by_id == me.id:
-        return HttpResponseBadRequest("Toto je tvoja odoslanĂˇ ĹľiadosĹĄ.")
+        return HttpResponseBadRequest("Toto je tvoja odoslanÃ¡ Å¾iadosÅ¥.")
 
     fr.mark_declined()
-    messages.info(request, "Ĺ˝iadosĹĄ bola zamietnutĂˇ.")
+    # messages.info(request, "Å½iadosÅ¥ bola zamietnutÃ¡.")
 
     if request.htmx:
         return render(request, "friends/_lists.html", _lists_context(me))
@@ -2385,13 +2412,12 @@ def remove_friend(request, friendship_id: int):
     )
 
     if me.id not in (fr.user_a_id, fr.user_b_id):
-        return HttpResponseBadRequest("NemĂˇĹˇ prĂ­stup.")
+        return HttpResponseBadRequest("NemÃ¡Å¡ prÃ­stup.")
 
-    # pri remove zruĹˇĂ­me (DECLINED) â€“ nech je histĂłria a unikĂˇtnosĹĄ dvojice ostĂˇva
     fr.status = Friendship.Status.DECLINED
     fr.responded_at = timezone.now()
     fr.save(update_fields=["status", "responded_at", "updated_at"])
-    messages.info(request, "PriateÄľ bol odstrĂˇnenĂ˝.")
+    # messages.info(request, "PriateÄ¾ bol odstrÃ¡nenÃ½.")
 
     if request.htmx:
         return render(request, "friends/_lists.html", _lists_context(me))
@@ -2432,7 +2458,7 @@ def _lists_context(me):
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\apps\notifications\consumers.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\apps\notifications\consumers.py ---
 
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
 
@@ -2455,12 +2481,15 @@ class NotificationsConsumer(AsyncJsonWebsocketConsumer):
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\apps\notifications\models.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\apps\notifications\models.py ---
 
 # apps/notifications/models.py
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.db import transaction
 
 from apps.competitions.models import Competition
 
@@ -2493,7 +2522,7 @@ class Notification(models.Model):
         indexes = [
             models.Index(fields=["recipient", "created_at"]),
             models.Index(fields=["competition", "created_at"]),
-            # PostgreSQL: rĂ˝chly lookup nepreÄŤĂ­tanĂ˝ch
+            # PostgreSQL: rÃ½chly lookup nepreÄÃ­tanÃ½ch
             models.Index(fields=["recipient"], name="notif_unread_recipient_idx", condition=Q(read_at__isnull=True)),
         ]
 
@@ -2505,9 +2534,65 @@ class Notification(models.Model):
         self.read_at = when or timezone.now()
         self.save(update_fields=["read_at"])
 
+# Nezabudni nechaÅ¥ importy nad tÃ½m nedotknutÃ©
+
+@receiver(post_save, sender=Notification, dispatch_uid="ws_notification_sender_unique")
+def auto_broadcast_notification(sender, instance, created, **kwargs):
+    if created:
+        def send_ws():
+            from asgiref.sync import async_to_sync
+            from channels.layers import get_channel_layer
+            
+            t = instance.type
+            msg_title = "NovÃ© upozornenie!"
+            msg_text = "MÃ¡Å¡ novÃº sprÃ¡vu."
+            
+            if t == "CATCH_CREATED":
+                comp_name = instance.competition.name if instance.competition else ""
+                msg_title = "NovÃ½ Ãºlovok!"
+                msg_text = f"Ãšlovok ÄakÃ¡ na schvÃ¡lenie v sÃºÅ¥aÅ¾i {comp_name}."
+            elif t == "CATCH_APPROVED":
+                msg_title = "Ãšlovok schvÃ¡lenÃ½!"
+                msg_text = f"Tvoj Ãºlovok {instance.payload.get('species','')} bol schvÃ¡lenÃ½."
+            elif t == "CATCH_REJECTED":
+                msg_title = "Ãšlovok odmietnutÃ½"
+                msg_text = f"Tvoj Ãºlovok {instance.payload.get('species','')} bol odmietnutÃ½."
+            elif t == "FRIEND_REQUEST":
+                msg_title = "Å½iadosÅ¥ o priateÄ¾stvo"
+                msg_text = f"PouÅ¾Ã­vateÄ¾ {instance.payload.get('sender_name','')} si Å¥a chce pridaÅ¥."
+            elif t == "FRIEND_ACCEPTED":
+                msg_title = "NovÃ© priateÄ¾stvo!"
+                msg_text = f"PouÅ¾Ã­vateÄ¾ {instance.payload.get('sender_name','')} prijal tvoju Å¾iadosÅ¥."
+            elif t == "COMP_CANCELLED":
+                msg_title = "ZruÅ¡enÃ¡ sÃºÅ¥aÅ¾"
+                msg_text = f"SÃºÅ¥aÅ¾ {instance.payload.get('competition_name','')} bola zruÅ¡enÃ¡."
+            elif t == "ORGANIZER_PROMOTED":
+                msg_title = "NovÃ¡ rola!"
+                msg_text = f"Bol si vymenovanÃ½ za organizÃ¡tora v sÃºÅ¥aÅ¾i {instance.payload.get('competition_name','')}."
+            elif t == "COMP_ADDED":
+                msg_title = "NovÃ¡ sÃºÅ¥aÅ¾"
+                msg_text = f"Bol si pridanÃ½ do sÃºÅ¥aÅ¾e {instance.payload.get('competition_name','')}."
+
+            unread = Notification.objects.filter(recipient_id=instance.recipient_id, read_at__isnull=True).count()
+            
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"user_{instance.recipient_id}",
+                {
+                    "type": "notify",
+                    "data": {
+                        "unread_count": unread,
+                        "refresh_pending": False,
+                        "message_title": msg_title, 
+                        "message_text": msg_text,
+                    },
+                },
+            )
+        transaction.on_commit(send_ws)
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\apps\notifications\urls.py ---
+
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\apps\notifications\urls.py ---
 
 from django.urls import path
 from . import views
@@ -2524,7 +2609,7 @@ urlpatterns = [
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\apps\notifications\views.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\apps\notifications\views.py ---
 
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -2597,8 +2682,8 @@ def mark_all_read(request):
 
 def _require_organizer(request):
     """
-    - Ak user nie je organizer (nemĂˇ ani jednu sĂşĹĄaĹľ kde je organizer/creator), nepustĂ­me ho do Pending.
-    - Pre HTMX volania (partial) vrĂˇtime 403, aby sa to nedalo obchĂˇdzaĹĄ.
+    - Ak user nie je organizer (nemÃ¡ ani jednu sÃºÅ¥aÅ¾ kde je organizer/creator), nepustÃ­me ho do Pending.
+    - Pre HTMX volania (partial) vrÃ¡time 403, aby sa to nedalo obchÃ¡dzaÅ¥.
     """
     if _organizer_competitions(request.user).exists():
         return None
@@ -2606,7 +2691,7 @@ def _require_organizer(request):
     if request.headers.get("HX-Request") == "true":
         return HttpResponseForbidden("Organizer only")
 
-    messages.error(request, "TĂˇto sekcia je dostupnĂˇ len pre organizĂˇtora sĂşĹĄaĹľe.")
+    messages.error(request, "TÃ¡to sekcia je dostupnÃ¡ len pre organizÃ¡tora sÃºÅ¥aÅ¾e.")
     return redirect("core:dashboard")
 
 @require_POST
@@ -2621,10 +2706,10 @@ def mark_read(request, notification_id):
         <i class="bi bi-check2-all text-success"></i>
       </div>
       <div class="flex-grow-1" style="font-size: 0.82rem; line-height: 1.3;">
-        <span class="text-muted text-decoration-line-through">Upozornenie bolo vybavenĂ©.</span>
+        <span class="text-muted text-decoration-line-through">Upozornenie bolo vybavenÃ©.</span>
         <div class="text-muted d-flex justify-content-between align-items-center mt-1" style="font-size: 0.72rem;">
           <span>{notif.created_at.strftime('%d.%m.%Y %H:%M')}</span>
-          <span class="text-success fw-semibold"><i class="bi bi-check"></i> preÄŤĂ­tanĂ©</span>
+          <span class="text-success fw-semibold"><i class="bi bi-check"></i> preÄÃ­tanÃ©</span>
         </div>
       </div>
     </li>
@@ -2653,7 +2738,7 @@ def notification_redirect(request, notification_id):
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\config\routing.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\config\routing.py ---
 
 from django.urls import path
 from apps.notifications.consumers import NotificationsConsumer
@@ -2664,7 +2749,7 @@ websocket_urlpatterns = [
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\config\settings.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\config\settings.py ---
 
 """
 Django settings for config project.
@@ -2823,8 +2908,8 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 25 * 1024 * 1024  # 25MB - max veÄľkosĹĄ celĂ©ho requestu
-FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB - max veÄľkosĹĄ jednĂ©ho uploadu do pamĂ¤te
+DATA_UPLOAD_MAX_MEMORY_SIZE = 25 * 1024 * 1024  # 25MB - max veÄ¾kosÅ¥ celÃ©ho requestu
+FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB - max veÄ¾kosÅ¥ jednÃ©ho uploadu do pamÃ¤te
 
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
@@ -2853,7 +2938,7 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",  # fallback (napr. admin / username)
 ]
 
-# KeÄŹ to treba vypĂ­saĹĄ do logu namiesto posielania emailu (napr. pri vĂ˝voji), odkomentuj tento riadok:
+# KeÄ to treba vypÃ­saÅ¥ do logu namiesto posielania emailu (napr. pri vÃ½voji), odkomentuj tento riadok:
 # EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 # --- Email / Password reset (DEV default) ---
@@ -2868,7 +2953,7 @@ EMAIL_USE_SSL = False
 
 DEFAULT_FROM_EMAIL = "noreply@fishing-app.local"
 
-# platnosĹĄ reset tokenu (sekundy) â€“ napr. 3 dni
+# platnosÅ¥ reset tokenu (sekundy) â€“ napr. 3 dni
 PASSWORD_RESET_TIMEOUT = int(os.getenv("PASSWORD_RESET_TIMEOUT", str(60 * 60 * 24 * 3)))
 
 
@@ -2877,7 +2962,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\config\urls.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\config\urls.py ---
 
 from django.contrib import admin
 from django.urls import path, include
@@ -2889,7 +2974,7 @@ from django.contrib.staticfiles.storage import staticfiles_storage
 urlpatterns = [
     path("admin/", admin.site.urls),
 
-    path("accounts/", include("apps.accounts.urls")),  # ak uĹľ pouĹľĂ­vaĹˇ accounts app
+    path("accounts/", include("apps.accounts.urls")),  # ak uÅ¾ pouÅ¾Ã­vaÅ¡ accounts app
 
     path("", include("core.urls")),
     path("competitions/", include("apps.competitions.urls")),
@@ -2907,7 +2992,7 @@ if settings.DEBUG:
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\core\models.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\core\models.py ---
 
 from django.conf import settings
 from django.db import models
@@ -2915,17 +3000,17 @@ from django.db import models
 
 class DashboardFeedback(models.Model):
     class Section(models.TextChoices):
-        COMPETITIONS = "competitions", "SĂşĹĄaĹľe"
-        COMPETITION_CREATE = "competition_create", "NovĂˇ sĂşĹĄaĹľ"
-        INVITATIONS = "invitations", "PozvĂˇnky"
-        CATCH_CREATE = "catch_create", "PridaĹĄ Ăşlovok"
-        PENDING_CATCHES = "pending_catches", "ÄŚakĂˇ na schvĂˇlenie"
+        COMPETITIONS = "competitions", "SÃºÅ¥aÅ¾e"
+        COMPETITION_CREATE = "competition_create", "NovÃ¡ sÃºÅ¥aÅ¾"
+        INVITATIONS = "invitations", "PozvÃ¡nky"
+        CATCH_CREATE = "catch_create", "PridaÅ¥ Ãºlovok"
+        PENDING_CATCHES = "pending_catches", "ÄŒakÃ¡ na schvÃ¡lenie"
         SCOREBOARD = "scoreboard", "Scoreboard"
-        MY_CATCHES = "my_catches", "Moje Ăşlovky"
+        MY_CATCHES = "my_catches", "Moje Ãºlovky"
 
     class FeedbackType(models.TextChoices):
         BUG = "bug", "Bug"
-        IMPROVEMENT = "improvement", "ZlepĹˇenie"
+        IMPROVEMENT = "improvement", "ZlepÅ¡enie"
 
     reporter = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -2944,13 +3029,13 @@ class DashboardFeedback(models.Model):
         verbose_name="Typ",
     )
     description = models.TextField(verbose_name="Popis")
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="VytvorenĂ©")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="UpravenĂ©")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="VytvorenÃ©")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="UpravenÃ©")
 
     class Meta:
         ordering = ("-created_at",)
-        verbose_name = "PoznĂˇmka z dashboardu"
-        verbose_name_plural = "PoznĂˇmky z dashboardu"
+        verbose_name = "PoznÃ¡mka z dashboardu"
+        verbose_name_plural = "PoznÃ¡mky z dashboardu"
         indexes = [
             models.Index(fields=["created_at"]),
             models.Index(fields=["section", "feedback_type"]),
@@ -2958,11 +3043,11 @@ class DashboardFeedback(models.Model):
         ]
 
     def __str__(self):
-        return f"{self.get_feedback_type_display()} â€˘ {self.get_section_display()} â€˘ {self.reporter}"
+        return f"{self.get_feedback_type_display()} â€¢ {self.get_section_display()} â€¢ {self.reporter}"
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\core\urls.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\core\urls.py ---
 
 from django.urls import path
 from . import views
@@ -2977,7 +3062,7 @@ urlpatterns = [
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\core\views.py ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\core\views.py ---
 
 from django.contrib import messages
 from django.contrib.auth import update_session_auth_hash
@@ -3031,10 +3116,10 @@ def dashboard(request):
             feedback.reporter = user
             feedback.save()
 
-            messages.success(request, "PoznĂˇmka bola uloĹľenĂˇ. ÄŽakujeme za feedback.")
+            messages.success(request, "PoznÃ¡mka bola uloÅ¾enÃ¡. ÄŽakujeme za feedback.")
             return redirect("core:dashboard")
 
-        messages.error(request, "FormulĂˇr sa nepodarilo uloĹľiĹĄ. Skontroluj vyplnenĂ© polia.")
+        messages.error(request, "FormulÃ¡r sa nepodarilo uloÅ¾iÅ¥. Skontroluj vyplnenÃ© polia.")
 
     organizer_comps = base_qs.filter(
         Q(created_by=user) | Q(memberships__user=user, memberships__is_organizer=True)
@@ -3048,6 +3133,7 @@ def dashboard(request):
         "hide_nav_links_desktop": True,
         "active_competition": active_competition,
         "feedback_form": feedback_form,
+        "pending_catches_count": pending_catches_count,
     })
 
 
@@ -3069,10 +3155,10 @@ def profile(request):
 
             if profile_form.is_valid():
                 profile_form.save()
-                messages.success(request, "Profil bol uloĹľenĂ˝.")
+                messages.success(request, "Profil bol uloÅ¾enÃ½.")
                 return redirect("core:profile")
             else:
-                messages.error(request, "Skontroluj formulĂˇr â€“ nieÄŤo nie je vyplnenĂ© sprĂˇvne.")
+                messages.error(request, "Skontroluj formulÃ¡r â€“ nieÄo nie je vyplnenÃ© sprÃ¡vne.")
 
         elif action == "password":
             password_form = BootstrapPasswordChangeForm(user=user, data=request.POST)
@@ -3081,10 +3167,10 @@ def profile(request):
             if password_form.is_valid():
                 updated_user = password_form.save()
                 update_session_auth_hash(request, updated_user)
-                messages.success(request, "Heslo bolo zmenenĂ©.")
+                messages.success(request, "Heslo bolo zmenenÃ©.")
                 return redirect("core:profile")
             else:
-                messages.error(request, "Heslo sa nepodarilo zmeniĹĄ. Skontroluj chyby vo formulĂˇri.")
+                messages.error(request, "Heslo sa nepodarilo zmeniÅ¥. Skontroluj chyby vo formulÃ¡ri.")
 
     return render(
         request,
@@ -3098,11 +3184,11 @@ def profile(request):
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\templates\partials\nav.html ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\templates\partials\nav.html ---
 
 <nav class="navbar navbar-expand-lg navbar-dark floating-nav container mt-3 mb-4 rounded-4 shadow position-relative" style="z-index: 1040;">
   <div class="container-fluid">
-    <a class="navbar-brand fw-semibold text-nowrap" href="{% url 'core:home' %}">đźŽŁ MĂˇm zĂˇber!</a>
+    <a class="navbar-brand fw-semibold text-nowrap" href="{% url 'core:home' %}">ðŸŽ£ MÃ¡m zÃ¡ber!</a>
 
     {% if user.is_authenticated %}
       {% with hide_desktop=hide_nav_links_desktop|default:False %}
@@ -3129,12 +3215,12 @@ def profile(request):
             </a>
             
             <ul class="dropdown-menu dropdown-menu-end shadow-sm p-0" style="width: 320px;">
-              <li class="dropdown-header fw-bold border-bottom py-2 bg-body-tertiary">Upozornenia</li>
+              <li class="dropdown-header fw-bold border-bottom py-2" style="background: rgba(2, 44, 34, 0.95) !important; color:#fff">Upozornenia</li>
               
               <div style="max-height: 360px; overflow-y: auto;">
                 {% if nav_missing_spots_total %}
                   <li class="dropdown-header d-flex align-items-center gap-1 text-uppercase fw-bold pb-1 pt-2" style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">
-                    <i class="bi bi-exclamation-triangle text-danger"></i> Bez lovnĂ©ho miesta
+                    <i class="bi bi-exclamation-triangle text-danger"></i> Bez lovnÃ©ho miesta
                   </li>
                   {% for row in nav_missing_spots %}
                     <li class="border-bottom">
@@ -3171,29 +3257,29 @@ def profile(request):
                       <div class="flex-grow-1" style="font-size: 0.82rem; line-height: 1.3;">
                         <a href="{% url 'notifications:notification_redirect' notif.id %}" class="text-decoration-none text-body stretched-link fw-medium">
                           {% if notif.type == 'CATCH_CREATED' %}
-                            NovĂ© Ăşlovky ÄŤakajĂş na schvĂˇlenie v sĂşĹĄaĹľi <strong>{{ notif.competition.name }}</strong>.
+                            NovÃ© Ãºlovky ÄakajÃº na schvÃ¡lenie v sÃºÅ¥aÅ¾i <strong>{{ notif.competition.name }}</strong>.
                           {% elif notif.type == 'CATCH_APPROVED' %}
-                            VĂˇĹˇ Ăşlovok <strong>{{ notif.payload.species }}</strong> bol schvĂˇlenĂ˝! (+{{ notif.payload.points }} b)
+                            VÃ¡Å¡ Ãºlovok <strong>{{ notif.payload.species }}</strong> bol schvÃ¡lenÃ½! (+{{ notif.payload.points }} b)
                           {% elif notif.type == 'CATCH_REJECTED' %}
-                            VĂˇĹˇ Ăşlovok <strong>{{ notif.payload.species }}</strong> bol odmietnutĂ˝. {% if notif.payload.reason %}<span class="text-danger">DĂ´vod: {{ notif.payload.reason }}</span>{% endif %}
+                            VÃ¡Å¡ Ãºlovok <strong>{{ notif.payload.species }}</strong> bol odmietnutÃ½. {% if notif.payload.reason %}<span class="text-danger">DÃ´vod: {{ notif.payload.reason }}</span>{% endif %}
                           {% elif notif.type == 'FRIEND_REQUEST' %}
-                            PouĹľĂ­vateÄľ <strong>{{ notif.payload.sender_name }}</strong> vĂˇm poslal ĹľiadosĹĄ o priateÄľstvo.
+                            PouÅ¾Ã­vateÄ¾ <strong>{{ notif.payload.sender_name }}</strong> vÃ¡m poslal Å¾iadosÅ¥ o priateÄ¾stvo.
                           {% elif notif.type == 'FRIEND_ACCEPTED' %}
-                            PouĹľĂ­vateÄľ <strong>{{ notif.payload.sender_name }}</strong> prijal vaĹˇu ĹľiadosĹĄ o priateÄľstvo.
+                            PouÅ¾Ã­vateÄ¾ <strong>{{ notif.payload.sender_name }}</strong> prijal vaÅ¡u Å¾iadosÅ¥ o priateÄ¾stvo.
                           {% elif notif.type == 'COMP_CANCELLED' %}
-                            SĂşĹĄaĹľ <strong>{{ notif.payload.competition_name }}</strong> bola zruĹˇenĂˇ organizĂˇtorom.
+                            SÃºÅ¥aÅ¾ <strong>{{ notif.payload.competition_name }}</strong> bola zruÅ¡enÃ¡ organizÃ¡torom.
                           {% elif notif.type == 'ORGANIZER_PROMOTED' %}
-                            Boli ste vymenovanĂ˝ za organizĂˇtora v sĂşĹĄaĹľi <strong>{{ notif.payload.competition_name }}</strong>.
+                            Boli ste vymenovanÃ½ za organizÃ¡tora v sÃºÅ¥aÅ¾i <strong>{{ notif.payload.competition_name }}</strong>.
                           {% elif notif.type == 'COMP_ADDED' %}
-                            Boli ste pridanĂ˝ do sĂşĹĄaĹľe <strong>{{ notif.payload.competition_name }}</strong>.
+                            Boli ste pridanÃ½ do sÃºÅ¥aÅ¾e <strong>{{ notif.payload.competition_name }}</strong>.
                           {% else %}
-                            NovĂ© upozornenie.
+                            NovÃ© upozornenie.
                           {% endif %}
                         </a>
                         <div class="text-muted d-flex justify-content-between align-items-center mt-1" style="font-size: 0.72rem;">
                           <span>{{ notif.created_at|date:"d.m. H:i" }}</span>
                           {% if notif.read_at %}
-                            <span class="text-success fw-semibold"><i class="bi bi-check"></i> preÄŤĂ­tanĂ©</span>
+                            <span class="text-success fw-semibold"><i class="bi bi-check"></i> preÄÃ­tanÃ©</span>
                           {% endif %}
                         </div>
                       </div>
@@ -3205,7 +3291,7 @@ def profile(request):
                                 hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
                                 hx-target="#notif-{{ notif.id }}"
                                 hx-swap="outerHTML"
-                                title="OznaÄŤiĹĄ ako preÄŤĂ­tanĂ©">
+                                title="OznaÄiÅ¥ ako preÄÃ­tanÃ©">
                           <i class="bi bi-x-circle badge-hover fs-6"></i>
                         </button>
                       </div>
@@ -3215,7 +3301,7 @@ def profile(request):
                 {% elif not nav_missing_spots_total %}
                   <li class="p-4 text-center text-muted" style="font-size: 0.9rem;">
                     <i class="bi bi-check2-all fs-2 d-block mb-2 text-success" style="opacity: 0.5;"></i>
-                    NemĂˇte Ĺľiadne upozornenia.
+                    NemÃ¡te Å¾iadne upozornenia.
                   </li>
                 {% endif %}
               </div>
@@ -3224,17 +3310,17 @@ def profile(request):
 
           <div class="dropdown me-1">
             <a class="nav-link dropdown-toggle d-flex align-items-center gap-1 p-2" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              đź‘¤ <span class="d-none d-sm-inline">{% firstof user.get_full_name user.username user.email %}</span>
+              ðŸ‘¤ <span class="d-none d-sm-inline">{% firstof user.get_full_name user.username user.email %}</span>
             </a>
             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
               {% if nav_is_organizer %}
-                <li><span class="dropdown-item-text"><span class="badge text-bg-warning text-dark">OrganizĂˇtor</span></span></li>
+                <li><span class="dropdown-item-text"><span class="badge text-bg-warning text-dark">OrganizÃ¡tor</span></span></li>
                 <li><hr class="dropdown-divider"></li>
               {% endif %}
               <li><a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'core:profile' %}"><i class="bi bi-person"></i> Profil</a></li>
               <li><a class="dropdown-item d-flex align-items-center gap-2" href="{% url 'friends:home' %}"><i class="bi bi-people"></i> Priatelia</a></li>
               <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item text-danger d-flex align-items-center gap-2" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> OdhlĂˇsiĹĄ</a></li>
+              <li><a class="dropdown-item text-danger d-flex align-items-center gap-2" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right"></i> OdhlÃ¡siÅ¥</a></li>
             </ul>
           </div>
 
@@ -3256,35 +3342,35 @@ def profile(request):
 
             <li class="nav-item dropdown {% if hide_desktop %}d-none{% endif %}">
               <a class="nav-link dropdown-toggle text-nowrap {% if 'competitions:' in current_view and current_view != 'competitions:competition_create' %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                đźŹ† SĂşĹĄaĹľe
+                ðŸ† SÃºÅ¥aÅ¾e
               </a>
               <ul class="dropdown-menu shadow-sm">
-                <li><a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'competitions:my_competitions' %}active{% endif %}" href="{% url 'competitions:my_competitions' %}"><i class="bi bi-trophy"></i> Moje sĂşĹĄaĹľe</a></li>
+                <li><a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'competitions:my_competitions' %}active{% endif %}" href="{% url 'competitions:my_competitions' %}"><i class="bi bi-trophy"></i> Moje sÃºÅ¥aÅ¾e</a></li>
                 <li><a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'competitions:scoreboard_select' %}active{% endif %}" href="{% url 'competitions:scoreboard_select' %}"><i class="bi bi-list-ol"></i> Scoreboard</a></li>
-                <li><a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'competitions:invitations' %}active{% endif %}" href="{% url 'competitions:invitations' %}"><i class="bi bi-envelope-open"></i> PozvĂˇnky</a></li>
+                <li><a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'competitions:invitations' %}active{% endif %}" href="{% url 'competitions:invitations' %}"><i class="bi bi-envelope-open"></i> PozvÃ¡nky</a></li>
               </ul>
             </li>
 
             <li class="nav-item dropdown {% if hide_desktop %}d-none{% endif %}">
               <a class="nav-link dropdown-toggle text-nowrap {% if 'catches:' in current_view and current_view != 'catches:catch_create' %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                đźź Ăšlovky
+                ðŸŸ Ãšlovky
               </a>
               <ul class="dropdown-menu shadow-sm">
-                <li><a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'catches:my_catches' %}active{% endif %}" href="{% url 'catches:my_catches' %}"><i class="bi bi-journal-text"></i> Moje Ăşlovky</a></li>
+                <li><a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'catches:my_catches' %}active{% endif %}" href="{% url 'catches:my_catches' %}"><i class="bi bi-journal-text"></i> Moje Ãºlovky</a></li>
                 {% if nav_is_organizer %}
                   <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'notifications:pending' %}active{% endif %}" href="{% url 'notifications:pending' %}"><i class="bi bi-shield-check text-warning"></i> SchvaÄľovanie Ăşlovkov</a></li>
+                  <li><a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'notifications:pending' %}active{% endif %}" href="{% url 'notifications:pending' %}"><i class="bi bi-shield-check text-warning"></i> SchvaÄ¾ovanie Ãºlovkov</a></li>
                 {% endif %}
               </ul>
             </li>
 
             <li class="nav-item dropdown {% if hide_desktop %}d-none{% endif %} ms-lg-2">
               <a class="btn btn-success btn-sm dropdown-toggle text-nowrap d-flex align-items-center gap-1" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius: 6px; padding: 0.4rem 0.8rem;">
-                <i class="bi bi-plus-circle"></i> PridaĹĄ
+                <i class="bi bi-plus-circle"></i> PridaÅ¥
               </a>
               <ul class="dropdown-menu shadow-sm">
-                <li><a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'catches:catch_create' %}active{% endif %}" href="{% url 'catches:catch_create' %}"><i class="bi bi-fish"></i> NovĂ˝ Ăşlovok</a></li>
-                <li><a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'competitions:competition_create' %}active{% endif %}" href="{% url 'competitions:competition_create' %}"><i class="bi bi-calendar-plus"></i> VytvoriĹĄ sĂşĹĄaĹľ</a></li>
+                <li><a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'catches:catch_create' %}active{% endif %}" href="{% url 'catches:catch_create' %}"><i class="bi bi-fish"></i> NovÃ½ Ãºlovok</a></li>
+                <li><a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'competitions:competition_create' %}active{% endif %}" href="{% url 'competitions:competition_create' %}"><i class="bi bi-calendar-plus"></i> VytvoriÅ¥ sÃºÅ¥aÅ¾</a></li>
               </ul>
             </li>
           </ul>
@@ -3316,14 +3402,14 @@ def profile(request):
 
 
 
---- FILE: C:\Users\MA602569\Documents\fishing app\templates\base.html ---
+--- FILE: C:\Users\bukov\Documents\VS Projects\fishing-app\templates\base.html ---
 
 <!doctype html>
 <html lang="sk" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}MĂˇĹˇ zĂˇber!{% endblock %}</title>
+  <title>{% block title %}MÃ¡Å¡ zÃ¡ber!{% endblock %}</title>
 
   <!-- Bootstrap 5 CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -3478,12 +3564,38 @@ def profile(request):
         if (typeof data.unread_count === "number") {
           if (data.unread_count > lastCount) {
             playBeep();
+            
+            if (data.message_text) {
+              Swal.fire({
+                toast: true,
+                position: 'top', 
+                icon: 'info',
+                title: data.message_title || 'NovÃ© upozornenie!',
+                text: data.message_text,                          
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                background: 'linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)', 
+                color: '#000000',
+                iconColor: '#000000',
+                width: '100%',
+                customClass: {
+                  popup: 'mt-0 shadow-lg border-0 rounded-0 rounded-bottom-4 text-start',
+                  title: 'fw-bold fs-6'
+                },
+                didOpen: (toast) => {
+                  toast.style.maxWidth = '800px';
+                  toast.addEventListener('mouseenter', Swal.stopTimer)
+                  toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+              });
+            }
           }
           lastCount = data.unread_count;
           setCount(data.unread_count);
         }
 
-        if (typeof htmx !== 'undefined') {
+        if (typeof htmx !== 'undefined' && !window.isNavigating) {
             const navDropdown = document.getElementById('nav-notifications-dropdown');
             if (navDropdown) {
                 htmx.ajax('GET', window.location.href, {
@@ -3525,7 +3637,7 @@ def profile(request):
 
           <div class="alert {{ cls }} alert-dismissible fade show" role="alert">
             {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="ZavrieĹĄ"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="ZavrieÅ¥"></button>
           </div>
         {% endfor %}
       </div>
@@ -3549,7 +3661,7 @@ def profile(request):
 
       e.preventDefault();
       Swal.fire({
-        title: 'Ste si istĂ˝?',
+        title: 'Ste si istÃ½?',
         text: e.detail.question,
         icon: 'warning',
         customClass: {
@@ -3559,13 +3671,38 @@ def profile(request):
         },
         buttonsStyling: false,
         showCancelButton: true,
-        confirmButtonText: 'Ăno',
-        cancelButtonText: 'ZruĹˇiĹĄ',
+        confirmButtonText: 'Ãno',
+        cancelButtonText: 'ZruÅ¡iÅ¥',
       }).then(function(result) {
         if (result.isConfirmed) {
-          e.detail.issueRequest();
+          e.detail.issueRequest(true);
         }
       });
+    });
+
+    window.isNavigating = false;
+    window.addEventListener('beforeunload', () => window.isNavigating = true);
+
+    document.addEventListener('submit', function(e) {
+      const form = e.target;
+
+      window.isNavigating = true; 
+
+      if (form.dataset.submitting) {
+        e.preventDefault(); 
+        return;
+      }
+      form.dataset.submitting = "true";
+
+      if (!form.hasAttribute('hx-post') && !form.hasAttribute('hx-get')) {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn && !form.classList.contains('no-disable')) {
+          setTimeout(() => {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>SpracÃºva sa...';
+          }, 10);
+        }
+      }
     });
   </script>
   {% block extra_js %}{% endblock %}

@@ -129,6 +129,7 @@ def my_competitions(request):
             "location_name": c.location_name,
             "can_cancel": is_organizer and not getattr(c, "cancelled_at", None),
             "can_delete": bool(is_organizer and is_finished_or_cancelled),
+            "can_leave": not is_organizer,
         })
 
     return render(request, "competitions/my_competitions.html", {
@@ -187,6 +188,26 @@ def competition_delete(request, pk: int):
         return redirect("competitions:my_competitions")
 
     messages.success(request, f'Súťaž "{name}" bola vymazaná.')
+    return redirect("competitions:my_competitions")
+
+@require_POST
+@login_required
+@transaction.atomic
+def competition_leave(request, pk: int):
+    competition = get_object_or_404(Competition, pk=pk)
+    
+    if competition.created_by_id == request.user.id:
+        messages.error(request, "Hlavný organizátor nemôže opustiť súťaž.")
+        return redirect("competitions:my_competitions")
+
+    membership = CompetitionMembership.objects.filter(competition=competition, user=request.user).first()
+    if not membership:
+        messages.warning(request, "Nie ste členom tejto súťaže.")
+        return redirect("competitions:my_competitions")
+
+    membership.delete()
+
+    # messages.success(request, f'Úspešne ste opustili súťaž "{competition.name}".')
     return redirect("competitions:my_competitions")
 
 @login_required
@@ -1017,15 +1038,14 @@ def invite_user_search(request):
         })
 
     if friends_only:
-        friend_ids_query = Friendship.objects.filter(
-            status=Friendship.Status.ACCEPTED
-        ).filter(
+        fr_qs = Friendship.objects.filter(status=Friendship.Status.ACCEPTED).filter(
             Q(user_a_id=request.user.id) | Q(user_b_id=request.user.id)
         )
-        qs = qs.filter(
-            Q(friendships_as_a__user_b_id=request.user.id, friendships_as_a__status=Friendship.Status.ACCEPTED) |
-            Q(friendships_as_b__user_a_id=request.user.id, friendships_as_b__status=Friendship.Status.ACCEPTED)
-        ).distinct()
+        friend_ids = []
+        for fr in fr_qs:
+            friend_ids.append(fr.user_b_id if fr.user_a_id == request.user.id else fr.user_a_id)
+            
+        qs = qs.filter(id__in=friend_ids)
 
     users = list(qs.order_by("first_name", "last_name", "username")[:10])
     user_ids = [u.id for u in users]

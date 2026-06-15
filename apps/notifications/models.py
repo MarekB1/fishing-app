@@ -49,15 +49,58 @@ class Notification(models.Model):
         self.read_at = when or timezone.now()
         self.save(update_fields=["read_at"])
 
-@receiver(post_save, sender=Notification)
+# Nezabudni nechať importy nad tým nedotknuté
+
+@receiver(post_save, sender=Notification, dispatch_uid="ws_notification_sender_unique")
 def auto_broadcast_notification(sender, instance, created, **kwargs):
-    """
-    Keď vznikne akákoľvek nová notifikácia (priateľstvo, schválenie, atď.),
-    automaticky pošleme WebSocket signál príjemcovi.
-    """
     if created:
         def send_ws():
-            from apps.notifications.realtime import broadcast_unread_count
-            broadcast_unread_count(instance.recipient_id, refresh_pending=False)
+            from asgiref.sync import async_to_sync
+            from channels.layers import get_channel_layer
             
+            t = instance.type
+            msg_title = "Nové upozornenie!"
+            msg_text = "Máš novú správu."
+            
+            if t == "CATCH_CREATED":
+                comp_name = instance.competition.name if instance.competition else ""
+                msg_title = "Nový úlovok!"
+                msg_text = f"Úlovok čaká na schválenie v súťaži {comp_name}."
+            elif t == "CATCH_APPROVED":
+                msg_title = "Úlovok schválený!"
+                msg_text = f"Tvoj úlovok {instance.payload.get('species','')} bol schválený."
+            elif t == "CATCH_REJECTED":
+                msg_title = "Úlovok odmietnutý"
+                msg_text = f"Tvoj úlovok {instance.payload.get('species','')} bol odmietnutý."
+            elif t == "FRIEND_REQUEST":
+                msg_title = "Žiadosť o priateľstvo"
+                msg_text = f"Používateľ {instance.payload.get('sender_name','')} si ťa chce pridať."
+            elif t == "FRIEND_ACCEPTED":
+                msg_title = "Nové priateľstvo!"
+                msg_text = f"Používateľ {instance.payload.get('sender_name','')} prijal tvoju žiadosť."
+            elif t == "COMP_CANCELLED":
+                msg_title = "Zrušená súťaž"
+                msg_text = f"Súťaž {instance.payload.get('competition_name','')} bola zrušená."
+            elif t == "ORGANIZER_PROMOTED":
+                msg_title = "Nová rola!"
+                msg_text = f"Bol si vymenovaný za organizátora v súťaži {instance.payload.get('competition_name','')}."
+            elif t == "COMP_ADDED":
+                msg_title = "Nová súťaž"
+                msg_text = f"Bol si pridaný do súťaže {instance.payload.get('competition_name','')}."
+
+            unread = Notification.objects.filter(recipient_id=instance.recipient_id, read_at__isnull=True).count()
+            
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"user_{instance.recipient_id}",
+                {
+                    "type": "notify",
+                    "data": {
+                        "unread_count": unread,
+                        "refresh_pending": False,
+                        "message_title": msg_title, 
+                        "message_text": msg_text,
+                    },
+                },
+            )
         transaction.on_commit(send_ws)

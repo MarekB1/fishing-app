@@ -158,12 +158,38 @@
         if (typeof data.unread_count === "number") {
           if (data.unread_count > lastCount) {
             playBeep();
+            
+            if (data.message_text) {
+              Swal.fire({
+                toast: true,
+                position: 'top', 
+                icon: 'info',
+                title: data.message_title || 'Nové upozornenie!',
+                text: data.message_text,                          
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                background: 'linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)', 
+                color: '#000000',
+                iconColor: '#000000',
+                width: '100%',
+                customClass: {
+                  popup: 'mt-0 shadow-lg border-0 rounded-0 rounded-bottom-4 text-start',
+                  title: 'fw-bold fs-6'
+                },
+                didOpen: (toast) => {
+                  toast.style.maxWidth = '800px';
+                  toast.addEventListener('mouseenter', Swal.stopTimer)
+                  toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+              });
+            }
           }
           lastCount = data.unread_count;
           setCount(data.unread_count);
         }
 
-        if (typeof htmx !== 'undefined') {
+        if (typeof htmx !== 'undefined' && !window.isNavigating) {
             const navDropdown = document.getElementById('nav-notifications-dropdown');
             if (navDropdown) {
                 htmx.ajax('GET', window.location.href, {
@@ -246,6 +272,31 @@
           e.detail.issueRequest(true);
         }
       });
+    });
+
+    window.isNavigating = false;
+    window.addEventListener('beforeunload', () => window.isNavigating = true);
+
+    document.addEventListener('submit', function(e) {
+      const form = e.target;
+
+      window.isNavigating = true; 
+
+      if (form.dataset.submitting) {
+        e.preventDefault(); 
+        return;
+      }
+      form.dataset.submitting = "true";
+
+      if (!form.hasAttribute('hx-post') && !form.hasAttribute('hx-get')) {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn && !form.classList.contains('no-disable')) {
+          setTimeout(() => {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Spracúva sa...';
+          }, 10);
+        }
+      }
     });
   </script>
   {% block extra_js %}{% endblock %}

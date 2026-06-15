@@ -94,6 +94,12 @@
                       <i class="bi bi-trash"></i>
                     </button>
                   {% endif %}
+
+                  {% if it.can_leave %}
+                    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#leaveCompetitionModal-{{ it.competition.pk }}" title="Opustiť súťaž">
+                      <i class="bi bi-box-arrow-right"></i>
+                    </button>
+                  {% endif %}
                 </div>
               </div>
 
@@ -147,6 +153,31 @@
                 <form method="post" action="{% url 'competitions:competition_delete' it.competition.pk %}">
                   {% csrf_token %}
                   <button type="submit" class="btn btn-danger">Áno, vymazať</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if it.can_leave %}
+        <div class="modal fade" id="leaveCompetitionModal-{{ it.competition.pk }}" tabindex="-1" aria-labelledby="leaveCompetitionModalLabel-{{ it.competition.pk }}" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title text-danger" id="leaveCompetitionModalLabel-{{ it.competition.pk }}">
+                  Opustiť súťaž
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Zavrieť"></button>
+              </div>
+              <div class="modal-body text-light">
+                Naozaj si prajete opustiť súťaž <strong class="text-white">{{ it.name }}</strong>? Vaše členstvo bude z tejto súťaže natrvalo vymazané (vaše doterajšie úlovky však zostanú v súťaži zachované).
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nie</button>
+                <form method="post" action="{% url 'competitions:competition_leave' it.competition.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger">Áno, opustiť</button>
                 </form>
               </div>
             </div>
