@@ -146,6 +146,10 @@ def competition_cancel(request, pk: int):
         messages.info(request, "Súťaž už je zrušená.")
         return redirect("competitions:my_competitions")
 
+    if timezone.now() > competition.ends_at:
+        messages.warning(request, "Ukončenú súťaž nie je možné zrušiť.")
+        return redirect("competitions:my_competitions")
+
     competition.cancelled_at = timezone.now()
     competition.save(update_fields=["cancelled_at"])
 
@@ -226,6 +230,10 @@ def competition_edit(request, pk: int):
 
     if competition.cancelled_at:
         messages.warning(request, "Zrušenú súťaž nie je možné upravovať.")
+        return redirect("competitions:detail", pk=competition.pk)
+
+    if timezone.now() > competition.ends_at:
+        messages.warning(request, "Ukončenú súťaž nie je možné upravovať.")
         return redirect("competitions:detail", pk=competition.pk)
 
     if request.method == "POST":

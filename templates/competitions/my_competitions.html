@@ -80,57 +80,22 @@
                 </a>
 
                 <div class="d-flex gap-2">
-                  {% if it.can_cancel %}
-                    <a class="btn btn-outline-light btn-sm"
-                       href="{% url 'competitions:competition_edit' it.competition.pk %}" title="Upraviť">
+                  {% if it.can_cancel and it.status != 'Ukončená' %}
+                    <a class="btn btn-outline-light btn-sm" href="{% url 'competitions:competition_edit' it.competition.pk %}" title="Upraviť">
                       <i class="bi bi-pencil"></i>
                     </a>
-                    <form method="post" action="{% url 'competitions:competition_cancel' it.competition.pk %}"
-                          onsubmit="return confirm('Naozaj chceš zrušiť túto súťaž?');">
-                      {% csrf_token %}
-                      <button class="btn btn-outline-warning btn-sm" type="submit" title="Zrušiť">
-                        <i class="bi bi-x-circle"></i>
-                      </button>
-                    </form>
+                    <button type="button" class="btn btn-outline-warning btn-sm" data-bs-toggle="modal" data-bs-target="#cancelCompetitionModal-{{ it.competition.pk }}" title="Zrušiť">
+                      <i class="bi bi-x-circle"></i>
+                    </button>
                   {% endif %}
 
                   {% if it.can_delete %}
-                    <button type="button"
-                            class="btn btn-outline-danger btn-sm"
-                            data-bs-toggle="modal"
-                            data-bs-target="#deleteCompetitionModal-{{ it.competition.pk }}"
-                            title="Vymazať">
+                    <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteCompetitionModal-{{ it.competition.pk }}" title="Vymazať">
                       <i class="bi bi-trash"></i>
                     </button>
                   {% endif %}
                 </div>
               </div>
-
-              {% if it.can_delete %}
-                <div class="modal fade" id="deleteCompetitionModal-{{ it.competition.pk }}" tabindex="-1"
-                    aria-labelledby="deleteCompetitionModalLabel-{{ it.competition.pk }}" aria-hidden="true">
-                  <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content bg-dark border-secondary">
-                      <div class="modal-header border-secondary">
-                        <h5 class="modal-title" id="deleteCompetitionModalLabel-{{ it.competition.pk }}">
-                          Vymazať súťaž
-                        </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Zavrieť"></button>
-                      </div>
-                      <div class="modal-body text-light">
-                        Prajete si zmazať súťaž <strong class="text-white">{{ it.name }}</strong>?
-                      </div>
-                      <div class="modal-footer border-secondary">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nie</button>
-                        <form method="post" action="{% url 'competitions:competition_delete' it.competition.pk %}">
-                          {% csrf_token %}
-                          <button type="submit" class="btn btn-danger">Áno, vymazať</button>
-                        </form>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              {% endif %}
 
             </div>
           </div>
@@ -138,14 +103,63 @@
       {% endfor %}
     </div>
 
+    {% for it in items %}
+      {% if it.can_cancel and it.status != 'Ukončená' %}
+        <div class="modal fade" id="cancelCompetitionModal-{{ it.competition.pk }}" tabindex="-1" aria-labelledby="cancelCompetitionModalLabel-{{ it.competition.pk }}" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title text-warning" id="cancelCompetitionModalLabel-{{ it.competition.pk }}">
+                  Zrušiť súťaž
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Zavrieť"></button>
+              </div>
+              <div class="modal-body text-light">
+                Prajete si predčasne zrušiť súťaž <strong class="text-white">{{ it.name }}</strong>? Táto akcia je nevratná.
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nie</button>
+                <form method="post" action="{% url 'competitions:competition_cancel' it.competition.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-warning text-dark fw-bold">Áno, zrušiť</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if it.can_delete %}
+        <div class="modal fade" id="deleteCompetitionModal-{{ it.competition.pk }}" tabindex="-1" aria-labelledby="deleteCompetitionModalLabel-{{ it.competition.pk }}" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title text-danger" id="deleteCompetitionModalLabel-{{ it.competition.pk }}">
+                  Vymazať súťaž
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Zavrieť"></button>
+              </div>
+              <div class="modal-body text-light">
+                Prajete si natrvalo zmazať súťaž <strong class="text-white">{{ it.name }}</strong>?
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nie</button>
+                <form method="post" action="{% url 'competitions:competition_delete' it.competition.pk %}">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-danger">Áno, vymazať</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+    {% endfor %}
+
     <div class="mt-4 card border-secondary">
       <div class="card-header fw-semibold">TODO</div>
       <div class="card-body">
         <ul class="mb-0">
-          <li>Potvrdenie zrušenia súťaže dať do modalu ako pri vymazaní</li>
           <li>Možnosť upraviť body za rybu pri úlovku</li>
-          <li>Pokiaľ je súťaž ukončená nedá sa už upravovať a ani zrušiť</li>
-          <li>Po kliknutí na vymazanie súťaže vyskočí modal okno ale, cez ktoré sa nedá pokračovať</li>
         </ul>
       </div>
     </div>
