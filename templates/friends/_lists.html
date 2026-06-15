@@ -1,138 +1,216 @@
-{% load friends_extras %}
-<div class="row g-3">
-  <div class="col-12 col-lg-4">
-    <div class="card h-100 border-secondary">
-      <div class="card-header fw-semibold d-flex align-items-center justify-content-between">
-        <span>✅ Priatelia</span>
-        <span class="badge text-bg-secondary">{{ friends_accepted|length }}</span>
-      </div>
-      <div class="card-body p-0">
-        {% if friends_accepted %}
-          <div class="list-group list-group-flush">
-            {% for fr in friends_accepted %}
-              {% with u=fr|other_user:request.user %}
-                <div class="list-group-item d-flex justify-content-between align-items-center">
-                  <div class="me-3">
-                    <div class="fw-semibold">{% firstof u.get_full_name u.username %}</div>
-                    <div class="text-secondary small">@{{ u.username }}</div>
-                  </div>
-
-                  <form
-                    method="post"
-                    action="{% url 'friends:remove_friend' fr.id %}"
-                    hx-post="{% url 'friends:remove_friend' fr.id %}"
-                    hx-target="#friends-lists"
-                    hx-swap="innerHTML"
-                  >
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-danger btn-sm">Odstrániť</button>
-                  </form>
-                </div>
-              {% endwith %}
-            {% endfor %}
-          </div>
-        {% else %}
-          <div class="p-3">
-            <div class="alert alert-info mb-0">Zatiaľ nemáš žiadnych priateľov.</div>
-          </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
-  <div class="col-12 col-lg-4">
-    <div class="card h-100 border-secondary">
-      <div class="card-header fw-semibold d-flex align-items-center justify-content-between">
-        <span>📩 Prijaté žiadosti</span>
-        <span class="badge text-bg-secondary">{{ friends_incoming|length }}</span>
-      </div>
-      <div class="card-body p-0">
-        {% if friends_incoming %}
-          <div class="list-group list-group-flush">
-            {% for fr in friends_incoming %}
-              {% with u=fr|other_user:request.user %}
-                <div class="list-group-item">
-                  <div class="d-flex justify-content-between align-items-start gap-2">
-                    <div class="me-2">
-                      <div class="fw-semibold">{% firstof u.get_full_name u.username %}</div>
-                      <div class="text-secondary small">@{{ u.username }}</div>
-                      <div class="text-secondary small">Žiadosť: {{ fr.created_at|date:"d.m.Y H:i" }}</div>
+<div id="friends-lists-container" class="row g-4">
+    <div class="col-md-6">
+        <div class="card h-100 shadow" style="background: var(--surface-card); border: 1px solid var(--border-light); backdrop-filter: blur(16px); border-radius: 16px;">
+            <div class="card-header bg-transparent border-bottom" style="border-color: var(--border-light) !important; padding: 1.25rem;">
+                <h5 class="mb-0 fw-bold text-white d-flex align-items-center gap-2">
+                    <i class="bi bi-person-plus-fill text-info"></i> Prijaté žiadosti
+                </h5>
+            </div>
+            <div class="card-body" style="padding: 1.25rem;">
+                {% if friends_incoming %}
+                    <div class="d-flex flex-column gap-3">
+                        {% for fr in friends_incoming %}
+                            {% with sender=fr.requested_by %}
+                            <div class="d-flex align-items-center justify-content-between p-3" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-light); border-radius: 12px;">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
+                                         style="width: 42px; height: 42px; background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%); font-size: 14px; border: 1px solid rgba(255, 255, 255, 0.2);">
+                                        {{ sender.username|slice:":2"|upper }}
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-semibold text-white">{{ sender.get_full_name|default:sender.username }}</h6>
+                                        <small style="color: rgba(255, 255, 255, 0.4); font-size: 12px;">@{{ sender.username }}</small>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button hx-post="{% url 'friends:accept_request' fr.id %}"
+                                            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                                            hx-target="#friends-lists-container"
+                                            hx-swap="outerHTML"
+                                            class="btn btn-sm btn-success d-flex align-items-center gap-1 text-white px-3 fw-semibold"
+                                             style="border-radius: 8px; background-color: #198754; border: none;">
+                                        <i class="bi bi-check-lg"></i> Prijať
+                                    </button>
+                                    <button hx-post="{% url 'friends:decline_request' fr.id %}"
+                                            hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                                            hx-target="#friends-lists-container"
+                                            hx-swap="outerHTML"
+                                            class="btn btn-sm btn-outline-danger d-flex align-items-center gap-1 px-2.5"
+                                            style="border-radius: 8px; border-color: rgba(220, 53, 69, 0.4); color: #ea868f;">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endwith %}
+                        {% endfor %}
                     </div>
-                    <div class="d-flex flex-wrap gap-2">
-                      <form
-                        method="post"
-                        action="{% url 'friends:accept_request' fr.id %}"
-                        hx-post="{% url 'friends:accept_request' fr.id %}"
-                        hx-target="#friends-lists"
-                        hx-swap="innerHTML"
-                      >
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-success btn-sm">Prijať</button>
-                      </form>
-
-                      <form
-                        method="post"
-                        action="{% url 'friends:decline_request' fr.id %}"
-                        hx-post="{% url 'friends:decline_request' fr.id %}"
-                        hx-target="#friends-lists"
-                        hx-swap="innerHTML"
-                      >
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-danger btn-sm">Zamietnuť</button>
-                      </form>
+                {% else %}
+                    <div class="text-center py-4 text-muted opacity-50">
+                        <i class="bi bi-inbox fs-2 mb-2 d-block"></i>
+                        <p class="mb-0" style="font-size: 14px;">Žiadne nové žiadosti.</p>
                     </div>
-                  </div>
-                </div>
-              {% endwith %}
-            {% endfor %}
-          </div>
-        {% else %}
-          <div class="p-3">
-            <div class="alert alert-secondary mb-0">Žiadne prijaté žiadosti.</div>
-          </div>
-        {% endif %}
-      </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
-  </div>
 
-  <div class="col-12 col-lg-4">
-    <div class="card h-100 border-secondary">
-      <div class="card-header fw-semibold d-flex align-items-center justify-content-between">
-        <span>📤 Odoslané žiadosti</span>
-        <span class="badge text-bg-secondary">{{ friends_outgoing|length }}</span>
-      </div>
-      <div class="card-body p-0">
-        {% if friends_outgoing %}
-          <div class="list-group list-group-flush">
-            {% for fr in friends_outgoing %}
-              {% with u=fr|other_user:request.user %}
-                <div class="list-group-item d-flex justify-content-between align-items-center">
-                  <div class="me-3">
-                    <div class="fw-semibold">{% firstof u.get_full_name u.username %}</div>
-                    <div class="text-secondary small">@{{ u.username }}</div>
-                    <div class="text-secondary small">Odoslané: {{ fr.created_at|date:"d.m.Y H:i" }}</div>
-                  </div>
-
-                  <form
-                    method="post"
-                    action="{% url 'friends:remove_friend' fr.id %}"
-                    hx-post="{% url 'friends:remove_friend' fr.id %}"
-                    hx-target="#friends-lists"
-                    hx-swap="innerHTML"
-                  >
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-light btn-sm">Zrušiť</button>
-                  </form>
-                </div>
-              {% endwith %}
-            {% endfor %}
-          </div>
-        {% else %}
-          <div class="p-3">
-            <div class="alert alert-secondary mb-0">Žiadne odoslané žiadosti.</div>
-          </div>
-        {% endif %}
-      </div>
+    <div class="col-md-6">
+        <div class="card h-100 shadow" style="background: var(--surface-card); border: 1px solid var(--border-light); backdrop-filter: blur(16px); border-radius: 16px;">
+            <div class="card-header bg-transparent border-bottom" style="border-color: var(--border-light) !important; padding: 1.25rem;">
+                <h5 class="mb-0 fw-bold text-white d-flex align-items-center gap-2">
+                    <i class="bi bi-send-fill text-muted"></i> Odoslané žiadosti
+                </h5>
+            </div>
+            <div class="card-body" style="padding: 1.25rem;">
+                {% if friends_outgoing %}
+                    <div class="d-flex flex-column gap-3">
+                        {% for fr in friends_outgoing %}
+                            {% if fr.user_a_id == request.user.id %}
+                                {% with target_user=fr.user_b %}
+                                    <div class="d-flex align-items-center justify-content-between p-3" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-light); border-radius: 12px;">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
+                                                 style="width: 42px; height: 42px; background: rgba(255, 255, 255, 0.1); font-size: 14px; border: 1px solid var(--border-light);">
+                                                {{ target_user.username|slice:":2"|upper }}
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fw-semibold text-white">{{ target_user.get_full_name|default:target_user.username }}</h6>
+                                                <small style="color: rgba(255, 255, 255, 0.4); font-size: 12px;">@{{ target_user.username }}</small>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge d-flex align-items-center gap-1 px-2.5 py-1.5" 
+                                                  style="background: rgba(251, 191, 36, 0.1); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.2); font-weight: 600; border-radius: 6px; font-size: 12px;">
+                                                <i class="bi bi-clock-history"></i> Odoslané
+                                            </span>
+                                            <button hx-post="{% url 'friends:remove_friend' fr.id %}"
+                                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                                                    hx-target="#friends-lists-container"
+                                                    hx-swap="outerHTML"
+                                                    hx-confirm="Naozaj chcete zrušiť túto žiadosť?"
+                                                    class="btn btn-sm btn-link p-1 text-danger badge-hover"
+                                                    title="Zrušiť žiadosť">
+                                                <i class="bi bi-trash3 fs-6"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endwith %}
+                            {% else %}
+                                {% with target_user=fr.user_a %}
+                                    <div class="d-flex align-items-center justify-content-between p-3" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-light); border-radius: 12px;">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
+                                                 style="width: 42px; height: 42px; background: rgba(255, 255, 255, 0.1); font-size: 14px; border: 1px solid var(--border-light);">
+                                                {{ target_user.username|slice:":2"|upper }}
+                                            </div>
+                                            <div>
+                                                <h6 class="mb-0 fw-semibold text-white">{{ target_user.get_full_name|default:target_user.username }}</h6>
+                                                <small style="color: rgba(255, 255, 255, 0.4); font-size: 12px;">@{{ target_user.username }}</small>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="badge d-flex align-items-center gap-1 px-2.5 py-1.5" 
+                                                  style="background: rgba(251, 191, 36, 0.1); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.2); font-weight: 600; border-radius: 6px; font-size: 12px;">
+                                                <i class="bi bi-clock-history"></i> Odoslané
+                                            </span>
+                                            <button hx-post="{% url 'friends:remove_friend' fr.id %}"
+                                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                                                    hx-target="#friends-lists-container"
+                                                    hx-swap="outerHTML"
+                                                    hx-confirm="Naozaj chcete zrušiť túto žiadosť?"
+                                                    class="btn btn-sm btn-link p-1 text-danger badge-hover"
+                                                    title="Zrušiť žiadosť">
+                                                <i class="bi bi-trash3 fs-6"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-4 text-muted opacity-50">
+                        <i class="bi bi-send fs-2 mb-2 d-block"></i>
+                        <p class="mb-0" style="font-size: 14px;">Žiadne odoslané žiadosti.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
     </div>
-  </div>
+
+    <div class="col-12 mt-4">
+        <div class="card shadow" style="background: var(--surface-card); border: 1px solid var(--border-light); backdrop-filter: blur(16px); border-radius: 16px;">
+            <div class="card-header bg-transparent border-bottom" style="border-color: var(--border-light) !important; padding: 1.25rem;">
+                <h5 class="mb-0 fw-bold text-white d-flex align-items-center gap-2">
+                    <i class="bi bi-people-fill text-success"></i> Moji priatelia ({{ friends_accepted|length }})
+                </h5>
+            </div>
+            <div class="card-body" style="padding: 1.25rem;">
+                {% if friends_accepted %}
+                    <div class="row row-cols-1 row-cols-md-2 g-3">
+                        {% for fr in friends_accepted %}
+                            {% if fr.user_a_id == request.user.id %}
+                                {% with u=fr.user_b %}
+                                    <div class="col">
+                                        <div class="d-flex align-items-center justify-content-between p-3" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-light); border-radius: 12px;">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
+                                                     style="width: 44px; height: 44px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); font-size: 14px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                                                    {{ u.username|slice:":2"|upper }}
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0 fw-semibold text-white">{{ u.get_full_name|default:u.username }}</h6>
+                                                    <small style="color: rgba(255, 255, 255, 0.4); font-size: 12px;">@{{ u.username }}</small>
+                                                </div>
+                                            </div>
+                                            <button hx-post="{% url 'friends:remove_friend' fr.id %}"
+                                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                                                    hx-target="#friends-lists-container"
+                                                    hx-swap="outerHTML"
+                                                    hx-confirm="Naozaj si prajete odobrať používateľa {{ u.username }} z priateľov?"
+                                                    class="btn btn-sm btn-outline-danger px-3 d-flex align-items-center gap-1"
+                                                    style="border-radius: 8px; border-color: rgba(220, 53, 69, 0.3);">
+                                                <i class="bi bi-person-x"></i> Odstrániť
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endwith %}
+                            {% else %}
+                                {% with u=fr.user_a %}
+                                    <div class="col">
+                                        <div class="d-flex align-items-center justify-content-between p-3" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-light); border-radius: 12px;">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold" 
+                                                     style="width: 44px; height: 44px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); font-size: 14px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                                                    {{ u.username|slice:":2"|upper }}
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0 fw-semibold text-white">{{ u.get_full_name|default:u.username }}</h6>
+                                                    <small style="color: rgba(255, 255, 255, 0.4); font-size: 12px;">@{{ u.username }}</small>
+                                                </div>
+                                            </div>
+                                            <button hx-post="{% url 'friends:remove_friend' fr.id %}"
+                                                    hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
+                                                    hx-target="#friends-lists-container"
+                                                    hx-swap="outerHTML"
+                                                    hx-confirm="Naozaj si prajete odobrať používateľa {{ u.username }} z priateľov?"
+                                                    class="btn btn-sm btn-outline-danger px-3 d-flex align-items-center gap-1"
+                                                    style="border-radius: 8px; border-color: rgba(220, 53, 69, 0.3);">
+                                                <i class="bi bi-person-x"></i> Odstrániť
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endwith %}
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 text-muted opacity-50">
+                        <i class="bi bi-emoji-frown fs-1 mb-2 d-block"></i>
+                        <p class="mb-0">Zatiaľ nemáte žiadnych priateľov. Skúste niekoho vyhľadať vyššie!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 </div>

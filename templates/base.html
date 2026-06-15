@@ -24,6 +24,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+  
   {% block extra_css %}{% endblock %}
 </head>
 
@@ -31,6 +33,16 @@
   {% load static %}
 
   <style>
+    .swal2-popup.fishing-theme {
+      background: var(--bg-deep) !important;
+      border: 1px solid var(--border-light) !important;
+      border-radius: 16px !important;
+      backdrop-filter: blur(16px);
+      color: var(--text-main) !important;
+    }
+    .swal2-title { color: #f1f5f9 !important; }
+    .swal2-html-container { color: #94a3b8 !important; }
+
     .form-control, .form-select {
         background-color: rgba(255, 255, 255, 0.05) !important;
         border: 1px solid rgba(255, 255, 255, 0.15) !important;
@@ -71,6 +83,8 @@
     .form-control::file-selector-button:hover {
         background-color: rgba(255, 255, 255, 0.2) !important;
     }
+
+    .badge-hover:hover { color: #dc3545 !important; transition: color 0.2s; }
   </style>
 
   {% if user.is_authenticated %}
@@ -126,7 +140,6 @@
       document.querySelectorAll("[data-pending-count]").forEach((el) => {
         el.textContent = count;
 
-        // hide badge if needed
         if (el.dataset.pendingHideZero === "1") {
           el.style.display = count > 0 ? "" : "none";
         }
@@ -150,15 +163,20 @@
           setCount(data.unread_count);
         }
 
-        //if (data.refresh_pending) {
-          //document.body.dispatchEvent(new Event("pendingRefresh", { bubbles: true }));
-        // }
-      };
-
-      socket.onerror = (e) => console.log("WS error", e);
-      socket.onclose = (e) => {
-        console.log("WS closed", e.code);
-        setTimeout(connect, 1500);
+        if (typeof htmx !== 'undefined') {
+            const navDropdown = document.getElementById('nav-notifications-dropdown');
+            if (navDropdown) {
+                htmx.ajax('GET', window.location.href, {
+                    target: '#nav-notifications-dropdown',
+                    select: '#nav-notifications-dropdown',
+                    swap: 'outerHTML'
+                });
+            }
+            
+            if (data.refresh_pending) {
+                document.body.dispatchEvent(new Event("pendingRefresh"));
+            }
+        }
       };
     }
 
@@ -199,8 +217,37 @@
   <!-- Bootstrap 5 JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   
-  <!-- UI helpers -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   <script src="{% static 'js/password_toggle.js' %}"></script>
+
+  <script>
+    document.addEventListener("htmx:confirm", function(e) {
+      if (!e.detail.question) {
+        return;
+      }
+
+      e.preventDefault();
+      Swal.fire({
+        title: 'Ste si istý?',
+        text: e.detail.question,
+        icon: 'warning',
+        customClass: {
+          popup: 'fishing-theme',
+          confirmButton: 'btn btn-danger',
+          cancelButton: 'btn btn-outline-light ms-2'
+        },
+        buttonsStyling: false,
+        showCancelButton: true,
+        confirmButtonText: 'Áno',
+        cancelButtonText: 'Zrušiť',
+      }).then(function(result) {
+        if (result.isConfirmed) {
+          e.detail.issueRequest(true);
+        }
+      });
+    });
+  </script>
   {% block extra_js %}{% endblock %}
   
 </body>

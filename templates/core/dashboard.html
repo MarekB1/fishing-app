@@ -90,32 +90,37 @@
     </div>
     {% endif %}
 
-    {% if nav_is_organizer and unread_notifications %}
-    <div class="col-12 col-sm-6 col-lg-3">
+    <div id="pending-card-wrapper" 
+         class="col-12 col-sm-6 col-lg-3 {% if not pending_catches_count %}d-none{% endif %}"
+         hx-get="{% url 'core:dashboard' %}"
+         hx-trigger="pendingRefresh from:body"
+         hx-select="#pending-card-wrapper"
+         hx-swap="outerHTML">
+         
+      {% if pending_catches_count > 0 %}
       <div class="card h-100 shadow-sm card-hover border-warning" style="background-color: rgba(255, 193, 7, 0.05);">
         <div class="card-body d-flex flex-column">
           <div class="fw-semibold mb-2 cursor-default text-warning">✅ Čaká na schválenie</div>
           <p class="text-secondary flex-grow-1 mb-3 cursor-default">Úlovky čakajúce na kontrolu.</p>
           <a class="btn btn-warning d-flex align-items-center justify-content-between text-dark fw-bold" href="{% url 'notifications:pending' %}">
             <span>Spracovať úlovky</span>
-            <span class="badge text-bg-dark" id="pending-count-dashboard" data-pending-count>
-              {{ unread_notifications }}
+            <span class="badge text-bg-dark">
+              {{ pending_catches_count }}
             </span>
           </a>
         </div>
       </div>
+      {% endif %}
+      
     </div>
-    {% endif %}
-    
-  </div>
 
   <div class="mt-4">
     <div class="card border-secondary">
       <div class="card-header fw-semibold">TODO</div>
       <div class="card-body">
         <ul class="mb-0">
-          <li>Pridať oficiálne oznámenia (napr pridanie do súťaže), bude to svietiť pri profile</li>
-          <li>Spraviť oznámenia</li>
+          <li>Rozrobené upozornenia - ešte dorobiť nastavavenie typou, ktoré chce dostávať user</li>
+          <li>Rozrobená zmena alertov na pop up okná vo friends (pri mazaní odoslane žiadosti a mazaní priateľov)</li>
           <li>Možnosť likes</li>
           <li>"Čaká na spracovanie" nefunguje, celkovo pending nefunguje</li>
           <li>Je tam oznámenie na "Priateľstvo bolo potvrdené" treba ho doštilizovať</li>

@@ -2,6 +2,9 @@
 from django.conf import settings
 from django.db import models
 from django.db.models import Q
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.db import transaction
 
 from apps.competitions.models import Competition
 
@@ -9,10 +12,16 @@ from apps.competitions.models import Competition
 class Notification(models.Model):
     class Type(models.TextChoices):
         CATCH_CREATED = "CATCH_CREATED", "Catch created"
-        CATCH_REVIEWED = "CATCH_REVIEWED", "Catch reviewed"
+        CATCH_APPROVED = "CATCH_APPROVED", "Catch approved"
+        CATCH_REJECTED = "CATCH_REJECTED", "Catch rejected"
+        FRIEND_REQUEST = "FRIEND_REQUEST", "Friend request"
+        FRIEND_ACCEPTED = "FRIEND_ACCEPTED", "Friend accepted"
+        COMP_CANCELLED = "COMP_CANCELLED", "Competition cancelled"
+        ORGANIZER_PROMOTED = "ORGANIZER_PROMOTED", "Organizer promoted"
+        COMP_ADDED = "COMP_ADDED", "Added to competition"
 
     competition = models.ForeignKey(
-        Competition, on_delete=models.CASCADE, related_name="notifications"
+        Competition, on_delete=models.CASCADE, related_name="notifications", null=True, blank=True
     )
     recipient = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="notifications"
@@ -39,3 +48,16 @@ class Notification(models.Model):
         from django.utils import timezone
         self.read_at = when or timezone.now()
         self.save(update_fields=["read_at"])
+
+@receiver(post_save, sender=Notification)
+def auto_broadcast_notification(sender, instance, created, **kwargs):
+    """
+    Keď vznikne akákoľvek nová notifikácia (priateľstvo, schválenie, atď.),
+    automaticky pošleme WebSocket signál príjemcovi.
+    """
+    if created:
+        def send_ws():
+            from apps.notifications.realtime import broadcast_unread_count
+            broadcast_unread_count(instance.recipient_id, refresh_pending=False)
+            
+        transaction.on_commit(send_ws)

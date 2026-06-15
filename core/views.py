@@ -6,6 +6,7 @@ from django.utils import timezone
 from django.db.models import Q
 
 from apps.competitions.models import Competition
+from apps.catches.models import Catch
 from .forms import (
     ProfileUpdateForm,
     BootstrapPasswordChangeForm,
@@ -54,10 +55,19 @@ def dashboard(request):
 
         messages.error(request, "Formulár sa nepodarilo uložiť. Skontroluj vyplnené polia.")
 
+    organizer_comps = base_qs.filter(
+        Q(created_by=user) | Q(memberships__user=user, memberships__is_organizer=True)
+    )
+    pending_catches_count = Catch.objects.filter(
+        competition__in=organizer_comps,
+        status=Catch.Status.PENDING
+    ).count()    
+
     return render(request, "core/dashboard.html", {
         "hide_nav_links_desktop": True,
         "active_competition": active_competition,
         "feedback_form": feedback_form,
+        "pending_catches_count": pending_catches_count,
     })
 
 

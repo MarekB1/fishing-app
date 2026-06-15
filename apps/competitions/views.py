@@ -15,6 +15,7 @@ from django.db.models import Q
 from django.urls import reverse
 from django.db import IntegrityError
 
+from apps.notifications.models import Notification
 from .forms import CompetitionForm
 from .models import Competition, CompetitionMembership, Invitation, InvitationUse
 from apps.catches.models import Catch
@@ -149,6 +150,16 @@ def competition_cancel(request, pk: int):
     competition.save(update_fields=["cancelled_at"])
 
     messages.success(request, "Súťaž bola zrušená.")
+
+    members = CompetitionMembership.objects.filter(competition=competition).exclude(user=request.user)
+    Notification.objects.bulk_create([
+        Notification(
+            competition=competition,
+            recipient=m.user,
+            type=Notification.Type.COMP_CANCELLED,
+            payload={"competition_name": competition.name}
+        ) for m in members
+    ])
     return redirect("competitions:my_competitions")
 
 @require_POST
@@ -429,6 +440,13 @@ def membership_grant_organizer(request, pk: int, membership_id: int):
         m.is_organizer = True
         m.save(update_fields=["is_organizer"])
 
+    Notification.objects.create(
+        competition=competition,
+        recipient=m.user,
+        type=Notification.Type.ORGANIZER_PROMOTED,
+        payload={"competition_name": competition.name}
+    )    
+
     return render(request, "competitions/_member_row.html", {
         "competition": competition,
         "m": m,
@@ -492,7 +510,7 @@ def membership_set_spot(request, pk: int, membership_id: int):
     error = None
 
     if raw == "":
-        spot = None  # vymazanie priradenia
+        spot = None 
     else:
         if not raw.isdigit():
             error = "Zadaj číslo."
@@ -519,13 +537,9 @@ def membership_set_spot(request, pk: int, membership_id: int):
 
     m.spot_number = spot
 
-    # if spot < 1 or spot > competition.fishing_spots_count:
-    #     error = f"Povolené je 1 až {competition.fishing_spots_count}."
-
     try:
         m.save(update_fields=["spot_number"])
     except IntegrityError:
-        # safety net pri race condition
         return render(request, "competitions/_member_row.html", {
             "competition": competition,
             "m": m,
@@ -994,31 +1008,26 @@ def invite_user_search(request):
             "limit_reached": limit_reached,
         })
 
-    # 2. Efektívny filter priateľov priamo v DB (ak je zaškrtnutý checkbox)
     if friends_only:
         friend_ids_query = Friendship.objects.filter(
             status=Friendship.Status.ACCEPTED
         ).filter(
             Q(user_a_id=request.user.id) | Q(user_b_id=request.user.id)
         )
-        # Získame ID všetkých priateľov pomocou Unionu alebo Q objektov
         qs = qs.filter(
             Q(friendships_as_a__user_b_id=request.user.id, friendships_as_a__status=Friendship.Status.ACCEPTED) |
             Q(friendships_as_b__user_a_id=request.user.id, friendships_as_b__status=Friendship.Status.ACCEPTED)
         ).distinct()
 
-    # 3. Vykonanie query s limitom
     users = list(qs.order_by("first_name", "last_name", "username")[:10])
     user_ids = [u.id for u in users]
 
-    # Pomocné sety pre badge v UI
     member_ids = set(
         CompetitionMembership.objects
         .filter(competition=competition, user_id__in=user_ids)
         .values_list("user_id", flat=True)
     )
 
-    # Zistíme, kto z výsledkov je reálne priateľ (pre zobrazenie ikonky/badge)
     friend_ids = set()
     fr_qs = Friendship.objects.filter(
         status=Friendship.Status.ACCEPTED
@@ -1055,21 +1064,25 @@ def invite_user_add(request, user_id: int):
     competition = get_object_or_404(Competition, pk=int(competition_id))
     _require_organizer_or_404(request.user, competition)
 
-    # ✅ najprv si načítaj "other" – používame ho nižšie
     other = get_object_or_404(User, pk=user_id, is_active=True)
 
-    # zistíme či je friend (na badge) – len raz
     is_friend = Friendship.objects.filter(
         status=Friendship.Status.ACCEPTED
     ).filter(
         Friendship.pair_q(request.user.id, other.id)
     ).exists()
 
-    # je už člen?
     membership = CompetitionMembership.objects.filter(
         competition=competition,
         user=other,
     ).first()
+
+    Notification.objects.create(
+        competition=competition,
+        recipient=other,
+        type=Notification.Type.COMP_ADDED,
+        payload={"competition_name": competition.name}
+    )
 
     if membership:
         return render(request, "competitions/_invite_user_row.html", {
@@ -1081,7 +1094,6 @@ def invite_user_add(request, user_id: int):
             "assigned_spot": membership.spot_number,
         })
 
-    # ✅ ak je limit (iba neoficiálna) a user ešte nie je člen → blok
     if _unofficial_limit_reached(competition):
         return render(request, "competitions/_invite_user_row.html", {
             "competition": competition,
@@ -1091,7 +1103,6 @@ def invite_user_add(request, user_id: int):
             "limit_reached": True,
         })
 
-    # lovné miesto je vybraté v hornom toolbar-e (select #spotPicker)
     spot = _parse_spot_number(request.POST.get("spot_number"))
     spot_error = None
 
@@ -1111,13 +1122,11 @@ def invite_user_add(request, user_id: int):
         defaults={"role": CompetitionMembership.Role.CONTESTANT},
     )
 
-    # ak je spot zvolený a membership ho ešte nemá → priraď
     if spot is not None and membership.spot_number is None:
         membership.spot_number = spot
         try:
             membership.save(update_fields=["spot_number"])
         except IntegrityError:
-            # race condition / unikátny constraint (competition, spot_number)
             spot_error = f"Miesto {spot} už niekto medzičasom obsadil."
             membership.refresh_from_db(fields=["spot_number"])
 

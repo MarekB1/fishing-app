@@ -200,9 +200,6 @@ def catch_approve(request, pk: int):
 
     when = timezone.now()
     with transaction.atomic():
-        # --- NOVÁ LOGIKA VÝPOČTU BODOV ---
-        # Použijeme existujúcu build_scoreboard funkciu pre tento jeden úlovok
-        # Musíme ho poslať v zozname (Iterable)
         temp_scores = build_scoreboard(
             approved_catches=[catch], 
             rules=catch.competition.scoring_rules
@@ -211,18 +208,22 @@ def catch_approve(request, pk: int):
         assigned_points = 0
         if temp_scores:
             assigned_points = temp_scores[0].points
-        # ---------------------------------
 
         catch.status = Catch.Status.APPROVED
         catch.reviewed_by = request.user
         catch.reviewed_at = when
         catch.rejection_reason = ""
-        catch.points = assigned_points  # Uložíme vypočítané body 
+        catch.points = assigned_points  
         
-        # Pridaj "points" do update_fields
         catch.save(update_fields=["status", "reviewed_by", "reviewed_at", "rejection_reason", "points"])
 
-        # Notifikácie a broadcast ostávajú nezmenené
+        Notification.objects.create(
+            competition=catch.competition,
+            recipient=catch.user,
+            type=Notification.Type.CATCH_APPROVED,
+            payload={"species": catch.species, "points": float(assigned_points)}
+        )
+
         Notification.objects.filter(
             type=Notification.Type.CATCH_CREATED,
             payload__catch_id=catch.id,
@@ -251,9 +252,7 @@ def catch_reject(request, pk: int):
         messages.info(request, "Úlovok už bol skontrolovaný.")
         return redirect(request.POST.get("next") or "notifications:pending")
 
-    # 1) detail page posiela "rejection_reason" v POSTe
     reason = (request.POST.get("rejection_reason") or "").strip()
-    # 2) pending list používa hx-prompt, ten príde v hlavičke
     if not reason:
         reason = (request.headers.get("HX-Prompt") or "").strip()
 
@@ -264,6 +263,13 @@ def catch_reject(request, pk: int):
         catch.reviewed_at = when
         catch.rejection_reason = reason
         catch.save(update_fields=["status", "reviewed_by", "reviewed_at", "rejection_reason"])
+
+        Notification.objects.create(
+            competition=catch.competition,
+            recipient=catch.user,
+            type=Notification.Type.CATCH_REJECTED,
+            payload={"species": catch.species, "reason": reason}
+        )
 
         Notification.objects.filter(
             type=Notification.Type.CATCH_CREATED,

@@ -11,37 +11,97 @@
           <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
             <div>
               <h1 class="h4 mb-1">Profil</h1>
-              <div class="text-secondary small">Upravíš meno, priezvisko, email a heslo.</div>
+              <!-- <div class="text-secondary small">Upravíš meno, priezvisko, email a heslo.</div> -->
             </div>
           </div>
 
           <!-- Tabs -->
-          <ul class="nav nav-tabs" role="tablist">
-            <li class="nav-item" role="presentation">
-              <button
-                class="nav-link {% if active_tab == 'profile' %}active{% endif %}"
-                data-bs-toggle="tab"
-                data-bs-target="#tab-profile"
-                type="button"
-                role="tab"
-                aria-controls="tab-profile"
-                aria-selected="{% if active_tab == 'profile' %}true{% else %}false{% endif %}">
-                Osobné údaje
-              </button>
-            </li>
-            <li class="nav-item" role="presentation">
-              <button
-                class="nav-link {% if active_tab == 'password' %}active{% endif %}"
-                data-bs-toggle="tab"
-                data-bs-target="#tab-password"
-                type="button"
-                role="tab"
-                aria-controls="tab-password"
-                aria-selected="{% if active_tab == 'password' %}true{% else %}false{% endif %}">
-                Heslo
-              </button>
-            </li>
-          </ul>
+          <style>
+            .fishing-nav-wrapper {
+              background-color: #041612;
+              border-radius: 5px;
+              padding: 4px 10px 1px 10px; 
+              margin-bottom: 24px;
+              display: flex;
+              align-items: flex-end;
+            }
+
+            .fishing-tabs {
+              border-bottom: none;
+              margin: 0;
+              gap: 8px;
+            }
+
+            .fishing-tabs .nav-link {
+              position: relative;
+              background-color: transparent;
+              color: #00b4d8;
+              border: none;
+              border-radius: 12px 12px 0 0;
+              padding: 0.6rem 1.25rem;
+              font-weight: 500;
+              transition: color 0.2s ease-in-out;
+              z-index: 1;
+            }
+
+            .fishing-tabs .nav-link:hover {
+              color: #ffffff;
+            }
+
+            .fishing-tabs .nav-link.active {
+              background-color: #0a2b24;
+              color: #ffffff;
+            }
+
+            .fishing-tabs .nav-link.active::before,
+            .fishing-tabs .nav-link.active::after {
+              content: "";
+              position: absolute;
+              bottom: 0;
+              width: 12px;
+              height: 12px;
+              z-index: 0;
+            }
+
+            .fishing-tabs .nav-link.active::before {
+              left: -12px;
+              background: radial-gradient(circle at top left, transparent 12px, #0a2b24 13px);
+            }
+
+            .fishing-tabs .nav-link.active::after {
+              right: -12px;
+              background: radial-gradient(circle at top right, transparent 12px, #0a2b24 13px);
+            }
+          </style>
+
+          <div class="fishing-nav-wrapper shadow-sm">
+            <ul class="nav nav-tabs fishing-tabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link {% if active_tab == 'profile' %}active{% endif %}"
+                  data-bs-toggle="tab"
+                  data-bs-target="#tab-profile"
+                  type="button"
+                  role="tab"
+                  aria-controls="tab-profile"
+                  aria-selected="{% if active_tab == 'profile' %}true{% else %}false{% endif %}">
+                  <i class="bi bi-person me-2"></i>Osobné údaje
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button
+                  class="nav-link {% if active_tab == 'password' %}active{% endif %}"
+                  data-bs-toggle="tab"
+                  data-bs-target="#tab-password"
+                  type="button"
+                  role="tab"
+                  aria-controls="tab-password"
+                  aria-selected="{% if active_tab == 'password' %}true{% else %}false{% endif %}">
+                  <i class="bi bi-shield-lock me-2"></i>Heslo
+                </button>
+              </li>
+            </ul>
+          </div>
 
           <div class="tab-content pt-3">
             <!-- TAB: Profile -->

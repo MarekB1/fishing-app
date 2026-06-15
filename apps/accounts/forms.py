@@ -32,7 +32,7 @@ class EmailAuthenticationForm(BootstrapFormMixin, AuthenticationForm):
         label="E-mail",
         widget=forms.EmailInput(attrs={
             "autocomplete": "email",
-            "placeholder": "napr. marek@example.com",
+            "placeholder": "meno@priezvisko.com",
         }),
     )
 
@@ -54,7 +54,7 @@ class SignUpForm(BootstrapFormMixin, UserCreationForm):
         required=True,
         widget=forms.EmailInput(attrs={
             "autocomplete": "email",
-            "placeholder": "napr. marek@example.com",
+            "placeholder": "meno@priezvisko.com",
         }),
     )
 

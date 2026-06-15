@@ -12,6 +12,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_POST
 from django.utils import timezone
 
+from apps.notifications.models import Notification
+
 from .models import Friendship
 
 User = get_user_model()
@@ -137,7 +139,6 @@ def send_request(request, user_id: int):
     if other.id == me.id:
         return HttpResponseBadRequest("Nemôžeš pridať sám seba.")
 
-    # kanonická dvojica
     a_id, b_id = sorted([me.id, other.id])
 
     fr, created = Friendship.objects.select_for_update().get_or_create(
@@ -153,24 +154,26 @@ def send_request(request, user_id: int):
             if fr.requested_by_id == me.id:
                 messages.info(request, "Žiadosť už bola odoslaná.")
             else:
-                # druhý ťa už pozval → kliknutím "Pridať" to rovno prijmeme
                 fr.mark_accepted()
-                messages.success(request, "Žiadosť bola prijatá. Ste priatelia.")
+                # messages.success(request, "Žiadosť bola prijatá. Ste priatelia.")
         else:
-            # po zamietnutí umožníme poslať znova (reset na PENDING)
             fr.requested_by = me
             fr.status = Friendship.Status.PENDING
             fr.responded_at = None
             fr.save(update_fields=["requested_by", "status", "responded_at", "updated_at"])
-            messages.success(request, "Žiadosť bola odoslaná.")
-    else:
-        messages.success(request, "Žiadosť bola odoslaná.")
+            # messages.success(request, "Žiadosť bola odoslaná.")
+    # else:
+    #     messages.success(request, "Žiadosť bola odoslaná.")
 
-    # HTMX: vrátime pre-renderovaný riadok pre daného usera (button sa zmení)
+    Notification.objects.create(
+        recipient=other,
+        type=Notification.Type.FRIEND_REQUEST,
+        payload={"sender_name": me.get_full_name() or me.username}
+    )
+
     if request.htmx:
-        # znovu dopočítaj state pre toho druhého
         fr.refresh_from_db()
-        state = "none"
+        
         if fr.status == Friendship.Status.ACCEPTED:
             state = "friend"
         elif fr.status == Friendship.Status.PENDING:
@@ -209,7 +212,13 @@ def accept_request(request, friendship_id: int):
         return HttpResponseBadRequest("Toto je tvoja odoslaná žiadosť.")
 
     fr.mark_accepted()
-    messages.success(request, "Priateľstvo bolo potvrdené.")
+    # messages.success(request, "Priateľstvo bolo potvrdené.")
+
+    Notification.objects.create(
+        recipient=fr.requested_by,
+        type=Notification.Type.FRIEND_ACCEPTED,
+        payload={"sender_name": me.get_full_name() or me.username}
+    )
 
     if request.htmx:
         return render(request, "friends/_lists.html", _lists_context(me))
@@ -232,12 +241,11 @@ def decline_request(request, friendship_id: int):
     if me.id not in (fr.user_a_id, fr.user_b_id):
         return HttpResponseBadRequest("Nemáš prístup.")
 
-    # môže zamietnuť iba ten, kto nežiada
     if fr.requested_by_id == me.id:
         return HttpResponseBadRequest("Toto je tvoja odoslaná žiadosť.")
 
     fr.mark_declined()
-    messages.info(request, "Žiadosť bola zamietnutá.")
+    # messages.info(request, "Žiadosť bola zamietnutá.")
 
     if request.htmx:
         return render(request, "friends/_lists.html", _lists_context(me))
@@ -257,11 +265,10 @@ def remove_friend(request, friendship_id: int):
     if me.id not in (fr.user_a_id, fr.user_b_id):
         return HttpResponseBadRequest("Nemáš prístup.")
 
-    # pri remove zrušíme (DECLINED) – nech je história a unikátnosť dvojice ostáva
     fr.status = Friendship.Status.DECLINED
     fr.responded_at = timezone.now()
     fr.save(update_fields=["status", "responded_at", "updated_at"])
-    messages.info(request, "Priateľ bol odstránený.")
+    # messages.info(request, "Priateľ bol odstránený.")
 
     if request.htmx:
         return render(request, "friends/_lists.html", _lists_context(me))

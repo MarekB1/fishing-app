@@ -39,7 +39,7 @@
             </dd>
 
             <dt class="col-4 text-secondary">Súťažiaci</dt>
-            <dd class="col-8">{{ catch.user.username }}</dd>
+            <dd class="col-8">{% firstof catch.user.get_full_name catch.user.username %}</dd>
 
             <dt class="col-4 text-secondary">Čas úlovku</dt>
             <dd class="col-8">{{ catch.caught_at|date:"d.m.Y H:i" }}</dd>
@@ -48,7 +48,7 @@
             <dd class="col-8">{% if catch.length_cm %}{{ catch.length_cm }} cm{% else %}—{% endif %}</dd>
 
             <dt class="col-4 text-secondary">Váha</dt>
-            <dd class="col-8">{% if catch.weight_kg %}{{ catch.weight_kg }} kg{% else %}—{% endif %}</dd>
+            <dd class="col-8">{% if catch.weight_kg %}{{ catch.weight_kg|floatformat:"-3" }} kg{% else %}—{% endif %}</dd>
 
             <dt class="col-4 text-secondary">Poznámka</dt>
             <dd class="col-8">{% if catch.note %}{{ catch.note }}{% else %}—{% endif %}</dd>
