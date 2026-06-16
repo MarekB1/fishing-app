@@ -153,14 +153,11 @@
 
       socket.onopen = () => console.log("WS open");
       socket.onmessage = (event) => {
-        console.log("--- DEBUG FE: Prijatá WebSocket správa! ---", event.data);
         let data;
         try { data = JSON.parse(event.data); } catch { return; }
 
         if (typeof data.unread_count === "number") {
-          console.log(`--- DEBUG FE: Starý lastCount: ${lastCount}, Nový data.unread_count: ${data.unread_count} ---`);
           if (data.unread_count > lastCount) {
-            console.log("--- DEBUG FE: Vytváram Swal.fire Toast! ---");
             playBeep();
             
             if (data.message_text) {
