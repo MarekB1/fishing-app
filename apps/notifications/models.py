@@ -53,8 +53,10 @@ class Notification(models.Model):
 
 @receiver(post_save, sender=Notification, dispatch_uid="ws_notification_sender_unique")
 def auto_broadcast_notification(sender, instance, created, **kwargs):
+    print(f"--- DEBUG BE: Signál Notification (ID: {instance.id}) spustený. Created: {created} ---")
     if created:
         def send_ws():
+            print(f"--- DEBUG BE: Odosielam cez WS do skupiny user_{instance.recipient_id} (Notif ID: {instance.id}) ---")
             from asgiref.sync import async_to_sync
             from channels.layers import get_channel_layer
             

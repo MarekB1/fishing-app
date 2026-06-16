@@ -96,16 +96,23 @@ def catch_create(request):
                 organizer_ids.add(int(catch.competition.created_by_id))
 
                 for uid in organizer_ids:
-                    Notification.objects.create(
-                        competition=catch.competition,
+                    already_notified = Notification.objects.filter(
                         recipient_id=uid,
                         type=Notification.Type.CATCH_CREATED,
-                        payload={
-                            "catch_id": catch.id,
-                            "species": catch.species,
-                            "contestant_id": request.user.id,
-                        },
-                    )
+                        payload__catch_id=catch.id
+                    ).exists()
+
+                    if not already_notified:
+                        Notification.objects.create(
+                            competition=catch.competition,
+                            recipient_id=uid,
+                            type=Notification.Type.CATCH_CREATED,
+                            payload={
+                                "catch_id": catch.id,
+                                "species": catch.species,
+                                "contestant_id": request.user.id,
+                            },
+                        )
 
             # messages.success(request, "Úlovok bol pridaný a čaká na schválenie.")
             return redirect("competitions:detail", pk=catch.competition_id)

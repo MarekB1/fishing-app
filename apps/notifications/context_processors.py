@@ -7,12 +7,12 @@ def unread_notifications(request):
     unread_qs = Notification.objects.filter(
         recipient=request.user, 
         read_at__isnull=True
-    ).select_related('competition').order_by('-created_at')
+    ).select_related('competition').order_by('-created_at').distinct() 
     
     read_qs = Notification.objects.filter(
         recipient=request.user, 
         read_at__isnull=False
-    ).select_related('competition').order_by('-created_at')[:3]
+    ).select_related('competition').order_by('-created_at').distinct()[:3]
 
     combined_notifications = list(unread_qs) + list(read_qs)
 

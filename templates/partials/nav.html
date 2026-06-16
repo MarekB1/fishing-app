@@ -46,6 +46,7 @@
 
                 {% if recent_notifications %}
                   {% for notif in recent_notifications %}
+                    {% ifchanged notif.id %}
                     <li class="d-flex align-items-start position-relative p-2 border-bottom text-wrap {% if notif.read_at %}opacity-50 bg-body-tertiary{% endif %}" id="notif-{{ notif.id }}">
                       
                       <div class="me-2 mt-1">
@@ -109,6 +110,7 @@
                       </div>
                       {% endif %} -->
                     </li>
+                    {% endifchanged %}
                   {% endfor %}
                 {% elif not nav_missing_spots_total %}
                   <li class="p-4 text-center text-muted" style="font-size: 0.9rem;">
