@@ -48,3 +48,16 @@ class DashboardFeedback(models.Model):
 
     def __str__(self):
         return f"{self.get_feedback_type_display()} • {self.get_section_display()} • {self.reporter}"
+    
+class TodoTask(models.Model):
+    title = models.CharField(max_length=200, verbose_name="Stručný názov")
+    description = models.TextField(verbose_name="Popis úlohy")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Vytvorené")
+
+    class Meta:
+        ordering = ("-created_at",)
+        verbose_name = "TODO úloha"
+        verbose_name_plural = "TODO úlohy"
+
+    def __str__(self):
+        return self.title

@@ -113,8 +113,16 @@
       {% endif %}
       
     </div>
+    
+  {% if user.is_staff %}
+      <div class="mb-3">
+          <a href="{% url 'core:todo_management' %}" class="btn btn-outline-warning btn-sm">
+              <i class="bi bi-wrench-adjustable me-1"></i> Otvoriť TODO Manažment
+          </a>
+      </div>
+  {% endif %}  
 
-  <div class="mt-4">
+  <!-- <div class="mt-4">
     <div class="card border-secondary">
       <div class="card-header fw-semibold">TODO</div>
       <div class="card-body">
@@ -125,5 +133,5 @@
         </ul>
       </div>
     </div>
-  </div>
+  </div> -->
 {% endblock %}

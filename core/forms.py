@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import PasswordChangeForm
 
+from .models import TodoTask
 from .models import DashboardFeedback
 
 User = get_user_model()
@@ -116,3 +117,19 @@ class DashboardFeedbackForm(BootstrapFormMixin, forms.ModelForm):
         if len(value) < 5:
             raise forms.ValidationError("Popis musí mať aspoň 5 znakov.")
         return value
+    
+class TodoTaskForm(forms.ModelForm):
+    class Meta:
+        model = TodoTask
+        fields = ('title', 'description')
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Napr. Oprava schvaľovania fotiek'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'rows': 3, 
+                'placeholder': 'Podrobný popis, čo všetko treba spraviť...'
+            }),
+        }    

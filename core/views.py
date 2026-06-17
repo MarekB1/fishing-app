@@ -4,7 +4,10 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
 from django.utils import timezone
 from django.db.models import Q
+from django.http import Http404
 
+from .forms import TodoTaskForm
+from .models import TodoTask
 from apps.competitions.models import Competition
 from apps.catches.models import Catch
 from .forms import (
@@ -115,3 +118,23 @@ def profile(request):
             "active_tab": active_tab,
         },
     )
+
+@login_required
+def todo_management(request):
+    if not request.user.is_staff:
+        raise Http404("Stránka neexistuje")
+
+    if request.method == "POST":
+        form = TodoTaskForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "TODO úloha bola úspešne pridaná.")
+            return redirect("core:todo_management")
+    else:
+        form = TodoTaskForm()
+
+    tasks = TodoTask.objects.all()
+    return render(request, "core/todo_management.html", {
+        "form": form,
+        "tasks": tasks,
+    })

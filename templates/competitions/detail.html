@@ -355,7 +355,6 @@
         <li>Úprava úlovku organizátorom</li>
         <li>notifikácia ak sa uloží lovné miesto</li>
         <li>Povoliť úpravu úlovku pre organizátora</li>
-        <li>Pokiaľ súťaž už neprebieha, nemôže sa dať pridať úlovok (Teraz je tam stále button na pridanie)!</li>
         <li>Zobraziť účastníkov v súťaži aj pre ostatných</li>
         <li>Organizátor si zvolí, či chce súťažiť alebo nie</li>
         <li>Do všetkých úlovkov pridať aj počet bodov</li>
@@ -368,30 +367,27 @@
         object-fit: cover;
     }
     
-    /* Nastavenie výšky pre zobrazenie približne 2 riadkov (4 karty) */
     .catch-scroll-container {
-        max-height: 950px; /* Ak by boli karty príliš zrezané alebo by sa ich zmestilo viac, uprav toto číslo */
+        max-height: 950px;
         overflow-y: auto;
         overflow-x: hidden;
     }
 
-    /* Moderný tmavý scrollbar prispôsobený appke */
     .custom-scrollbar::-webkit-scrollbar {
         width: 8px;
     }
     .custom-scrollbar::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.05); /* Jemný priehľadný podklad */
+        background: rgba(255, 255, 255, 0.05);
         border-radius: 10px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.2); /* Biela polopriehľadná "palička" */
+        background: rgba(255, 255, 255, 0.2); 
         border-radius: 10px;
     }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.4); /* Zvýraznenie po nabehnutí myšou */
+        background: rgba(255, 255, 255, 0.4); 
     }
 
-    /* Hover efekty na kartu */
     .card {
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }

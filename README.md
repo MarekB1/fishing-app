@@ -164,3 +164,17 @@ ForEach-Object {
     Get-Content $_.FullName | Out-File -FilePath "projekt_kontext.txt" -Append -Encoding utf8
     "`n`n" | Out-File -FilePath "projekt_kontext.txt" -Append -Encoding utf8
 }
+
+
+## Push a pull dát z databázy 
+<!--- Export dát s TODO --->
+python manage.py dumpdata core.todotask --indent 4 > todos.json
+
+<!--- Export dát s TODO --->
+klasický commit a push
+
+<!--- Export dát s TODO --->
+<!-- Teorecitky to viem spraviť aj cez klasický push a potom do terminálu import databázy -->
+git pull
+python manage.py loaddata todos.json
+

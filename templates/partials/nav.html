@@ -187,6 +187,13 @@
                 <li><a class="dropdown-item d-flex align-items-center gap-2 {% if current_view == 'competitions:competition_create' %}active{% endif %}" href="{% url 'competitions:competition_create' %}"><i class="bi bi-calendar-plus"></i> Vytvoriť súťaž</a></li>
               </ul>
             </li>
+            {% if user.is_staff %}
+            <li class="nav-item d-lg-none">
+              <a class="nav-link text-warning" href="{% url 'core:todo_management' %}">
+                <i class="bi bi-wrench me-1"></i> Admin TODO
+              </a>
+            </li>
+            {% endif %}
           </ul>
         </div>
 
