@@ -14,7 +14,7 @@
         Upraviť
       </a>
       {% endif %}
-      {% if is_contestant %}
+      {% if is_contestant and competition.is_running %}
         <a class="btn btn-primary btn-sm" href="{% url 'catches:catch_create' %}?competition={{ competition.id }}">+ Pridať úlovok</a>
       {% endif %}
       <a class="btn btn-warning" style="font-size: 0.875rem;"
@@ -25,9 +25,24 @@
   </div>
 
   <div class="mb-3">
-    <h1 class="h3 fw-bold mb-1">{{ competition.name }}</h1>
+    <div class="d-flex align-items-center gap-2 mb-1">
+      <h1 class="h3 fw-bold mb-0">{{ competition.name }}</h1>
+      
+      {% if status == 'Prebieha' %}
+        <span class="badge bg-success">{{ status }}</span>
+      {% elif status == 'Plánovaná' %}
+        <span class="badge bg-info text-dark">{{ status }}</span>
+      {% elif status == 'Ukončená' %}
+        <span class="badge bg-secondary">{{ status }}</span>
+      {% elif status == 'Zrušená' %}
+        <span class="badge bg-danger">{{ status }}</span>
+      {% else %}
+        <span class="badge bg-secondary">{{ status }}</span>
+      {% endif %}
+    </div>
+    
     {% if competition.description %}
-      <p class="text-secondary mb-0">{{ competition.description }}</p>
+      <p class="text-secondary mb-0 mt-1">{{ competition.description }}</p>
     {% endif %}
   </div>
 
@@ -213,22 +228,8 @@
   </div>
 
   <div class="row g-3">
-    <!-- {% if is_contestant %}
-    <div class="card shadow-sm mb-4">
-      <div class="card-body">
-        <div class="text-secondary small">Lovné miesto</div>
-        <div class="h4 fw-bold mb-0">
-          {% if membership.spot_number %}
-            {{ membership.spot_number }}
-          {% else %}
-            <span class="text-secondary">nepridelené</span>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  {% endif %} -->
 
-  <div class="card shadow-sm mb-4">
+  <div class="card shadow-sm mb-4 px-0">
     <div class="d-flex flex-column flex-sm-row justify-content-sm-between align-items-sm-center card-header border-secondary">
       <div class="d-flex flex-column ">
         <div class="fw-semibold">👥 Účastníci v súťaži</div>
