@@ -44,6 +44,8 @@ body {
   font-weight: 600;
   letter-spacing: 0.5px;
   color: var(--primary-color);
+  border-top-left-radius: calc(1.5rem - 1px) !important;
+  border-top-right-radius: calc(1.5rem - 1px) !important;
 }
 
 .card-hover:hover {
