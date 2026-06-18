@@ -3,8 +3,8 @@
     "model": "core.todotask",
     "pk": 1,
     "fields": {
-        "title": "Moûnosù likes",
-        "description": "Pridanie moûnosti pridaù Like na ˙lovok v scoreboarde",
+        "title": "Mo≈ænos≈• likes",
+        "description": "Pridanie mo≈ænosti prida≈• Like na √∫lovok v scoreboarde",
         "created_at": "2026-06-17T11:08:24.626Z"
     }
 },
@@ -12,8 +12,8 @@
     "model": "core.todotask",
     "pk": 2,
     "fields": {
-        "title": "PWA inötal·cia",
-        "description": "Spraviù progresÌvnu webov˙ aplik·ciu (PWA) - Inötalovaù str·nku ako aplik·ciu.",
+        "title": "PWA in≈°tal√°cia",
+        "description": "Spravi≈• progres√≠vnu webov√∫ aplik√°ciu (PWA) - In≈°talova≈• str√°nku ako aplik√°ciu.",
         "created_at": "2026-06-17T11:08:47.374Z"
     }
 },
@@ -21,8 +21,8 @@
     "model": "core.todotask",
     "pk": 3,
     "fields": {
-        "title": "Profilov· fotka",
-        "description": "Pridaù moûnosù nahraù profilov˙ fotku pri registr·ciÌ a pri ˙prave profilu",
+        "title": "Profilov√° fotka",
+        "description": "Prida≈• mo≈ænos≈• nahra≈• profilov√∫ fotku pri registr√°ci√≠ a pri √∫prave profilu",
         "created_at": "2026-06-17T11:09:51.952Z"
     }
 },
@@ -31,7 +31,7 @@
     "pk": 4,
     "fields": {
         "title": "Checkbox",
-        "description": "(Ofici·lna s˙ùaû) Pridaù Checkbox do vytv·rania s˙ùaûÌ \"Hlavn· v˝hra\" a textov˝ input pre opis v˝hry",
+        "description": "(Ofici√°lna s√∫≈•a≈æ) Prida≈• Checkbox do vytv√°rania s√∫≈•a≈æ√≠ \"Hlavn√° v√Ωhra\" a textov√Ω input pre opis v√Ωhry",
         "created_at": "2026-06-17T11:20:04.139Z"
     }
 },
@@ -40,7 +40,7 @@
     "pk": 5,
     "fields": {
         "title": "Checkbox",
-        "description": "(Ofici·lna s˙ùaû) Pridaù Checkbox do vytv·rania s˙ùaûÌ \"Sponzori s˙ùaûe\" a textov˝ input pre sponzorov",
+        "description": "(Ofici√°lna s√∫≈•a≈æ) Prida≈• Checkbox do vytv√°rania s√∫≈•a≈æ√≠ \"Sponzori s√∫≈•a≈æe\" a textov√Ω input pre sponzorov",
         "created_at": "2026-06-17T11:20:46.463Z"
     }
 },
@@ -48,8 +48,8 @@
     "model": "core.todotask",
     "pk": 6,
     "fields": {
-        "title": "Rieöenie remÌzy",
-        "description": "(Ofici·lna s˙ùaû) Ako sa bude rieöiù remÌza? Zistiù od Rada",
+        "title": "Rie≈°enie rem√≠zy",
+        "description": "(Ofici√°lna s√∫≈•a≈æ) Ako sa bude rie≈°i≈• rem√≠za? Zisti≈• od Rada",
         "created_at": "2026-06-17T11:21:19.903Z"
     }
 },
@@ -57,8 +57,8 @@
     "model": "core.todotask",
     "pk": 7,
     "fields": {
-        "title": "Form·t lovn˝ch miest",
-        "description": "(Ofici·lna s˙ùaû) Form·t lovn˝ch miest (1, A1...) nastaviù pri vytv·ranÌ s˙ùaûÌ",
+        "title": "Form√°t lovn√Ωch miest",
+        "description": "(Ofici√°lna s√∫≈•a≈æ) Form√°t lovn√Ωch miest (1, A1...) nastavi≈• pri vytv√°ran√≠ s√∫≈•a≈æ√≠",
         "created_at": "2026-06-17T11:21:52.671Z"
     }
 },
@@ -67,7 +67,7 @@
     "pk": 8,
     "fields": {
         "title": "Loading screen",
-        "description": "Spraviù loading screen pri uploade fotky do s˙ùaûÌ aj do profilu a registr·ciÌ",
+        "description": "Spravi≈• loading screen pri uploade fotky do s√∫≈•a≈æ√≠ aj do profilu a registr√°ci√≠",
         "created_at": "2026-06-17T11:23:53.933Z"
     }
 },
@@ -75,8 +75,8 @@
     "model": "core.todotask",
     "pk": 9,
     "fields": {
-        "title": "Schvaæovanie - ˙prava ˙lovku",
-        "description": "Povoliù ˙pravu ˙lovku pre organiz·tora",
+        "title": "Schvaƒæovanie - √∫prava √∫lovku",
+        "description": "Povoli≈• √∫pravu √∫lovku pre organiz√°tora",
         "created_at": "2026-06-17T11:24:20.348Z"
     }
 },
@@ -84,8 +84,8 @@
     "model": "core.todotask",
     "pk": 10,
     "fields": {
-        "title": "Pridanie ˙lovku - zobrazenie fotky",
-        "description": "Zobraziù fotku po nahratÌ v malom form·te, aby user vedel, ûe je to ok",
+        "title": "Pridanie √∫lovku - zobrazenie fotky",
+        "description": "Zobrazi≈• fotku po nahrat√≠ v malom form√°te, aby user vedel, ≈æe je to ok",
         "created_at": "2026-06-17T11:24:57.954Z"
     }
 },
@@ -94,7 +94,7 @@
     "pk": 11,
     "fields": {
         "title": "Scoreboard",
-        "description": "RozlÌöenie zobrazenia pre organiz·torov (viac detailov) a ˙ËastnÌkov.",
+        "description": "Rozl√≠≈°enie zobrazenia pre organiz√°torov (viac detailov) a √∫ƒçastn√≠kov.",
         "created_at": "2026-06-17T11:27:01.722Z"
     }
 },
@@ -103,7 +103,7 @@
     "pk": 12,
     "fields": {
         "title": "Scoreboard",
-        "description": "Pridaù anim·ciu pri zmene poradia (HTMX swap transition).",
+        "description": "Prida≈• anim√°ciu pri zmene poradia (HTMX swap transition).",
         "created_at": "2026-06-17T11:27:15.630Z"
     }
 },
@@ -111,8 +111,8 @@
     "model": "core.todotask",
     "pk": 13,
     "fields": {
-        "title": "Schvaæovanie ˙lovku",
-        "description": "upraviù button \"Zobraziù ˙pln˝ detail ˙lovku\"",
+        "title": "Schvaƒæovanie √∫lovku",
+        "description": "upravi≈• button \"Zobrazi≈• √∫pln√Ω detail √∫lovku\"",
         "created_at": "2026-06-17T11:41:08.821Z"
     }
 }
