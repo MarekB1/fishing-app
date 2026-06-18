@@ -70,12 +70,11 @@ body {
   border-color: rgba(255, 255, 255, 0.3);
 }
 
-/* Warning: Teplá jantárová (ponechaná, ale s lepším kontrastom) */
 .btn-warning {
   background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
-  color: #000000 !important; /* Čierny text pre maximálnu čitateľnosť na žltej */
+  color: #000000 !important; 
   font-weight: 700;
 }
 

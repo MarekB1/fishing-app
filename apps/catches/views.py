@@ -206,6 +206,17 @@ def catch_approve(request, pk: int):
 
     when = timezone.now()
     with transaction.atomic():
+        approved_catches = list(Catch.objects.filter(
+            competition=catch.competition,
+            status=Catch.Status.APPROVED
+        ).select_related("user"))
+        
+        scoreboard_before = build_scoreboard(
+            approved_catches=approved_catches,
+            rules=catch.competition.scoring_rules
+        )
+        rank_before = {item.user.id: idx for idx, item in enumerate(scoreboard_before)}
+
         temp_scores = build_scoreboard(
             approved_catches=[catch], 
             rules=catch.competition.scoring_rules
@@ -215,11 +226,19 @@ def catch_approve(request, pk: int):
         if temp_scores:
             assigned_points = temp_scores[0].points
 
+        catch.points = assigned_points  
+
+        approved_catches.append(catch)
+        scoreboard_after = build_scoreboard(
+            approved_catches=approved_catches,
+            rules=catch.competition.scoring_rules
+        )
+        rank_after = {item.user.id: idx for idx, item in enumerate(scoreboard_after)}
+
         catch.status = Catch.Status.APPROVED
         catch.reviewed_by = request.user
         catch.reviewed_at = when
         catch.rejection_reason = ""
-        catch.points = assigned_points  
         
         catch.save(update_fields=["status", "reviewed_by", "reviewed_at", "rejection_reason", "points"])
 
@@ -235,6 +254,27 @@ def catch_approve(request, pk: int):
             payload__catch_id=catch.id,
             read_at__isnull=True,
         ).update(read_at=when)
+
+        catcher_name = catch.user.get_full_name() or catch.user.username
+        for item in scoreboard_after:
+            uid = item.user.id
+            if uid == catch.user.id:
+                continue
+                
+            r_bef = rank_before.get(uid, float('inf'))
+            r_aft = rank_after[uid]
+            
+            if r_aft > r_bef:
+                Notification.objects.create(
+                    competition=catch.competition,
+                    recipient_id=uid,
+                    type=Notification.Type.OVERTAKEN,
+                    payload={
+                        "overtaker_name": catcher_name,
+                        "new_rank": r_aft + 1,
+                        "competition_name": catch.competition.name
+                    }
+                )
 
         transaction.on_commit(lambda: _broadcast_pending_refresh(catch.competition))
 

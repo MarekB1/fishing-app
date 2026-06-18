@@ -19,6 +19,7 @@ class Notification(models.Model):
         COMP_CANCELLED = "COMP_CANCELLED", "Competition cancelled"
         ORGANIZER_PROMOTED = "ORGANIZER_PROMOTED", "Organizer promoted"
         COMP_ADDED = "COMP_ADDED", "Added to competition"
+        OVERTAKEN = "OVERTAKEN", "Overtaken on scoreboard"
 
     competition = models.ForeignKey(
         Competition, on_delete=models.CASCADE, related_name="notifications", null=True, blank=True
@@ -87,6 +88,9 @@ def auto_broadcast_notification(sender, instance, created, **kwargs):
             elif t == "COMP_ADDED":
                 msg_title = "Nová súťaž"
                 msg_text = f"Bol si pridaný do súťaže {instance.payload.get('competition_name','')}."
+            elif t == "OVERTAKEN":
+                msg_title = "Zmena v poradí!"
+                msg_text = f"Hráč {instance.payload.get('overtaker_name','')} ťa práve predbehol v súťaži {instance.payload.get('competition_name','')}! Si na {instance.payload.get('new_rank','')}. mieste."
 
             unread = Notification.objects.filter(recipient_id=instance.recipient_id, read_at__isnull=True).count()
             

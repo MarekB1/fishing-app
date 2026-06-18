@@ -62,6 +62,8 @@
                           <i class="bi bi-person-plus-fill text-primary fs-5"></i>
                         {% elif notif.type == 'FRIEND_ACCEPTED' %}
                           <i class="bi bi-heart-fill text-danger fs-5"></i>
+                        {% elif notif.type == 'OVERTAKEN' %}
+                          <i class="bi bi-graph-down-arrow text-danger fs-5"></i>
                         {% else %}
                           <i class="bi bi-info-circle-fill text-info fs-5"></i>
                         {% endif %}
@@ -85,6 +87,8 @@
                             Boli ste vymenovaný za organizátora v súťaži <strong>{{ notif.payload.competition_name }}</strong>.
                           {% elif notif.type == 'COMP_ADDED' %}
                             Boli ste pridaný do súťaže <strong>{{ notif.payload.competition_name }}</strong>.
+                          {% elif notif.type == 'OVERTAKEN' %}
+                            Hráč <strong>{{ notif.payload.overtaker_name }}</strong> ťa práve predbehol v súťaži <strong>{{ notif.payload.competition_name }}</strong>! Si na <strong>{{ notif.payload.new_rank }}.</strong> mieste.
                           {% else %}
                             Nové upozornenie.
                           {% endif %}
@@ -97,18 +101,6 @@
                         </div>
                       </div>
 
-                      <!-- {% if not notif.read_at %}
-                      <div class="ms-1 position-relative" style="z-index: 2;">
-                        <button class="btn btn-sm btn-link text-muted p-0 border-0"
-                                hx-post="{% url 'notifications:mark_read' notif.id %}"
-                                hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'
-                                hx-target="#notif-{{ notif.id }}"
-                                hx-swap="outerHTML"
-                                title="Označiť ako prečítané">
-                          <i class="bi bi-x-circle badge-hover fs-6"></i>
-                        </button>
-                      </div>
-                      {% endif %} -->
                     </li>
                     {% endifchanged %}
                   {% endfor %}

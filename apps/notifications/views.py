@@ -115,8 +115,10 @@ def notification_redirect(request, notification_id):
         return redirect("catches:my_catches")
     elif t in [Notification.Type.FRIEND_REQUEST, Notification.Type.FRIEND_ACCEPTED]:
         return redirect("friends:home")
-    elif t in [Notification.Type.COMP_CANCELLED, Notification.Type.COMP_ADDED, Notification.Type.ORGANIZER_PROMOTED]:
+    elif t in [Notification.Type.COMP_CANCELLED, Notification.Type.COMP_ADDED, Notification.Type.ORGANIZER_PROMOTED, Notification.Type.OVERTAKEN]:
         if notif.competition_id:
+            if t == Notification.Type.OVERTAKEN:
+                return redirect("competitions:scoreboard", pk=notif.competition_id)
             return redirect("competitions:detail", pk=notif.competition_id)
         return redirect("competitions:my_competitions")
         
