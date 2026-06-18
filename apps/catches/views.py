@@ -39,12 +39,12 @@ def _ws_notify_user(user_id: int, *, unread_count: int, refresh_pending: bool = 
 def catch_create(request):
     now = timezone.now()
 
-    # user môže pridávať len do aktívnych súťaží, kde je CONTESTANT
     competition_qs = (
         Competition.objects
         .filter(
             starts_at__lte=now,
             ends_at__gte=now,
+            cancelled_at__isnull=True,
         )
         .filter(
             Q(

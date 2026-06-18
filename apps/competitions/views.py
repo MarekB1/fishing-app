@@ -154,7 +154,7 @@ def competition_cancel(request, pk: int):
     competition.cancelled_at = timezone.now()
     competition.save(update_fields=["cancelled_at"])
 
-    messages.success(request, "Súťaž bola zrušená.")
+    # messages.success(request, "Súťaž bola zrušená.")
 
     members = CompetitionMembership.objects.filter(competition=competition).exclude(user=request.user)
     Notification.objects.bulk_create([
