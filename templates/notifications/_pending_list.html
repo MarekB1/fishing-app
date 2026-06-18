@@ -39,20 +39,27 @@
                     </div>
                 </div>
 
-                <div class="d-flex align-items-center mb-4 mt-auto">
-                    <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold bg-white text-dark shadow-sm" style="width: 35px; height: 35px; min-width: 35px;">
-                        {{ c.user.username|slice:":1"|upper }}
+                <div class="d-flex flex-row justify-content-between mb-4">
+                    <div class="d-flex align-items-center mt-auto">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold bg-white text-dark shadow-sm" style="width: 35px; height: 35px; min-width: 35px;">
+                            {{ c.user.username|slice:":1"|upper }}
+                        </div>
+                        <div class="ms-3 overflow-hidden">
+                            <div class="fw-bold text-truncate">{{ c.user.get_full_name|default:c.user.username }}</div>
+                            <div class="small opacity-50" style="font-size: 0.75rem;">{{ c.created_at|date:"d.m.Y H:i" }}</div>
+                        </div>
+                        {% if c.spot_number %}
+                        <div class="ms-auto text-end">
+                            <span class="badge rounded-pill bg-dark border border-secondary">Miesto: {{ c.spot_number }}</span>
+                        </div>
+                        {% endif %}
                     </div>
-                    <div class="ms-3 overflow-hidden">
-                        <div class="fw-bold text-truncate">{{ c.user.get_full_name|default:c.user.username }}</div>
-                        <div class="small opacity-50" style="font-size: 0.75rem;">{{ c.created_at|date:"d.m.Y H:i" }}</div>
+                    <div class="d-flex justify-content-center align-items-center">
+                        <a href="{% url 'catches:detail' c.id %}" class="btn btn-light text-decoration-none small px-3 mt-1 opacity-75">
+                            Detail úlovku
+                        </a>
                     </div>
-                    {% if c.spot_number %}
-                    <div class="ms-auto text-end">
-                         <span class="badge rounded-pill bg-dark border border-secondary">Miesto: {{ c.spot_number }}</span>
-                    </div>
-                    {% endif %}
-                </div>
+                </div>    
 
                 <div class="d-flex flex-column gap-2">
                     <div class="d-flex gap-2">
@@ -79,10 +86,6 @@
                             </button>
                         </form>
                     </div>
-                    
-                    <a href="{% url 'catches:detail' c.id %}" class="btn btn-link link-light text-decoration-none small p-0 mt-1 opacity-75">
-                        Zobraziť úplný detail úlovku
-                    </a>
                 </div>
             </div>
         </div>

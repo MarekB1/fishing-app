@@ -658,7 +658,10 @@ def _free_spots_for_competition(competition: Competition, *, exclude_invitation_
 
 
 def invitations(request):
-    organizer_competitions = _organizer_competitions_qs(request.user)
+    organizer_competitions = _organizer_competitions_qs(request.user).filter(
+        cancelled_at__isnull=True,
+        ends_at__gte=timezone.now()
+    )
 
     competition_id_raw = request.GET.get("competition")
     active_competition_id = None
