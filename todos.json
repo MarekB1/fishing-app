@@ -30,7 +30,7 @@
     "model": "core.todotask",
     "pk": 4,
     "fields": {
-        "title": "Checkbox",
+        "title": "Late Game - Checkbox",
         "description": "(Oficiálna súťaž) Pridať Checkbox do vytvárania súťaží \"Hlavná výhra\" a textový input pre opis výhry",
         "created_at": "2026-06-17T11:20:04.139Z"
     }
@@ -39,7 +39,7 @@
     "model": "core.todotask",
     "pk": 5,
     "fields": {
-        "title": "Checkbox",
+        "title": "Late Game - Checkbox",
         "description": "(Oficiálna súťaž) Pridať Checkbox do vytvárania súťaží \"Sponzori súťaže\" a textový input pre sponzorov",
         "created_at": "2026-06-17T11:20:46.463Z"
     }
@@ -48,7 +48,7 @@
     "model": "core.todotask",
     "pk": 6,
     "fields": {
-        "title": "Riešenie remízy",
+        "title": "Late Game - Riešenie remízy",
         "description": "(Oficiálna súťaž) Ako sa bude riešiť remíza? Zistiť od Rada",
         "created_at": "2026-06-17T11:21:19.903Z"
     }
@@ -57,7 +57,7 @@
     "model": "core.todotask",
     "pk": 7,
     "fields": {
-        "title": "Formát lovných miest",
+        "title": "Late Game - Formát lovných miest",
         "description": "(Oficiálna súťaž) Formát lovných miest (1, A1...) nastaviť pri vytváraní súťaží",
         "created_at": "2026-06-17T11:21:52.671Z"
     }
@@ -75,8 +75,8 @@
     "model": "core.todotask",
     "pk": 9,
     "fields": {
-        "title": "Schvaľovanie - úprava úlovku",
-        "description": "Povoliť úpravu úlovku pre organizátora",
+        "title": "Late Game - Schvaľovanie - úprava úlovku",
+        "description": "(Asi len premium verzia) Povoliť úpravu úlovku pre organizátora",
         "created_at": "2026-06-17T11:24:20.348Z"
     }
 },
@@ -93,27 +93,72 @@
     "model": "core.todotask",
     "pk": 11,
     "fields": {
-        "title": "Scoreboard",
-        "description": "Rozlíšenie zobrazenia pre organizátorov (viac detailov) a účastníkov.",
+        "title": "Late Game - Scoreboard",
+        "description": "(Asi premium len) Rozlíšenie zobrazenia pre organizátorov (viac detailov) a účastníkov.",
         "created_at": "2026-06-17T11:27:01.722Z"
     }
 },
 {
     "model": "core.todotask",
-    "pk": 12,
+    "pk": 14,
     "fields": {
-        "title": "Scoreboard",
-        "description": "Pridať animáciu pri zmene poradia (HTMX swap transition).",
-        "created_at": "2026-06-17T11:27:15.630Z"
+        "title": "Late game - Scoreboard",
+        "description": "Keď je user napr. na dashboarde, zmení sa poradie, potom následne si user o nejaký čas otvorí scoreboard, tak až vtedy sa mu spustí animácia a ak bolo tých zmien tam viac, tak sa to spustí po poradí naraz",
+        "created_at": "2026-06-18T16:32:16.915Z"
     }
 },
 {
     "model": "core.todotask",
-    "pk": 13,
+    "pk": 15,
     "fields": {
-        "title": "Schvaľovanie úlovku",
-        "description": "upraviť button \"Zobraziť úplný detail úlovku\"",
-        "created_at": "2026-06-17T11:41:08.821Z"
+        "title": "Detail súťaže",
+        "description": "Možnosť zmeniť pravidlá súťaže -IBA BODOVANIE",
+        "created_at": "2026-06-18T16:57:31.801Z"
+    }
+},
+{
+    "model": "core.todotask",
+    "pk": 16,
+    "fields": {
+        "title": "Detail úlovku",
+        "description": "Možnosť upraviť úlovok pri schvaľovaní",
+        "created_at": "2026-06-18T17:26:20.810Z"
+    }
+},
+{
+    "model": "core.todotask",
+    "pk": 17,
+    "fields": {
+        "title": "Detail úlovku",
+        "description": "Skontrolovať respontibilitu na mobile-hlavne textovej časti",
+        "created_at": "2026-06-18T17:27:38.494Z"
+    }
+},
+{
+    "model": "core.todotask",
+    "pk": 18,
+    "fields": {
+        "title": "Detail súťaže",
+        "description": "Late Game - Zobraziť či je súťaž ofiko alebo nie",
+        "created_at": "2026-06-18T17:29:10.427Z"
+    }
+},
+{
+    "model": "core.todotask",
+    "pk": 19,
+    "fields": {
+        "title": "Detail súťaže",
+        "description": "Zobraziť členov + info (body, počet rýb...)",
+        "created_at": "2026-06-18T17:31:58.159Z"
+    }
+},
+{
+    "model": "core.todotask",
+    "pk": 20,
+    "fields": {
+        "title": "Detail súťaže",
+        "description": "Možnosť otvoriť si profil účastníka, kde sa zobrazia jeho úlovky v danej súťaži",
+        "created_at": "2026-06-18T17:32:32.478Z"
     }
 }
 ]
