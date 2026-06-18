@@ -168,7 +168,7 @@ ForEach-Object {
 
 ## Push a pull dát z databázy 
 <!--- Export dát s TODO --->
-python manage.py dumpdata core.todotask --indent 4 > todos.json
+python manage.py dumpdata core.todotask --indent 4 -o todos.json
 
 <!--- Export dát s TODO --->
 klasický commit a push
