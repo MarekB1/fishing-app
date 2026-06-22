@@ -70,6 +70,11 @@ class SignUpForm(BootstrapFormMixin, UserCreationForm):
         widget=forms.TextInput(attrs={"autocomplete": "family-name"}),
     )
 
+    avatar = forms.ImageField(
+        required=False, 
+        label="Profilová fotka (nepovinné)"
+    )
+
     class Meta(UserCreationForm.Meta):
         model = User
         fields = ("username", "first_name", "last_name", "email", "password1", "password2")
@@ -96,3 +101,14 @@ class SignUpForm(BootstrapFormMixin, UserCreationForm):
                 "Tento e-mail je už používaný. Prihlás sa alebo použi iný e-mail."
             )
         return email
+
+    def save(self, commit=True):
+        user = super().save(commit=commit)
+        
+        avatar = self.cleaned_data.get('avatar')
+        if avatar:
+            user.profile.avatar = avatar
+            if commit:
+                user.profile.save()
+                
+        return user

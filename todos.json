@@ -100,6 +100,15 @@
 },
 {
     "model": "core.todotask",
+    "pk": 13,
+    "fields": {
+        "title": "Schvaľovanie úlovku",
+        "description": "upraviť button \"Zobraziť úplný detail úlovku\"",
+        "created_at": "2026-06-17T11:41:08.821Z"
+    }
+},
+{
+    "model": "core.todotask",
     "pk": 14,
     "fields": {
         "title": "Late game - Scoreboard",
@@ -112,17 +121,8 @@
     "pk": 15,
     "fields": {
         "title": "Detail súťaže",
-        "description": "Možnosť zmeniť pravidlá súťaže -IBA BODOVANIE",
+        "description": "(Toto bude asi premium) Možnosť zmeniť pravidlá súťaže -IBA BODOVANIE",
         "created_at": "2026-06-18T16:57:31.801Z"
-    }
-},
-{
-    "model": "core.todotask",
-    "pk": 16,
-    "fields": {
-        "title": "Detail úlovku",
-        "description": "Možnosť upraviť úlovok pri schvaľovaní",
-        "created_at": "2026-06-18T17:26:20.810Z"
     }
 },
 {
@@ -159,6 +159,15 @@
         "title": "Detail súťaže",
         "description": "Možnosť otvoriť si profil účastníka, kde sa zobrazia jeho úlovky v danej súťaži",
         "created_at": "2026-06-18T17:32:32.478Z"
+    }
+},
+{
+    "model": "core.todotask",
+    "pk": 21,
+    "fields": {
+        "title": "Schvaľovanie úlovku",
+        "description": "Vyriešiť situáciu, ak by chceli dvaja organizátori schváliť totožný úlovok",
+        "created_at": "2026-06-22T07:24:36.456Z"
     }
 }
 ]

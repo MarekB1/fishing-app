@@ -11,11 +11,9 @@
           <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
             <div>
               <h1 class="h4 mb-1">Profil</h1>
-              <!-- <div class="text-secondary small">Upravíš meno, priezvisko, email a heslo.</div> -->
             </div>
           </div>
 
-          <!-- Tabs -->
           <style>
             .fishing-nav-wrapper {
               background-color: #041612;
@@ -104,13 +102,12 @@
           </div>
 
           <div class="tab-content pt-3">
-            <!-- TAB: Profile -->
             <div
               class="tab-pane fade {% if active_tab == 'profile' %}show active{% endif %}"
               id="tab-profile"
               role="tabpanel">
 
-              <form method="post" novalidate>
+              <form method="post" enctype="multipart/form-data" novalidate>
                 {% csrf_token %}
                 <input type="hidden" name="action" value="profile">
 
@@ -119,6 +116,26 @@
                     {{ profile_form.non_field_errors }}
                   </div>
                 {% endif %}
+
+                <div class="d-flex align-items-center gap-3 mb-4 p-3 rounded" style="background-color: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.05);">
+                  <div class="flex-shrink-0">
+                    {% if user.profile.avatar %}
+                      <img src="{{ user.profile.avatar.url }}" alt="Avatar" class="rounded-circle object-fit-cover shadow-sm" width="80" height="80" style="border: 2px solid #00b4d8;">
+                    {% else %}
+                      <div class="rounded-circle d-flex justify-content-center align-items-center text-secondary shadow-sm" style="width: 80px; height: 80px; background-color: #041612; border: 2px solid rgba(255, 255, 255, 0.1); font-size: 2.5rem;">
+                        <i class="bi bi-person"></i>
+                      </div>
+                    {% endif %}
+                  </div>
+                  <div class="flex-grow-1">
+                    <label class="form-label mb-1" for="{{ profile_form.avatar.id_for_label }}">Zmeniť profilovú fotku</label>
+                    {{ profile_form.avatar }}
+                    {% if profile_form.avatar.errors %}
+                      <div class="invalid-feedback d-block">{{ profile_form.avatar.errors }}</div>
+                    {% endif %}
+                    <div class="form-text mt-1">Ideálne štvorcový formát. Maximálna veľkosť závisí od nastavení (bežne do pár MB).</div>
+                  </div>
+                </div>
 
                 <div class="mb-3">
                   <label class="form-label">Používateľské meno</label>
@@ -165,7 +182,6 @@
               </form>
             </div>
 
-            <!-- TAB: Password -->
             <div
               class="tab-pane fade {% if active_tab == 'password' %}show active{% endif %}"
               id="tab-password"

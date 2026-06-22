@@ -9,9 +9,6 @@ User = get_user_model()
 
 
 class BootstrapFormMixin:
-    """
-    Jednoduchý mixin na doplnenie Bootstrap 5 tried do všetkých polí.
-    """
     def _bootstrapify(self):
         for field in self.fields.values():
             w = field.widget
@@ -28,37 +25,38 @@ class BootstrapFormMixin:
 
 
 class ProfileUpdateForm(BootstrapFormMixin, forms.ModelForm):
+    avatar = forms.ImageField(required=False, label="Profilová fotka (nepovinné)")
+
     class Meta:
         model = User
-        fields = ("first_name", "last_name", "email")
+        fields = ['first_name', 'last_name', 'email']
         labels = {
-            "first_name": "Krstné meno",
-            "last_name": "Priezvisko",
-            "email": "E-mailová adresa",
-        }
-        widgets = {
-            "email": forms.EmailInput(attrs={"autocomplete": "email"}),
-            "first_name": forms.TextInput(attrs={"autocomplete": "given-name"}),
-            "last_name": forms.TextInput(attrs={"autocomplete": "family-name"}),
+            'first_name': 'Krstné meno',
+            'last_name': 'Priezvisko',
+            'email': 'E-mailová adresa'
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        
+        if self.instance and hasattr(self.instance, 'profile'):
+            self.fields['avatar'].initial = self.instance.profile.avatar
 
-        if "email" in self.fields:
-            self.fields["email"].required = True
+        self._bootstrapify() 
 
-        self._bootstrapify()
-
-    def clean_email(self):
-        email = (self.cleaned_data.get("email") or "").strip()
-        if not email:
-            return email
-
-        qs = User._default_manager.filter(email__iexact=email).exclude(pk=self.instance.pk)
-        if qs.exists():
-            raise forms.ValidationError("Tento e-mail je už používaný iným účtom.")
-        return email
+    def save(self, commit=True):
+        user = super().save(commit=commit)
+        
+        avatar = self.cleaned_data.get('avatar')
+        
+        if hasattr(user, 'profile'):
+            if 'avatar' in self.changed_data:
+                user.profile.avatar = avatar
+                
+            if commit:
+                user.profile.save()
+            
+        return user
 
 
 class BootstrapPasswordChangeForm(BootstrapFormMixin, PasswordChangeForm):

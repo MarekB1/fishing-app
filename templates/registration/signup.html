@@ -9,7 +9,7 @@
           <h1 class="h3 fw-bold mb-1">Registrácia</h1>
           <p class="text-secondary mb-4">Vytvor si účet a môžeš sa pripojiť do súťaží.</p>
 
-          <form method="post" novalidate>
+          <form method="post" enctype="multipart/form-data" novalidate>
             {% csrf_token %}
 
             {% if form.non_field_errors %}
@@ -49,6 +49,14 @@
                 {{ form.email }}
                 {% if form.email.errors %}
                   <div class="invalid-feedback d-block">{{ form.email.errors }}</div>
+                {% endif %}
+              </div>
+              
+              <div class="col-12 mt-3">
+                <label class="form-label" for="{{ form.avatar.id_for_label }}">Profilová fotka (nepovinné)</label>
+                {{ form.avatar }}
+                {% if form.avatar.errors %}
+                  <div class="invalid-feedback d-block">{{ form.avatar.errors }}</div>
                 {% endif %}
               </div>
             </div>
