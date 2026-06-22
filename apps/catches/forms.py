@@ -4,6 +4,7 @@ from pathlib import Path
 from attrs import field
 from .constants import FISH_SPECIES_CHOICES
 from django import forms
+from .models import Catch
 from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image, ImageOps, UnidentifiedImageError
 
@@ -205,3 +206,8 @@ class CatchCreateForm(forms.ModelForm):
                 self.add_error("caught_at", "Čas úlovku musí byť v rámci trvania súťaže.")
 
         return cleaned
+    
+class CatchEditForm(forms.ModelForm):
+    class Meta:
+        model = Catch
+        fields = ["species", "length_cm", "weight_kg", "caught_at", "note"]    

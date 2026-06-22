@@ -72,15 +72,64 @@
 
         {% if catch.status == "PENDING" and can_review %}
           <div class="card-footer border-secondary">
-            <div class="d-flex flex-wrap gap-2">
+            <div class="d-flex flex-row gap-2">
               <form method="post" action="{% url 'catches:approve' catch.id %}">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{% url 'notifications:pending' %}">
                 <button type="submit" class="btn btn-success btn-sm">Schváliť</button>
               </form>
               <button class="btn btn-outline-danger btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#rejectBox" aria-expanded="false" aria-controls="rejectBox">
-                Odmietnuť…
+                Odmietnuť
               </button>
+
+              <div class="d-flex justify-content-end" style="width: 100%">
+                <button class="btn btn-warning btn-sm text-dark fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#editBox" aria-expanded="false" aria-controls="editBox">
+                  <i class="bi bi-pencil-square"></i> Upraviť
+                </button>
+              </div>
+
+            </div>
+
+            <div class="collapse mt-3" id="editBox">
+              <div class="card card-body bg-dark border-secondary p-3">
+                <h6 class="mb-3 text-warning">Upraviť údaje a schváliť</h6>
+                <form method="post" action="{% url 'catches:approve' catch.id %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ back_url|default:request.META.HTTP_REFERER }}">
+                  <input type="hidden" name="action" value="edit_approve">
+                  
+                  <div class="mb-2">
+                    <label class="form-label text-secondary small mb-1">Druh</label>
+                    <input type="text" class="form-control form-control-sm" name="species" value="{{ catch.species }}" required>
+                  </div>
+                  
+                  <div class="row g-2 mb-2">
+                    <div class="col-6">
+                      <label class="form-label text-secondary small mb-1">Dĺžka (cm)</label>
+                      <input type="number" step="0.01" class="form-control form-control-sm" name="length_cm" value="{{ catch.length_cm|default_if_none:''|stringformat:'s' }}">
+                    </div>
+                    <div class="col-6">
+                      <label class="form-label text-secondary small mb-1">Váha (kg)</label>
+                      <input type="number" step="0.001" class="form-control form-control-sm" name="weight_kg" value="{% if catch.weight_kg %}{{ catch.weight_kg|stringformat:'g' }}{% endif %}">
+                    </div>
+                  </div>
+
+                  <div class="mb-2">
+                    <label class="form-label text-secondary small mb-1">Čas úlovku</label>
+                    <input type="datetime-local" class="form-control form-control-sm" name="caught_at" value="{{ catch.caught_at|date:'Y-m-d\TH:i' }}" required>
+                  </div>
+
+                  <div class="mb-3">
+                    <label class="form-label text-secondary small mb-1">Poznámka</label>
+                    <textarea class="form-control form-control-sm" name="note" rows="2">{{ catch.note }}</textarea>
+                  </div>
+                  
+                  <div class="d-flex gap-2">
+                     <button type="submit" class="btn btn-success btn-sm w-100">Schváliť s úpravami</button>
+                     <button type="button" class="btn btn-secondary btn-sm" data-bs-toggle="collapse" data-bs-target="#editBox">Zrušiť</button>
+                  </div>
+                </form>
+              </div>
             </div>
 
             <div class="collapse mt-3" id="rejectBox">

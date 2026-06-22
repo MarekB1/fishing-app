@@ -9,6 +9,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.urls import reverse
 
+from .forms import CatchCreateForm, CatchEditForm
 from apps.competitions.models import Competition, CompetitionMembership
 from apps.notifications.models import Notification
 from .models import Catch
@@ -204,6 +205,14 @@ def catch_approve(request, pk: int):
         messages.info(request, "Úlovok už bol skontrolovaný.")
         return redirect(request.POST.get("next") or "notifications:pending")
 
+    if request.POST.get("action") == "edit_approve":
+        form = CatchEditForm(request.POST, instance=catch)
+        if form.is_valid():
+            catch = form.save(commit=False)
+        else:
+            messages.error(request, "Údaje vo formulári pre úpravu sú neplatné.")
+            return redirect("catches:detail", pk=pk)
+
     when = timezone.now()
     with transaction.atomic():
         approved_catches = list(Catch.objects.filter(
@@ -239,8 +248,11 @@ def catch_approve(request, pk: int):
         catch.reviewed_by = request.user
         catch.reviewed_at = when
         catch.rejection_reason = ""
-        
-        catch.save(update_fields=["status", "reviewed_by", "reviewed_at", "rejection_reason", "points"])
+
+        if request.POST.get("action") == "edit_approve":
+            catch.save()
+        else:
+            catch.save(update_fields=["status", "reviewed_by", "reviewed_at", "rejection_reason", "points"])
 
         Notification.objects.create(
             competition=catch.competition,
